@@ -42,11 +42,23 @@ class OTPRecord(db.Model):
 # Shop Models
 # ---------------------------------------------------------
 
+class CarouselSlide(db.Model):
+    __tablename__ = 'carousel_slide'
+    id = db.Column(db.Integer, primary_key=True)
+    image = db.Column(db.String(100), nullable=False)
+    heading = db.Column(db.String(150), nullable=True)
+    subheading = db.Column(db.String(250), nullable=True)
+    button_text = db.Column(db.String(50), nullable=True)
+    button_link = db.Column(db.String(250), nullable=True)
+    order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+
+
 class Category(db.Model):
     __tablename__ = 'category'
     id = db.Column(db.String(50), primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    image = db.Column(db.String(100), nullable=False)
+    image = db.Column(db.String(100), nullable=True)
     products = db.relationship('Product', backref='category', lazy=True)
 
 
@@ -55,9 +67,59 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     price = db.Column(db.String(50), nullable=False)
-    image = db.Column(db.String(100), nullable=False)
+    image = db.Column(db.String(100), nullable=False)   # legacy single-image field (card thumbnail)
     category_id = db.Column(db.String(50), db.ForeignKey('category.id'), nullable=False)
     is_featured = db.Column(db.Boolean, default=False)
+    description = db.Column(db.Text, nullable=True)
+    images = db.relationship('ProductImage', backref='product', lazy=True,
+                             order_by='ProductImage.slot', cascade='all, delete-orphan')
+
+    @property
+    def hero_image(self):
+        """Returns the slot-1 ProductImage or None."""
+        return next((img for img in self.images if img.slot == 1), None)
+
+    @property
+    def gallery_images(self):
+        """Returns slots 2-7."""
+        return [img for img in self.images if img.slot > 1]
+
+
+IMAGE_SLOT_LABELS = {
+    1: ('Hero',        'Pure white BG, product fills 85% of frame'),
+    2: ('Alternate',   'Back, side, or open/unboxed view'),
+    3: ('Detail',      'Extreme close-up of key feature'),
+    4: ('Lifestyle',   'Product in real-life setting'),
+    5: ('Scale',       'Product next to hand / smartphone'),
+    6: ('Infographic', 'Text overlays with specs & benefits'),
+    7: ('In the Box',  'Everything the customer receives'),
+}
+
+
+class ProductImage(db.Model):
+    __tablename__ = 'product_image'
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    slot = db.Column(db.Integer, nullable=False)          # 1–7
+    image_type = db.Column(db.String(30), nullable=False) # hero/alternate/detail/lifestyle/scale/infographic/box
+    # Base filename without extension or size suffix, e.g. "p3_slot1"
+    base_name = db.Column(db.String(150), nullable=False)
+    alt_text = db.Column(db.String(255), nullable=True)
+    # Tiny 20×20 base64 data URI for blur-up effect
+    blur_data_uri = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def src(self, size=600):
+        """Return URL path for a given width (300/600/1200/2000)."""
+        return f'/static/images/products/{self.product_id}/{self.base_name}_{size}.webp'
+
+    @property
+    def srcset(self):
+        return ', '.join(f'{self.src(w)} {w}w' for w in [300, 600, 1200, 2000])
+
+    @property
+    def src_fallback(self):
+        return self.src(600)
 
 
 # ---------------------------------------------------------

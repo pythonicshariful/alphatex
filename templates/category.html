@@ -1,28 +1,72 @@
 {% extends "base.html" %}
-
-{% block title %}{{ category.name }} | ILLIYEEN{% endblock %}
+{% block title %}{{ category.name }} | alphatex{% endblock %}
+{% block header_class %}solid-header{% endblock %}
 
 {% block content %}
 <div class="page-header">
+    <span class="section-label">{{ category.id | title }}</span>
     <h1 class="reveal">{{ category.name }}</h1>
-    <p class="reveal" style="color: var(--text-secondary);">Explore the essence of {{ category.name | lower }} through our curated collections.</p>
 </div>
 
-<section class="section" style="padding-top: 4rem;">
-    <div class="products-grid">
+<section class="section">
+    <div class="products-grid" id="product-grid" data-category="{{ category.id }}">
         {% for product in products %}
-        <div class="product-card reveal">
-            <div class="product-image">
-                <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}">
-            </div>
+        <div class="product-card reveal" data-category="{{ category.id }}">
+            {% if loop.index <= 2 %}
+            <span class="product-badge badge-new">New</span>
+            {% endif %}
+            <button class="wishlist-btn" data-id="{{ product.id }}">
+                <i class="fa-regular fa-heart"></i>
+            </button>
+            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="display:block;">
+                <div class="product-image">
+                    {% set hero = product.hero_image %}
+                    {% if hero %}
+                    <div class="img-box" style="aspect-ratio:3/4;">
+                        <img class="blur-placeholder" src="{{ hero.blur_data_uri }}" alt="" aria-hidden="true">
+                        <picture>
+                            <source type="image/webp" srcset="{{ hero.srcset }}" sizes="(max-width:600px) 50vw, 25vw">
+                            <img src="{{ hero.src(600) }}"
+                                 alt="{{ hero.alt_text }}"
+                                 width="600" height="800"
+                                 loading="lazy"
+                                 class="blur-up"
+                                 onload="this.classList.add('loaded')">
+                        </picture>
+                    </div>
+                    {% else %}
+                    <img src="/static/images/{{ product.image }}" alt="{{ product.name }}" loading="lazy" width="600" height="800">
+                    {% endif %}
+                    <div class="product-quick">
+                        <button class="add-to-cart-btn"
+                            onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                            Add to Cart
+                        </button>
+                        <button class="quick-view-btn qv-trigger" onclick="event.preventDefault(); window.openQuickView('{{ product.name|replace('\'', '\\\'') }}', '{{ product.price }}', '{{ hero.src(600) if hero else url_for('static', filename='images/' + product.image) }}', '', '{{ url_for('shop.product_detail', product_id=product.id) }}')">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </a>
             <div class="product-info">
                 <h4 class="product-name">{{ product.name }}</h4>
                 <p class="product-price">{{ product.price }}</p>
+                <div class="product-swatches">
+                    <span class="swatch active" style="background:#1a1a1a;" title="Black"></span>
+                    <span class="swatch" style="background:#f5f0e8;" title="Ivory"></span>
+                    <span class="swatch" style="background:#3d2b1f;" title="Brown"></span>
+                </div>
             </div>
         </div>
-        {% else %}
-        <p style="text-align: center; grid-column: 1 / -1;">No products found in this category.</p>
         {% endfor %}
+        <div id="scroll-sentinel"></div>
     </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Activate data-category for infinite scroll
+document.querySelector('#product-grid')?.setAttribute('data-category', '{{ category.id }}');
+</script>
 {% endblock %}

@@ -7,11 +7,11 @@
 .phone-input-wrapper {
     display: flex;
     align-items: stretch;
-    border-bottom: 1px solid var(--border-color);
-    transition: var(--transition-smooth);
+    border-bottom: 1px solid var(--border);
+    transition: all .35s var(--ease);
 }
 .phone-input-wrapper:focus-within {
-    border-bottom-color: var(--accent-color);
+    border-bottom-color: var(--accent);
 }
 .phone-prefix {
     padding: 1rem .75rem 1rem 0;

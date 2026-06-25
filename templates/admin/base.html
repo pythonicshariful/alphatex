@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Admin | ILLIYEEN{% endblock %}</title>
+    <title>{% block title %}Admin | alphatex{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
@@ -15,7 +15,7 @@
     <!-- Sidebar -->
     <aside class="admin-sidebar">
         <div class="admin-brand">
-            <span>ILLIYEEN</span>
+            <span>alphatex</span>
             <small>Admin Panel</small>
         </div>
         <div class="admin-user-info">
@@ -30,8 +30,16 @@
                 <i class="fa-solid fa-gauge"></i> Dashboard
             </a>
             {% if admin.has_permission('products') %}
+            <a href="{{ url_for('admin.categories') }}" class="admin-nav-item {% if request.endpoint == 'admin.categories' %}active{% endif %}">
+                <i class="fa-solid fa-list"></i> Categories
+            </a>
             <a href="{{ url_for('admin.products') }}" class="admin-nav-item {% if request.endpoint == 'admin.products' %}active{% endif %}">
                 <i class="fa-solid fa-shirt"></i> Products
+            </a>
+            {% endif %}
+            {% if admin.has_permission('settings') %}
+            <a href="{{ url_for('admin.carousel') }}" class="admin-nav-item {% if request.endpoint == 'admin.carousel' %}active{% endif %}">
+                <i class="fa-solid fa-images"></i> Carousel
             </a>
             {% endif %}
             {% if admin.has_permission('users') %}

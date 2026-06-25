@@ -1,54 +1,196 @@
 {% extends "base.html" %}
+{% block title %}alphatex | Luxury Fashion{% endblock %}
 {% block header_class %}{% endblock %}
-{% block content %}
-<section class="hero">
-    <div class="hero-overlay"></div>
-    <img src="{{ url_for('static', filename='images/hero_wide.webp') }}" alt="Luxury Fashion" class="hero-image-bg">
-    <div class="hero-content">
-        <h1>Define Your Legacy</h1>
-        <p>Discover the pinnacle of modern luxury. Curated collections of sophisticated menswear, womenswear, and premium accessories.</p>
-        <a href="{{ url_for('shop.category', cat_id='men') }}" class="btn hero-btn">Explore Collection</a>
-    </div>
-</section>
 
-<section class="section">
-    <div class="section-header reveal">
-        <h2>Collections</h2>
-        <p>Curated lines for every aesthetic</p>
+{% block content %}
+
+<!-- ─── Hero Carousel ─────────────────────────────── -->
+<div class="hero-carousel">
+    <div class="carousel-track">
+        {% if slides %}
+            {% for slide in slides %}
+            <div class="carousel-slide">
+                <img src="{{ slide.image }}" alt="{{ slide.heading }}" class="parallax-img">
+                <div class="hero-overlay"></div>
+                <div class="slide-content">
+                    {% if slide.subheading %}
+                    <span class="slide-eyebrow">{{ slide.subheading }}</span>
+                    {% endif %}
+                    {% if slide.heading %}
+                    <h1 class="slide-title">{{ slide.heading | safe }}</h1>
+                    {% endif %}
+                    {% if slide.button_text and slide.button_link %}
+                    <div class="slide-actions">
+                        <a href="{{ slide.button_link }}" class="btn">{{ slide.button_text }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- Fallback if no slides exist in DB -->
+            <div class="carousel-slide">
+                <img src="{{ url_for('static', filename='images/carousel_1.jpg') }}" alt="Default Slide" class="parallax-img">
+                <div class="hero-overlay"></div>
+                <div class="slide-content">
+                    <h1 class="slide-title">Welcome to<br>alphatex</h1>
+                </div>
+            </div>
+        {% endif %}
     </div>
-    <div class="categories-grid">
-        {% for category in categories %}
-        <div class="category-card reveal" onclick="window.location.href='{{ url_for('shop.category', cat_id=category.id) }}'">
-            <img src="{{ url_for('static', filename='images/' + category.image) }}" alt="{{ category.name }}">
-            <div class="category-overlay">
-                <h3 class="category-title">{{ category.name }}</h3>
-                <span class="category-link">Shop Now <i class="fa-solid fa-arrow-right"></i></span>
+
+    <!-- Progress indicators -->
+    <div class="carousel-progress">
+        {% if slides %}
+            {% for slide in slides %}
+            <div class="progress-item"><div class="progress-line"><div class="progress-fill"></div></div><span class="progress-num">0{{ loop.index }}</span></div>
+            {% endfor %}
+        {% else %}
+            <div class="progress-item"><div class="progress-line"><div class="progress-fill"></div></div><span class="progress-num">01</span></div>
+        {% endif %}
+    </div>
+    <div class="carousel-arrows">
+        <button class="carousel-arrow carousel-prev"><i class="fa-solid fa-arrow-left"></i></button>
+        <button class="carousel-arrow carousel-next"><i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+</div>
+
+<!-- ─── Flash Sale ─────────────────────────────────── -->
+<section class="flash-sale" id="flash-timer-end">
+    <div class="flash-header">
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <span class="flash-badge"><i class="fa-solid fa-fire"></i> Flash Sale</span>
+            <h2 style="font-size:1.6rem;font-weight:400;">Today's Deals</h2>
+        </div>
+        <div class="flash-timer">
+            <div class="timer-block"><div class="timer-num" id="ft-h">08</div><div class="timer-label">Hrs</div></div>
+            <span class="timer-colon">:</span>
+            <div class="timer-block"><div class="timer-num" id="ft-m">00</div><div class="timer-label">Min</div></div>
+            <span class="timer-colon">:</span>
+            <div class="timer-block"><div class="timer-num" id="ft-s">00</div><div class="timer-label">Sec</div></div>
+        </div>
+    </div>
+    <div class="flash-track">
+        {% for product in featured %}
+        <div class="flash-card">
+            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="display:block;text-decoration:none;color:inherit; position:relative;">
+                <div class="flash-img">
+                    {% set hero = product.hero_image %}
+                    {% if hero %}
+                    <picture>
+                        <source type="image/webp" srcset="{{ hero.srcset }}" sizes="(max-width:600px) 50vw, 25vw">
+                        <img src="{{ hero.src(600) }}" alt="{{ hero.alt_text }}" loading="lazy">
+                    </picture>
+                    {% else %}
+                    <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}">
+                    {% endif %}
+                    
+                    <button class="btn btn-sm btn-icon qv-trigger"
+                            onclick="event.preventDefault(); window.openQuickView('{{ product.name }}', '{{ product.price }}', '{{ hero.src(600) if hero else url_for('static', filename='images/' + product.image) }}', '', '{{ url_for('shop.product_detail', product_id=product.id) }}')"
+                            style="position:absolute; top:10px; right:10px; background:var(--surface); color:var(--text); border:1px solid var(--border); box-shadow:var(--shadow-sm); z-index:10;">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </a>
+            <div class="flash-info">
+                <div class="flash-name">{{ product.name }}</div>
+                <div class="flash-prices">
+                    <span class="flash-price-new">{{ product.price }}</span>
+                    <span class="flash-price-old">+20%</span>
+                </div>
+                <div class="flash-progress-wrap">
+                    <div class="flash-progress-label"><span>Claimed</span><span>{{ [55,70,82,40,65,90]|random }}%</span></div>
+                    <div class="flash-progress-bar">
+                        <div class="flash-progress-fill" style="width:{{ [55,70,82,40,65,90]|random }}%;"></div>
+                    </div>
+                </div>
+                <button class="btn btn-sm add-to-cart-btn" style="width:100%;"
+                    onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                    Add to Cart
+                </button>
             </div>
         </div>
         {% endfor %}
     </div>
 </section>
 
-<section class="section" style="background-color: var(--bg-color);">
+<!-- ─── Bento Categories ───────────────────────────── -->
+<section class="section">
     <div class="section-header reveal">
-        <h2>Featured Arrivals</h2>
-        <p>The latest additions to our exclusive collections</p>
+        <span class="section-label">Collections</span>
+        <h2>Shop by Category</h2>
     </div>
-    <div class="products-grid">
+    <div class="bento-grid reveal">
+        {% for category in categories %}
+        <div class="bento-item" onclick="window.location.href='{{ url_for('shop.category', cat_id=category.id) }}'" style="overflow: hidden;">
+            <img src="{{ url_for('static', filename='images/' + category.image) }}" alt="{{ category.name }}" class="parallax-img">
+            <div class="bento-overlay"></div>
+            <div class="bento-info">
+                <div class="bento-tag">Explore</div>
+                <div class="bento-title">{{ category.name }}</div>
+                <div class="bento-shop">Shop Now <i class="fa-solid fa-arrow-right"></i></div>
+            </div>
+        </div>
+        {% endfor %}
+        <!-- Extra bento tiles for layout -->
+        <div class="bento-item" style="background:var(--accent-dim);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.8rem;cursor:pointer;" onclick="window.location.href='{{ url_for('shop.contact') }}'">
+            <i class="fa-solid fa-envelope-open-text" style="font-size:2.5rem;color:var(--accent);"></i>
+            <p style="font-family:var(--font-h);font-size:1.3rem;color:var(--text-1);">Contact Us</p>
+            <p style="font-size:.75rem;color:var(--text-2);text-align:center;padding:0 1rem;">Personal styling & bespoke inquiries</p>
+        </div>
+        <div class="bento-item" style="background:var(--surface-2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.6rem;cursor:default;">
+            <p style="font-family:var(--font-h);font-size:1.5rem;color:var(--accent);letter-spacing:.1em;">Free</p>
+            <p style="font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-2);">Shipping Over ৳2000</p>
+        </div>
+    </div>
+</section>
+
+<!-- ─── Featured Products ──────────────────────────── -->
+<section class="section" style="background:var(--surface);border-top:1px solid var(--border);">
+    <div class="section-header reveal">
+        <span class="section-label">Curated Picks</span>
+        <h2>Featured Arrivals</h2>
+    </div>
+    <div class="products-grid" id="product-grid">
         {% for product in featured %}
         <div class="product-card reveal">
-            <div class="product-image">
-                <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}">
-            </div>
+            <span class="product-badge badge-new">New</span>
+            <button class="wishlist-btn" data-id="{{ product.id }}" onclick="event.preventDefault();">
+                <i class="fa-regular fa-heart"></i>
+            </button>
+            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="display:block;">
+                <div class="product-image">
+                    {% set hero = product.hero_image %}
+                    {% if hero %}
+                    <div class="img-box" style="aspect-ratio:3/4;">
+                        <img class="blur-placeholder" src="{{ hero.blur_data_uri }}" alt="" aria-hidden="true">
+                        <picture>
+                            <source type="image/webp" srcset="{{ hero.srcset }}" sizes="(max-width:600px) 50vw, 25vw">
+                            <img src="{{ hero.src(600) }}" alt="{{ hero.alt_text }}" loading="lazy" class="blur-up" onload="this.classList.add('loaded')">
+                        </picture>
+                    </div>
+                    {% else %}
+                    <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" loading="lazy">
+                    {% endif %}
+                    <div class="product-quick">
+                        <button class="add-to-cart-btn"
+                            onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                            Add to Cart
+                        </button>
+                        <button class="quick-view-btn" onclick="event.preventDefault();window.location.href='{{ url_for('shop.product_detail', product_id=product.id) }}'">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </a>
             <div class="product-info">
                 <h4 class="product-name">{{ product.name }}</h4>
                 <p class="product-price">{{ product.price }}</p>
             </div>
         </div>
         {% endfor %}
-    </div>
-    <div style="text-align:center;margin-top:4rem;" class="reveal">
-        <a href="{{ url_for('shop.category', cat_id='men') }}" class="btn">View All Products</a>
+        <div id="scroll-sentinel"></div>
     </div>
 </section>
+
 {% endblock %}

@@ -2,6 +2,7 @@ from flask import Flask
 from config import Config
 from extensions import db, login_manager, limiter, csrf
 from models import User
+from migrate import migrate_legacy_images
 import pyotp
 from werkzeug.security import generate_password_hash
 
@@ -33,6 +34,7 @@ def create_app():
     with app.app_context():
         db.create_all()
         seed_db()
+        migrate_legacy_images(app)
 
     return app
 

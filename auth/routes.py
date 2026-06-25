@@ -2,8 +2,9 @@ import re
 import hashlib
 import random
 import string
+import requests
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import db, limiter
 from models import User, OTPRecord
@@ -12,6 +13,23 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 BD_PHONE_RE = re.compile(r'^\+8801[3-9]\d{8}$')
 
+def verify_turnstile(token):
+    secret = current_app.config.get('TURNSTILE_SECRET_KEY')
+    if not secret:
+        return True # Skip verification if not configured
+    
+    try:
+        data = {
+            'secret': secret,
+            'response': token,
+            'remoteip': request.remote_addr
+        }
+        res = requests.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', data=data)
+        if res.json().get('success'):
+            return True
+    except Exception as e:
+        current_app.logger.error(f"Turnstile error: {e}")
+    return False
 
 # -------------------------------------------------------
 # OTP Utilities
@@ -85,6 +103,11 @@ def register():
 @auth_bp.route('/register/send-otp', methods=['POST'])
 @limiter.limit('3/hour', key_func=lambda: request.form.get('phone', ''))
 def register_send_otp():
+    cf_token = request.form.get('cf-turnstile-response')
+    if not verify_turnstile(cf_token):
+        flash('Security check failed. Please try again.', 'error')
+        return redirect(url_for('auth.register'))
+        
     raw = request.form.get('phone', '').strip()
     # Prepend +88 if user typed just the local part (starting with 0)
     phone = '+88' + raw if not raw.startswith('+') else raw
@@ -169,6 +192,11 @@ def login():
 @auth_bp.route('/login/password', methods=['POST'])
 @limiter.limit('10/minute')
 def login_password():
+    cf_token = request.form.get('cf-turnstile-response')
+    if not verify_turnstile(cf_token):
+        flash('Security check failed. Please try again.', 'error')
+        return redirect(url_for('auth.login'))
+        
     identifier = request.form.get('identifier', '').strip()
     password = request.form.get('password', '')
     remember = bool(request.form.get('remember'))
@@ -185,6 +213,11 @@ def login_password():
 @auth_bp.route('/login/send-otp', methods=['POST'])
 @limiter.limit('3/hour', key_func=lambda: request.form.get('phone', ''))
 def login_send_otp():
+    cf_token = request.form.get('cf-turnstile-response')
+    if not verify_turnstile(cf_token):
+        flash('Security check failed. Please try again.', 'error')
+        return redirect(url_for('auth.login'))
+        
     raw = request.form.get('phone', '').strip()
     phone = '+88' + raw if not raw.startswith('+') else raw
     if not BD_PHONE_RE.match(phone):

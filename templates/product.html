@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} | alphatex{% endblock %}
+{% block header_class %}solid-header{% endblock %}
+
+{% block head %}
+<style>
+/* ── Product page overrides (scoped) ── */
+.pdp-wrap { display:grid; grid-template-columns:1fr 1fr; gap:4rem; padding:7rem 5% 5rem; max-width:1400px; margin:0 auto; }
+@media(max-width:900px){ .pdp-wrap{ grid-template-columns:1fr; gap:2rem; padding:5rem 4% 3rem; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pdp-wrap">
+
+    <!-- ── Gallery Column ──────────────────────── -->
+    <div class="pdp-gallery">
+
+        <!-- Hero / Main image -->
+        <div class="pdp-main-img-wrap" id="pdp-main-wrap">
+            {% set hero = product.hero_image %}
+            {% if hero %}
+            <div class="img-box" style="aspect-ratio:1/1;" id="pdp-main-box">
+                <!-- Blur-up placeholder -->
+                <img class="blur-placeholder" src="{{ hero.blur_data_uri }}" alt="" aria-hidden="true">
+                <picture>
+                    <source type="image/webp" srcset="{{ hero.srcset }}" sizes="(max-width:900px) 100vw, 50vw">
+                    <img id="pdp-hero-img"
+                         src="{{ hero.src(1200) }}"
+                         alt="{{ hero.alt_text }}"
+                         width="1200" height="1200"
+                         fetchpriority="high"
+                         class="pdp-hero blur-up"
+                         onload="this.classList.add('loaded')">
+                </picture>
+                <!-- Zoom lens overlay -->
+                <div class="zoom-lens" id="zoom-lens"></div>
+            </div>
+            {% else %}
+            <!-- Fallback: legacy single image -->
+            <div class="img-box" style="aspect-ratio:1/1;">
+                <img src="/static/images/{{ product.image }}"
+                     alt="{{ product.name }}"
+                     width="800" height="800"
+                     fetchpriority="high"
+                     class="pdp-hero"
+                     style="width:100%;height:100%;object-fit:cover;">
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Thumbnail Strip -->
+        {% if product.gallery_images %}
+        <div class="pdp-thumbs" id="pdp-thumbs">
+            {% if hero %}
+            <div class="pdp-thumb active" data-slot="1"
+                 data-src="{{ hero.src(1200) }}"
+                 data-srcset="{{ hero.srcset }}"
+                 data-blur="{{ hero.blur_data_uri }}">
+                <img src="{{ hero.src(300) }}" alt="{{ hero.alt_text }}" width="80" height="80" loading="lazy">
+                <span class="thumb-label">Hero</span>
+            </div>
+            {% endif %}
+            {% for img in product.gallery_images %}
+            <div class="pdp-thumb" data-slot="{{ img.slot }}"
+                 data-src="{{ img.src(1200) }}"
+                 data-srcset="{{ img.srcset }}"
+                 data-blur="{{ img.blur_data_uri }}">
+                <img src="{{ img.src(300) }}" alt="{{ img.alt_text }}" width="80" height="80" loading="lazy">
+                <span class="thumb-label">{{ slot_labels[img.slot][0] }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Mobile swipe dots -->
+        <div class="pdp-dots" id="pdp-dots"></div>
+    </div>
+
+    <!-- ── Info Column ─────────────────────────── -->
+    <div class="pdp-info">
+        <div class="section-label" style="margin-bottom:.5rem;">{{ product.category.name }}</div>
+        <h1 style="font-size:2.6rem;margin-bottom:.8rem;">{{ product.name }}</h1>
+        <div class="pdp-price">{{ product.price }}</div>
+
+        <!-- Color swatches -->
+        <div class="pdp-swatches-wrap" style="margin:1.5rem 0;">
+            <p style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-2);margin-bottom:.6rem;">Colour</p>
+            <div class="product-swatches" style="justify-content:flex-start;gap:.6rem;">
+                <span class="swatch active" style="background:#1a1a1a;width:24px;height:24px;" title="Onyx Black"></span>
+                <span class="swatch" style="background:#f5f0e8;width:24px;height:24px;" title="Ivory White"></span>
+                <span class="swatch" style="background:#3d2b1f;width:24px;height:24px;" title="Tobacco Brown"></span>
+                <span class="swatch" style="background:#1c3d5a;width:24px;height:24px;" title="Navy"></span>
+            </div>
+        </div>
+
+        <!-- Size selector -->
+        <div class="pdp-sizes" style="margin-bottom:1.8rem;">
+            <p style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-2);margin-bottom:.6rem;">Size</p>
+            <div class="size-grid">
+                {% for s in ['S','M','L','XL','XXL'] %}
+                <button class="size-btn {% if loop.index == 2 %}active{% endif %}">{{ s }}</button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Add to cart -->
+        <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+            <button class="btn btn-fill add-to-cart-btn" style="flex:1;min-width:180px;font-size:.8rem;"
+                onclick="addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                <i class="fa-solid fa-bag-shopping"></i> Add to Cart
+            </button>
+            <button class="wishlist-btn" data-id="{{ product.id }}"
+                style="position:static;width:52px;height:52px;border:1px solid var(--border);border-radius:var(--r);background:transparent;font-size:1.1rem;">
+                <i class="fa-regular fa-heart"></i>
+            </button>
+        </div>
+
+        <!-- Description -->
+        <div class="pdp-desc" style="border-top:1px solid var(--border);padding-top:1.5rem;color:var(--text-2);font-size:.88rem;line-height:1.8;">
+            {{ product.description or 'Crafted from premium materials, this piece combines contemporary design with timeless elegance. Each detail is meticulously considered to ensure lasting quality and effortless style.' }}
+        </div>
+
+        <!-- Accordion -->
+        <div class="pdp-accordion" style="margin-top:1.8rem;">
+            {% for label, body in [
+                ('Fabric & Materials', 'Premium 100% imported fabric. Breathable, wrinkle-resistant, and hypoallergenic.'),
+                ('Size & Fit', 'True to size. Model is 6\'1" wearing size L. Measurements: Chest 42", Length 54".'),
+                ('Shipping & Returns', 'Free shipping on orders over ৳2000. Returns accepted within 7 days in original condition.'),
+            ] %}
+            <div class="accordion-item">
+                <button class="accordion-btn">{{ label }}<i class="fa-solid fa-plus"></i></button>
+                <div class="accordion-body"><p>{{ body }}</p></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- ── Zoom Result Pane ───────────────────────────── -->
+<div class="zoom-result" id="zoom-result"></div>
+
+<!-- ── Related Products ───────────────────────────── -->
+{% if related %}
+<section class="section" style="border-top:1px solid var(--border);">
+    <div class="section-header reveal">
+        <span class="section-label">You May Also Like</span>
+        <h2>Related Items</h2>
+    </div>
+    <div class="products-grid reveal">
+        {% for p in related %}
+        <div class="product-card">
+            <a href="{{ url_for('shop.product_detail', product_id=p.id) }}" style="display:block;">
+                {% set p_hero = p.hero_image %}
+                <div class="product-image">
+                    {% if p_hero %}
+                    <picture>
+                        <source type="image/webp" srcset="{{ p_hero.srcset }}" sizes="(max-width:600px) 50vw, 25vw">
+                        <img src="{{ p_hero.src(600) }}" alt="{{ p_hero.alt_text }}" width="600" height="600" loading="lazy" class="blur-up" onload="this.classList.add('loaded')">
+                    </picture>
+                    {% else %}
+                    <img src="/static/images/{{ p.image }}" alt="{{ p.name }}" width="600" height="600" loading="lazy">
+                    {% endif %}
+                </div>
+            </a>
+            <div class="product-info">
+                <h4 class="product-name">{{ p.name }}</h4>
+                <p class="product-price">{{ p.price }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // ── Thumbnail switching ──────────────────────
+    const thumbs = document.querySelectorAll('.pdp-thumb');
+    const heroImg = document.getElementById('pdp-hero-img');
+
+    thumbs.forEach(thumb => {
+        thumb.addEventListener('click', () => {
+            thumbs.forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+            if (!heroImg) return;
+            const src = thumb.dataset.src;
+            const srcset = thumb.dataset.srcset;
+            const blur = thumb.dataset.blur;
+            // Blur-up transition
+            heroImg.classList.remove('loaded');
+            heroImg.src = src;
+            heroImg.srcset = srcset;
+            const placeholder = document.querySelector('.blur-placeholder');
+            if (placeholder) placeholder.src = blur;
+        });
+    });
+
+    // ── Accordion ────────────────────────────────
+    document.querySelectorAll('.accordion-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const item = btn.parentElement;
+            const isOpen = item.classList.contains('open');
+            document.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open'));
+            if (!isOpen) item.classList.add('open');
+        });
+    });
+
+    // ── Size selector ────────────────────────────
+    document.querySelectorAll('.size-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+
+    // ── Colour swatches ──────────────────────────
+    const swatches = document.querySelectorAll('.pdp-swatches-wrap .swatch');
+    swatches.forEach((sw, idx) => {
+        sw.addEventListener('click', () => {
+            swatches.forEach(s => s.classList.remove('active'));
+            sw.classList.add('active');
+            
+            // Change main image based on color swatch
+            // (For demo: maps the swatch index to an existing thumbnail)
+            if (thumbs.length > 0) {
+                const targetThumb = thumbs[idx % thumbs.length];
+                if (targetThumb) targetThumb.click();
+            }
+        });
+    });
+
+    // ── Hover zoom (desktop only) ─────────────────
+    const mainBox = document.getElementById('pdp-main-box');
+    const zoomResult = document.getElementById('zoom-result');
+    const lens = document.getElementById('zoom-lens');
+    if (mainBox && zoomResult && heroImg && window.innerWidth > 900) {
+        const ZOOM = 2.5;
+        mainBox.addEventListener('mouseenter', () => { zoomResult.style.display = 'block'; lens.style.display = 'block'; });
+        mainBox.addEventListener('mouseleave', () => { zoomResult.style.display = 'none'; lens.style.display = 'none'; });
+        mainBox.addEventListener('mousemove', (e) => {
+            const rect = mainBox.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+            const lw = lens.offsetWidth / 2;
+            const lh = lens.offsetHeight / 2;
+            x = Math.max(lw, Math.min(x, rect.width - lw));
+            y = Math.max(lh, Math.min(y, rect.height - lh));
+            lens.style.left = (x - lw) + 'px';
+            lens.style.top  = (y - lh) + 'px';
+            const bx = (x / rect.width) * 100;
+            const by = (y / rect.height) * 100;
+            zoomResult.style.backgroundImage = `url(${heroImg.src})`;
+            zoomResult.style.backgroundSize  = `${rect.width * ZOOM}px ${rect.height * ZOOM}px`;
+            zoomResult.style.backgroundPosition = `${bx}% ${by}%`;
+        });
+    }
+
+    // ── Wishlist init ─────────────────────────────
+    if (typeof initWishlists === 'function') initWishlists();
+});
+</script>
+{% endblock %}

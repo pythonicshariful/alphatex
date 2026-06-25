@@ -1,0 +1,63 @@
+{% extends "admin/base.html" %}
+{% block title %}Categories | alphatex Admin{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h1>Categories</h1>
+    <p>Manage product categories.</p>
+</div>
+
+<div class="admin-section" style="margin-bottom:2rem;">
+    <h2>Add New Category</h2>
+    <form method="POST" action="{{ url_for('admin.categories') }}" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:1rem;align-items:end;margin-top:1rem;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+            <label style="display:block;font-size:.8rem;margin-bottom:.3rem;color:var(--text-secondary);">Category ID (e.g. 'men')</label>
+            <input type="text" name="id" class="form-control" required placeholder="men">
+        </div>
+        <div>
+            <label style="display:block;font-size:.8rem;margin-bottom:.3rem;color:var(--text-secondary);">Category Name (e.g. 'Men')</label>
+            <input type="text" name="name" class="form-control" required placeholder="Men">
+        </div>
+        <div>
+            <label style="display:block;font-size:.8rem;margin-bottom:.3rem;color:var(--text-secondary);">Image filename (legacy)</label>
+            <input type="text" name="image" class="form-control" placeholder="men_category.jpg">
+        </div>
+        <div>
+            <button type="submit" class="btn">Add Category</button>
+        </div>
+    </form>
+</div>
+
+<div class="admin-section">
+    <h2>Current Categories</h2>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>ID</th><th>Name</th><th>Image</th><th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cat in categories %}
+            <tr>
+                <td>{{ cat.id }}</td>
+                <td>{{ cat.name }}</td>
+                <td>{{ cat.image }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin.delete_category', cid=cat.id) }}"
+                          onsubmit="return confirm('Delete this category and all its products?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" style="background:none;border:1px solid #ff4a4a;color:#ff4a4a;padding:.3rem .7rem;cursor:pointer;border-radius:2px;font-size:.8rem;">
+                            Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            {% if not categories %}
+            <tr><td colspan="4" style="text-align:center;padding:2rem;">No categories found.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Create Account | ILLIYEEN{% endblock %}
+{% block title %}Create Account | alphatex{% endblock %}
 
 {% block content %}
 <div class="auth-page">
     <div class="auth-card reveal">
-        <div class="auth-logo">Illiyeen</div>
+        <div class="auth-logo"><a href="/" style="display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;"><img src="/static/images/logo.webp" alt="alphatex" style="height:32px;width:auto;"><span style="font-family:Century Gothic,sans-serif;font-size:1.2rem;font-weight:700;letter-spacing:.12em;color:var(--accent);">alphatex</span></a></div>
         <h1 class="auth-title">Create Account</h1>
         <p class="auth-subtitle">Step 1 of 3 — Enter your mobile number</p>
 
@@ -23,6 +23,7 @@
             <p style="color:var(--text-secondary);font-size:.8rem;margin-bottom:1.5rem;">
                 We'll send a 6-digit OTP. Enter your 11-digit number starting with 0.
             </p>
+            <div class="cf-turnstile" data-sitekey="{{ config.TURNSTILE_SITE_KEY or '1x00000000000000000000AA' }}" style="margin-bottom: 1rem;"></div>
             <button type="submit" class="btn" style="width:100%;">Send OTP <i class="fa-solid fa-arrow-right"></i></button>
         </form>
 
