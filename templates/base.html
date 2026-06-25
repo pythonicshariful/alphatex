@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ILLIYEEN | Premium Luxury{% endblock %}</title>
+    <meta name="description" content="ILLIYEEN — The pinnacle of modern luxury fashion.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <header class="{% block header_class %}solid-header{% endblock %}">
+        <div class="logo"><a href="{{ url_for('shop.index') }}">Illiyeen</a></div>
+        <nav class="nav-links">
+            <a href="{{ url_for('shop.index') }}">Home</a>
+            <a href="{{ url_for('shop.category', cat_id='men') }}">Men</a>
+            <a href="{{ url_for('shop.category', cat_id='women') }}">Women</a>
+            <a href="{{ url_for('shop.category', cat_id='accessories') }}">Accessories</a>
+            <a href="{{ url_for('shop.contact') }}">Contact</a>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('auth.logout') }}">Logout</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" style="color: var(--accent-color);">Login</a>
+            {% endif %}
+        </nav>
+        <div class="header-icons">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            {% if current_user.is_authenticated %}
+            <a href="#"><i class="fa-regular fa-user"></i></a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}"><i class="fa-regular fa-user"></i></a>
+            {% endif %}
+            <i class="fa-solid fa-bag-shopping"></i>
+        </div>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Shipping Policy</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms &amp; Conditions</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Information</h4>
+                <ul>
+                    <li><a href="#">Exchange &amp; Return</a></li>
+                    <li><a href="#">Size Guide</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="{{ url_for('shop.contact') }}">Contact Us</a></li>
+                    <li><a href="#">About Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Follow Us</h4>
+                <div class="header-icons">
+                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 ILLIYEEN. ALL RIGHTS RESERVED.</p>
+            <div class="payment-methods">
+                <i class="fa-brands fa-cc-visa fa-lg"></i>
+                <i class="fa-brands fa-cc-mastercard fa-lg"></i>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

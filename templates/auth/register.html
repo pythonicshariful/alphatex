@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Create Account | ILLIYEEN{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card reveal">
+        <div class="auth-logo">Illiyeen</div>
+        <h1 class="auth-title">Create Account</h1>
+        <p class="auth-subtitle">Step 1 of 3 — Enter your mobile number</p>
+
+        <form action="{{ url_for('auth.register_send_otp') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <div class="phone-input-wrapper">
+                    <span class="phone-prefix">+88</span>
+                    <input type="text" name="phone" class="form-control phone-input"
+                           placeholder="01XXXXXXXXX" required
+                           maxlength="11" pattern="0[1-9]\d{9}"
+                           title="Enter 11 digits starting with 0 (e.g. 01711123456)">
+                </div>
+            </div>
+            <p style="color:var(--text-secondary);font-size:.8rem;margin-bottom:1.5rem;">
+                We'll send a 6-digit OTP. Enter your 11-digit number starting with 0.
+            </p>
+            <button type="submit" class="btn" style="width:100%;">Send OTP <i class="fa-solid fa-arrow-right"></i></button>
+        </form>
+
+        <div style="margin:2rem 0;text-align:center;color:var(--text-secondary);font-size:.85rem;">— or sign up with —</div>
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+            <a href="#" class="btn social-btn"><i class="fa-brands fa-google"></i> Continue with Google</a>
+            <a href="#" class="btn social-btn"><i class="fa-brands fa-facebook-f"></i> Continue with Facebook</a>
+        </div>
+
+        <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+    </div>
+</div>
+{% endblock %}

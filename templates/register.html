@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Register | ILLIYEEN{% endblock %}
+{% block header_class %}solid-header{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="reveal">Create Account</h1>
+    <p class="reveal" style="color: var(--text-secondary);">Join our exclusive members club.</p>
+</div>
+
+<section class="section" style="padding-top: 4rem;">
+    <div class="contact-container reveal">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div style="color: #ff4a4a; margin-bottom: 1rem; text-align: center;">
+              {% for message in messages %}
+                <p>{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        <form method="POST" action="/register">
+            <div class="form-group">
+                <input type="text" name="username" class="form-control" placeholder="Choose a Username" required>
+            </div>
+            <div class="form-group">
+                <input type="password" name="password" class="form-control" placeholder="Choose a Password" required>
+            </div>
+            <div style="text-align: center; margin-top: 3rem;">
+                <button type="submit" class="btn">Register</button>
+            </div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <p style="color: var(--text-secondary);">Already have an account? <a href="/login" style="color: var(--accent-color);">Sign in</a>.</p>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

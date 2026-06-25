@@ -1,0 +1,43 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard | ILLIYEEN Admin{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h1>Dashboard</h1>
+    <p>Welcome back, {{ admin.username }}. You have <strong>{{ admin.role | replace('_', ' ') | title }}</strong> access.</p>
+</div>
+
+<div class="admin-stats-grid">
+    <div class="admin-stat-card">
+        <i class="fa-solid fa-shirt fa-2x" style="color:var(--accent-color);margin-bottom:1rem;"></i>
+        <h2>{{ stats.products }}</h2>
+        <p>Products</p>
+    </div>
+    <div class="admin-stat-card">
+        <i class="fa-solid fa-layer-group fa-2x" style="color:var(--accent-color);margin-bottom:1rem;"></i>
+        <h2>{{ stats.categories }}</h2>
+        <p>Categories</p>
+    </div>
+    <div class="admin-stat-card">
+        <i class="fa-solid fa-users fa-2x" style="color:var(--accent-color);margin-bottom:1rem;"></i>
+        <h2>{{ stats.users }}</h2>
+        <p>Customers</p>
+    </div>
+    <div class="admin-stat-card">
+        <i class="fa-solid fa-user-shield fa-2x" style="color:var(--accent-color);margin-bottom:1rem;"></i>
+        <h2>{{ stats.admins }}</h2>
+        <p>Admin Users</p>
+    </div>
+</div>
+
+<div class="admin-section">
+    <h2>Your Role Permissions</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem;">
+        {% for perm in admin.permissions %}
+        <span style="background:var(--surface-color);border:1px solid var(--accent-color);color:var(--accent-color);padding:.3rem 1rem;border-radius:4px;font-size:.85rem;text-transform:capitalize;">
+            {{ perm | replace('_', ' ') }}
+        </span>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

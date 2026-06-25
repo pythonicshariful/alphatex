@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin | ILLIYEEN{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="admin-body">
+
+{% if admin is defined %}
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="admin-brand">
+            <span>ILLIYEEN</span>
+            <small>Admin Panel</small>
+        </div>
+        <div class="admin-user-info">
+            <i class="fa-solid fa-user-shield"></i>
+            <div>
+                <p>{{ admin.username }}</p>
+                <small>{{ admin.role | replace('_', ' ') | title }}</small>
+            </div>
+        </div>
+        <nav class="admin-nav">
+            <a href="{{ url_for('admin.dashboard') }}" class="admin-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-gauge"></i> Dashboard
+            </a>
+            {% if admin.has_permission('products') %}
+            <a href="{{ url_for('admin.products') }}" class="admin-nav-item {% if request.endpoint == 'admin.products' %}active{% endif %}">
+                <i class="fa-solid fa-shirt"></i> Products
+            </a>
+            {% endif %}
+            {% if admin.has_permission('users') %}
+            <a href="{{ url_for('admin.users') }}" class="admin-nav-item {% if request.endpoint == 'admin.users' %}active{% endif %}">
+                <i class="fa-solid fa-users"></i> Customers
+            </a>
+            {% endif %}
+            {% if admin.has_permission('logs') %}
+            <a href="{{ url_for('admin.login_history') }}" class="admin-nav-item {% if request.endpoint == 'admin.login_history' %}active{% endif %}">
+                <i class="fa-solid fa-shield-halved"></i> Login History
+            </a>
+            {% endif %}
+        </nav>
+        <div class="admin-sidebar-footer">
+            <div id="session-timer" style="color:var(--text-secondary);font-size:.75rem;margin-bottom:.5rem;">
+                Session: <span id="timer-display">30:00</span>
+            </div>
+            <a href="{{ url_for('admin.logout') }}" class="admin-nav-item" style="color:#ff4a4a;">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div style="margin-bottom:1.5rem;">
+              {% for cat, msg in messages %}
+                <div class="admin-alert admin-alert-{{ cat }}">{{ msg }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+</div>
+{% else %}
+    {% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

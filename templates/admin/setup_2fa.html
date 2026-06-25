@@ -1,0 +1,37 @@
+{% extends "admin/base.html" %}
+{% block title %}Setup 2FA | ILLIYEEN Admin{% endblock %}
+
+{% block auth_content %}
+<div class="auth-page" style="background:var(--surface-color);">
+    <div class="auth-card reveal" style="max-width:500px;">
+        <div class="auth-logo">ILLIYEEN</div>
+        <h1 class="auth-title">Setup 2FA</h1>
+        <p class="auth-subtitle">Mandatory for all admin accounts. Scan the QR code with Google Authenticator.</p>
+
+        {% if error %}
+        <div class="admin-alert admin-alert-error" style="margin-bottom:1.5rem;">{{ error }}</div>
+        {% endif %}
+
+        <div style="text-align:center;margin:2rem 0;">
+            <img src="data:image/png;base64,{{ qr_b64 }}" alt="QR Code" style="border:8px solid #fff;border-radius:4px;width:200px;">
+        </div>
+
+        <div style="background:var(--bg-color);padding:1rem;border-radius:4px;margin-bottom:1.5rem;text-align:center;">
+            <p style="color:var(--text-secondary);font-size:.75rem;margin-bottom:.5rem;">Manual entry key:</p>
+            <code style="color:var(--accent-color);letter-spacing:.1em;">{{ secret }}</code>
+        </div>
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Enter code from Authenticator to confirm</label>
+                <input type="text" name="code" class="form-control otp-input"
+                       placeholder="000000" maxlength="6" required autocomplete="one-time-code">
+            </div>
+            <button type="submit" class="btn" style="width:100%;margin-top:1rem;">
+                <i class="fa-solid fa-shield-halved"></i> Activate 2FA &amp; Enter
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

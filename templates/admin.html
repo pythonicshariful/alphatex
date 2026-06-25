@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | ILLIYEEN{% endblock %}
+{% block header_class %}solid-header{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="reveal">Admin Dashboard</h1>
+    <p class="reveal" style="color: var(--text-secondary);">Manage your platform's content and users.</p>
+</div>
+
+<section class="section" style="padding-top: 4rem;">
+    <div class="contact-container reveal" style="max-width: 1000px;">
+        
+        <h2 style="margin-bottom: 2rem; color: var(--accent-color);">Products ({{ products|length }})</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 4rem;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                    <th style="padding: 1rem; text-align: left;">ID</th>
+                    <th style="padding: 1rem; text-align: left;">Name</th>
+                    <th style="padding: 1rem; text-align: left;">Price</th>
+                    <th style="padding: 1rem; text-align: left;">Category</th>
+                    <th style="padding: 1rem; text-align: left;">Featured</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr style="border-bottom: 1px solid #1a1a1a;">
+                    <td style="padding: 1rem;">{{ product.id }}</td>
+                    <td style="padding: 1rem;">{{ product.name }}</td>
+                    <td style="padding: 1rem;">{{ product.price }}</td>
+                    <td style="padding: 1rem; text-transform: capitalize;">{{ product.category_id }}</td>
+                    <td style="padding: 1rem;">{{ "Yes" if product.is_featured else "No" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2 style="margin-bottom: 2rem; color: var(--accent-color);">Categories ({{ categories|length }})</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 4rem;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                    <th style="padding: 1rem; text-align: left;">ID</th>
+                    <th style="padding: 1rem; text-align: left;">Name</th>
+                    <th style="padding: 1rem; text-align: left;">Image</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr style="border-bottom: 1px solid #1a1a1a;">
+                    <td style="padding: 1rem;">{{ category.id }}</td>
+                    <td style="padding: 1rem;">{{ category.name }}</td>
+                    <td style="padding: 1rem;">{{ category.image }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2 style="margin-bottom: 2rem; color: var(--accent-color);">Users ({{ users|length }})</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                    <th style="padding: 1rem; text-align: left;">ID</th>
+                    <th style="padding: 1rem; text-align: left;">Username</th>
+                    <th style="padding: 1rem; text-align: left;">Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr style="border-bottom: 1px solid #1a1a1a;">
+                    <td style="padding: 1rem;">{{ user.id }}</td>
+                    <td style="padding: 1rem;">{{ user.username }}</td>
+                    <td style="padding: 1rem; text-transform: capitalize;">{{ user.role }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "admin/base.html" %}
+{% block title %}Login History | ILLIYEEN Admin{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h1>Login History</h1>
+    <p>Last 200 admin login attempts (success &amp; failed)</p>
+</div>
+<div class="admin-section">
+    <table class="admin-table">
+        <thead>
+            <tr><th>Timestamp</th><th>Email</th><th>IP Address</th><th>Status</th><th>User Agent</th></tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td style="font-size:.8rem;color:var(--text-secondary);">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td>{{ log.email }}</td>
+                <td><code style="font-size:.8rem;">{{ log.ip_address }}</code></td>
+                <td>
+                    {% if log.status == 'success' %}
+                        <span style="color:#4caf50;font-weight:500;">✓ Success</span>
+                    {% elif log.status == 'locked' %}
+                        <span style="color:#ff4a4a;font-weight:500;">🔒 Locked</span>
+                    {% else %}
+                        <span style="color:#ff9800;">✗ {{ log.status | replace('_', ' ') | title }}</span>
+                    {% endif %}
+                </td>
+                <td style="font-size:.75rem;color:var(--text-secondary);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ log.user_agent }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block header_class %}{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="hero-overlay"></div>
+    <img src="{{ url_for('static', filename='images/hero_wide.webp') }}" alt="Luxury Fashion" class="hero-image-bg">
+    <div class="hero-content">
+        <h1>Define Your Legacy</h1>
+        <p>Discover the pinnacle of modern luxury. Curated collections of sophisticated menswear, womenswear, and premium accessories.</p>
+        <a href="{{ url_for('shop.category', cat_id='men') }}" class="btn hero-btn">Explore Collection</a>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-header reveal">
+        <h2>Collections</h2>
+        <p>Curated lines for every aesthetic</p>
+    </div>
+    <div class="categories-grid">
+        {% for category in categories %}
+        <div class="category-card reveal" onclick="window.location.href='{{ url_for('shop.category', cat_id=category.id) }}'">
+            <img src="{{ url_for('static', filename='images/' + category.image) }}" alt="{{ category.name }}">
+            <div class="category-overlay">
+                <h3 class="category-title">{{ category.name }}</h3>
+                <span class="category-link">Shop Now <i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="section" style="background-color: var(--bg-color);">
+    <div class="section-header reveal">
+        <h2>Featured Arrivals</h2>
+        <p>The latest additions to our exclusive collections</p>
+    </div>
+    <div class="products-grid">
+        {% for product in featured %}
+        <div class="product-card reveal">
+            <div class="product-image">
+                <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}">
+            </div>
+            <div class="product-info">
+                <h4 class="product-name">{{ product.name }}</h4>
+                <p class="product-price">{{ product.price }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div style="text-align:center;margin-top:4rem;" class="reveal">
+        <a href="{{ url_for('shop.category', cat_id='men') }}" class="btn">View All Products</a>
+    </div>
+</section>
+{% endblock %}

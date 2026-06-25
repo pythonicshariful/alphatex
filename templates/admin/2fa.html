@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% block title %}Two-Factor Auth | ILLIYEEN Admin{% endblock %}
+
+{% block auth_content %}
+<div class="auth-page" style="background:var(--surface-color);">
+    <div class="auth-card reveal">
+        <div class="auth-logo">ILLIYEEN</div>
+        <h1 class="auth-title">Two-Factor Authentication</h1>
+        <p class="auth-subtitle">Enter the 6-digit code from your Google Authenticator app</p>
+
+        {% if error %}
+        <div class="admin-alert admin-alert-error" style="margin-bottom:1.5rem;">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Authenticator Code</label>
+                <input type="text" name="code" class="form-control otp-input"
+                       placeholder="000000" maxlength="6" pattern="\d{6}" required
+                       autocomplete="one-time-code">
+            </div>
+            <button type="submit" class="btn" style="width:100%;margin-top:1rem;">
+                <i class="fa-solid fa-lock-open"></i> Verify & Enter
+            </button>
+        </form>
+        <div style="text-align:center;margin-top:2rem;">
+            <a href="{{ url_for('admin.login') }}" style="color:var(--text-secondary);font-size:.85rem;">
+                <i class="fa-solid fa-arrow-left"></i> Back to login
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const c = document.querySelector('.otp-input');
+if(c) c.addEventListener('input', () => { c.value = c.value.replace(/\D/g,'').slice(0,6); });
+</script>
+{% endblock %}

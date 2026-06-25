@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Reset Password | ILLIYEEN{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card reveal">
+        <div class="auth-logo">Illiyeen</div>
+        <h1 class="auth-title">Reset Password</h1>
+        <p class="auth-subtitle">Enter your registered mobile number to receive an OTP</p>
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <div class="phone-input-wrapper">
+                    <span class="phone-prefix">+88</span>
+                    <input type="text" name="phone" class="form-control phone-input"
+                           placeholder="01XXXXXXXXX" required
+                           maxlength="11" pattern="0[1-9]\d{9}"
+                           title="Enter 11 digits starting with 0">
+                </div>
+            </div>
+            <button type="submit" class="btn" style="width:100%;margin-top:1rem;">Send Reset OTP</button>
+        </form>
+        <p class="auth-switch"><a href="{{ url_for('auth.login') }}"><i class="fa-solid fa-arrow-left"></i> Back to login</a></p>
+    </div>
+</div>
+{% endblock %}

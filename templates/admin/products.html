@@ -1,0 +1,75 @@
+{% extends "admin/base.html" %}
+{% block title %}Products | ILLIYEEN Admin{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h1>Products</h1>
+    <p>{{ products | length }} products across {{ categories | length }} categories</p>
+</div>
+
+<!-- Add Product Form -->
+<div class="admin-section" style="margin-bottom:2rem;">
+    <h2>Add New Product</h2>
+    <form method="POST" action="{{ url_for('admin.add_product') }}" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:1rem;align-items:end;margin-top:1rem;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+            <label style="display:block;font-size:.8rem;margin-bottom:.3rem;color:var(--text-secondary);">Product Name</label>
+            <input type="text" name="name" class="form-control" required placeholder="e.g. Premium Sherwani">
+        </div>
+        <div>
+            <label style="display:block;font-size:.8rem;margin-bottom:.3rem;color:var(--text-secondary);">Price</label>
+            <input type="text" name="price" class="form-control" required placeholder="e.g. $350.00">
+        </div>
+        <div>
+            <label style="display:block;font-size:.8rem;margin-bottom:.3rem;color:var(--text-secondary);">Category</label>
+            <select name="category_id" class="form-control" required style="background:var(--surface-color);color:var(--text-primary);">
+                {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label style="display:block;font-size:.8rem;margin-bottom:.3rem;color:var(--text-secondary);">Image filename</label>
+            <input type="text" name="image" class="form-control" placeholder="product_1.jpg">
+        </div>
+        <div>
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--text-secondary);margin-bottom:.3rem;">
+                <input type="checkbox" name="is_featured"> Featured
+            </label>
+            <button type="submit" class="btn" style="white-space:nowrap;">Add Product</button>
+        </div>
+    </form>
+</div>
+
+<!-- Products Table -->
+<div class="admin-section">
+    <h2>All Products</h2>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>ID</th><th>Name</th><th>Price</th><th>Category</th><th>Featured</th><th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.id }}</td>
+                <td>{{ product.name }}</td>
+                <td style="color:var(--accent-color);">{{ product.price }}</td>
+                <td>{{ product.category_id | title }}</td>
+                <td>{% if product.is_featured %}<span style="color:#4caf50;">✓ Yes</span>{% else %}No{% endif %}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin.delete_product', pid=product.id) }}"
+                          onsubmit="return confirm('Delete this product?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" style="background:none;border:1px solid #ff4a4a;color:#ff4a4a;padding:.3rem .7rem;cursor:pointer;border-radius:2px;font-size:.8rem;">
+                            Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
