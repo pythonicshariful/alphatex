@@ -51,8 +51,8 @@ Ensure you have Python 3.8+ installed.
 ### 2. Installation
 Clone the repository:
 ```bash
-git clone https://github.com/<your-username>/illyen.git
-cd illyen
+git clone https://github.com/pythonicshariful/alphatex
+cd alphatex
 ```
 
 Install dependencies:
