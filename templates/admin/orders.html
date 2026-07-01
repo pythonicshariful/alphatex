@@ -20,7 +20,7 @@
         <input type="text" class="table-search" data-target="#orders-table" placeholder="Search Order ID or Customer...">
     </div>
 
-    <form id="bulk-form" method="POST" action="{{ url_for('admin.bulk_order_action') }}">
+    <form id="bulk-form" method="POST" action="{{ url_for('admin.bulk_order_action') }}" data-bulk-group>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="bulk-bar">
             <span><span id="bulk-count">0</span> selected</span>
