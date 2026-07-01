@@ -237,6 +237,7 @@ def dashboard(admin):
         'products':     Product.query.count(),
         'categories':   Category.query.count(),
         'users':        User.query.count(),
+        'banned_users': User.query.filter_by(is_banned=True).count(),
         'admins':       AdminUser.query.count(),
         'orders':       orders_count,
         'pending':      pending_count,
