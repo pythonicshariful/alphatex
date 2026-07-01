@@ -1,0 +1,232 @@
+{% extends "admin/base.html" %}
+{% block title %}Customer Tracking #{{ user.id }} | alphatex Admin{% endblock %}
+{% block breadcrumb %}
+<span>/</span> <span>People</span> <span>/</span> <a href="{{ url_for('admin.users') }}">Customers</a> <span>/</span> <span>#{{ user.id }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page-header" style="margin-bottom: 2rem;">
+    <div>
+        <h1>Customer Profile: {{ user.display_name }}</h1>
+        <p>Joined on {{ user.created_at.strftime('%B %d, %Y') }} • Last login: {{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Never' }}</p>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        {% if user.is_banned %}
+        <span class="badge badge-danger" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Account Restricted</span>
+        {% else %}
+        <span class="badge badge-success" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Active Account</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="chart-grid" style="grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; margin-bottom: 2rem;">
+    <!-- Profile & Actions -->
+    <div class="admin-section" style="margin-bottom: 0; padding: 2rem;">
+        <div class="admin-section-header" style="margin-bottom: 1.5rem;">
+            <h2>Personal Information</h2>
+        </div>
+        
+        <div style="display: flex; gap: 1.5rem; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--a-border); padding-bottom: 1.5rem;">
+            <img src="{{ user.avatar_url }}" alt="Avatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent);">
+            <div>
+                <h3 style="font-size: 1.25rem; font-family: var(--font-h); font-weight: 500; margin-bottom: 0.3rem;">{{ user.full_name or 'No full name set' }}</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.2rem;">Username: @{{ user.username or 'unnamed' }}</p>
+                <p style="font-size: 0.85rem;"><span class="badge" style="background: var(--a-border); color: var(--text-1);">{{ user.social_provider|capitalize if user.social_provider else 'Local Account' }} Connection</span></p>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <div>
+                <small class="text-muted" style="display:block; text-transform:uppercase; font-size:0.75rem; letter-spacing: 0.05em; margin-bottom: 0.3rem;">Email Address</small>
+                <span style="font-size: 0.95rem; font-weight: 500;">{{ user.email or 'Not connected' }}</span>
+            </div>
+            <div>
+                <small class="text-muted" style="display:block; text-transform:uppercase; font-size:0.75rem; letter-spacing: 0.05em; margin-bottom: 0.3rem;">Mobile Number</small>
+                <span style="font-size: 0.95rem; font-weight: 500;">{{ user.phone or 'Not verified' }}</span>
+            </div>
+            <div>
+                <small class="text-muted" style="display:block; text-transform:uppercase; font-size:0.75rem; letter-spacing: 0.05em; margin-bottom: 0.3rem;">Alternative Mobile</small>
+                <span style="font-size: 0.95rem; font-weight: 500;">{{ user.alt_phone or '—' }}</span>
+            </div>
+            <div>
+                <small class="text-muted" style="display:block; text-transform:uppercase; font-size:0.75rem; letter-spacing: 0.05em; margin-bottom: 0.3rem;">Date of Birth</small>
+                <span style="font-size: 0.95rem; font-weight: 500;">{{ user.date_of_birth.strftime('%Y-%m-%d') if user.date_of_birth else '—' }}</span>
+            </div>
+            <div>
+                <small class="text-muted" style="display:block; text-transform:uppercase; font-size:0.75rem; letter-spacing: 0.05em; margin-bottom: 0.3rem;">Gender</small>
+                <span style="font-size: 0.95rem; font-weight: 500; text-transform: capitalize;">{{ user.gender or '—' }}</span>
+            </div>
+            <div>
+                <small class="text-muted" style="display:block; text-transform:uppercase; font-size:0.75rem; letter-spacing: 0.05em; margin-bottom: 0.3rem;">Profile Completed</small>
+                <span style="font-size: 0.95rem; font-weight: 500;">
+                    {% if user.profile_complete %}
+                    <span style="color: var(--success);"><i class="fa-solid fa-circle-check"></i> Yes</span>
+                    {% else %}
+                    <span style="color: var(--text-muted);"><i class="fa-solid fa-circle"></i> Incomplete</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; border-top: 1px solid var(--a-border); padding-top: 1.5rem;">
+            {% if not user.is_banned %}
+            <button type="button" class="btn-a btn-a-danger" style="flex: 1; justify-content: center;" onclick="openModal('ban-modal-{{ user.id }}')">
+                <i class="fa-solid fa-ban"></i> Restrict Account
+            </button>
+            {% else %}
+            <form method="POST" action="{{ url_for('admin.unban_user', uid=user.id) }}" style="flex: 1; display: flex;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn-a btn-a-primary" style="width: 100%; justify-content: center;">
+                    <i class="fa-solid fa-lock-open"></i> Lift Restriction
+                </button>
+            </form>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('admin.delete_user', uid=user.id) }}" style="flex: 1; display: flex;" onsubmit="return confirm('Permanently delete this user account? All addresses and order history will be deleted. This cannot be undone.')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-a btn-a-outline text-danger" style="width: 100%; justify-content: center;">
+                    <i class="fa-solid fa-trash"></i> Delete Account
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Saved Addresses -->
+    <div class="admin-section" style="margin-bottom: 0; padding: 2rem;">
+        <div class="admin-section-header" style="margin-bottom: 1.5rem;">
+            <h2>Delivery Address Book ({{ user.addresses|length }})</h2>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 1rem; max-height: 380px; overflow-y: auto; padding-right: 0.5rem;">
+            {% for addr in user.addresses %}
+            <div style="border: 1px solid var(--a-border); border-radius: 4px; padding: 1.2rem; background: var(--a-bg-item); position: relative;">
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <strong style="font-size: 1rem;">{{ addr.recipient_name }}</strong>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; font-weight: 600; text-transform: uppercase;
+                            {% if addr.label == 'Home' %}background:rgba(201,168,76,0.15); color:var(--accent);
+                            {% elif addr.label == 'Office' %}background:rgba(0,123,255,0.15); color:#007bff;
+                            {% else %}background:rgba(108,117,125,0.15); color:#6c757d;{% endif %}">
+                            {{ addr.label }}
+                        </span>
+                        {% if addr.is_default %}
+                        <span style="font-size: 0.65rem; background: var(--accent); color: #000; padding: 2px 6px; border-radius: 3px; font-weight: 600; text-transform: uppercase;">Default</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <p style="font-size: 0.88rem; margin-bottom: 0.4rem; color: var(--text-muted);"><i class="fa-solid fa-phone"></i> {{ addr.phone }}</p>
+                <p style="font-size: 0.88rem; line-height: 1.5; color: var(--text-2);">{{ addr.full_address }}</p>
+                {% if addr.maps_link %}
+                <a href="{{ addr.maps_link }}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--accent); text-decoration: none; margin-top: 0.8rem;">
+                    <i class="fa-solid fa-map-location-dot"></i> View on Google Maps
+                </a>
+                {% endif %}
+            </div>
+            {% else %}
+            <p style="text-align: center; color: var(--text-muted); padding: 3rem 0;">No addresses saved yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Order History -->
+<div class="admin-section" style="margin-bottom: 2rem;">
+    <div class="admin-section-header">
+        <h2>Order History ({{ orders|length }})</h2>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Fulfillment Address</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in orders %}
+                <tr>
+                    <td style="font-weight: 600;">#{{ o.id }}</td>
+                    <td>{{ o.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        <span style="font-size: 0.72rem; padding: 2px 6px; border-radius: 3px; font-weight: 600; text-transform: uppercase;
+                            {% if o.status == 'Pending' %}background:rgba(255,193,7,0.15); color:#ffc107;
+                            {% elif o.status == 'Processing' %}background:rgba(0,123,255,0.15); color:#007bff;
+                            {% elif o.status == 'Shipped' %}background:rgba(23,162,184,0.15); color:#17a2b8;
+                            {% elif o.status == 'Delivered' %}background:rgba(40,167,69,0.15); color:#28a745;
+                            {% else %}background:rgba(220,53,69,0.15); color:#dc3545;{% endif %}">
+                            {{ o.status }}
+                        </span>
+                    </td>
+                    <td style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ o.shipping_address }}">{{ o.shipping_address or '—' }}</td>
+                    <td style="font-weight: 600;">৳{{ o.total_amount }}</td>
+                    <td>
+                        <a href="{{ url_for('admin.order_detail', oid=o.id) }}" class="btn-a btn-a-sm btn-a-outline">View Order</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="empty-state"><p>No orders placed yet.</p></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Login Session Activity Log -->
+<div class="admin-section">
+    <div class="admin-section-header">
+        <h2>Security Audit: Login History ({{ login_logs|length }})</h2>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>IP Address</th>
+                    <th>User Agent / Browser</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in login_logs %}
+                <tr>
+                    <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td style="font-family: monospace; font-weight: 600; color: var(--accent);">{{ log.ip_address or '—' }}</td>
+                    <td style="font-size: 0.85rem; color: var(--text-2);">{{ log.user_agent or '—' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="3" class="empty-state"><p>No login logs available (Tracking started just now).</p></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Ban User -->
+{% if not user.is_banned %}
+<div class="modal-overlay" id="ban-modal-{{ user.id }}">
+    <div class="modal-box">
+        <form method="POST" action="{{ url_for('admin.ban_user', uid=user.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-header">
+                <h3>Ban Customer: {{ user.display_name }}</h3>
+                <button type="button" class="modal-close" onclick="closeModal('ban-modal-{{ user.id }}')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Reason for ban/restriction</label>
+                    <textarea name="reason" class="form-control" rows="3" required placeholder="Provide a reason for restriction..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-a btn-a-outline" onclick="closeModal('ban-modal-{{ user.id }}')">Cancel</button>
+                <button type="submit" class="btn-a btn-a-danger">Confirm Ban</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -757,6 +757,27 @@ def bulk_user_action(admin):
     return redirect(url_for('admin.users'))
 
 
+@admin_bp.route('/users/<int:uid>/delete', methods=['POST'])
+@require_admin('users')
+def delete_user(admin, uid):
+    user = User.query.get_or_404(uid)
+    db.session.delete(user)
+    db.session.commit()
+    log_audit(admin, 'delete_user', 'user', uid, f'Deleted user account: {user.email or user.phone}')
+    flash('User account deleted permanently.', 'success')
+    return redirect(url_for('admin.users'))
+
+
+@admin_bp.route('/users/<int:uid>')
+@require_admin('users')
+def user_detail(admin, uid):
+    from models import User, Order, DeliveryAddress, UserLoginLog
+    user = User.query.get_or_404(uid)
+    orders = Order.query.filter_by(user_id=uid).order_by(Order.created_at.desc()).all()
+    login_logs = UserLoginLog.query.filter_by(user_id=uid).order_by(UserLoginLog.timestamp.desc()).limit(50).all()
+    return render_template('admin/user_detail.html', admin=admin, user=user, orders=orders, login_logs=login_logs)
+
+
 # ── Inventory ────────────────────────────────────────────
 
 @admin_bp.route('/inventory')

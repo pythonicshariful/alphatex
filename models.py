@@ -205,7 +205,7 @@ class Order(db.Model):
     order_notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    user = db.relationship('User', backref=db.backref('orders', lazy=True))
+    user = db.relationship('User', backref=db.backref('orders', lazy=True, cascade='all, delete-orphan'))
     delivery_address = db.relationship('DeliveryAddress', foreign_keys=[address_id])
 
 class OrderItem(db.Model):
@@ -421,4 +421,15 @@ class SiteSettings(db.Model):
     key = db.Column(db.String(100), unique=True, nullable=False)
     value = db.Column(db.Text, nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class UserLoginLog(db.Model):
+    __tablename__ = 'user_login_log'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    ip_address = db.Column(db.String(45), nullable=True)
+    user_agent = db.Column(db.String(256), nullable=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('login_logs', lazy=True, cascade='all, delete-orphan'))
 

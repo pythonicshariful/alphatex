@@ -33,6 +33,7 @@
             <span><span id="bulk-count">0</span> selected</span>
             <button type="submit" name="action" value="ban" class="btn-a btn-a-sm btn-a-danger" onclick="return confirm('Ban selected users?')">Ban</button>
             <button type="submit" name="action" value="unban" class="btn-a btn-a-sm btn-a-outline" onclick="return confirm('Unban selected users?')">Unban</button>
+            <button type="submit" name="action" value="delete" class="btn-a btn-a-sm btn-a-danger" onclick="return confirm('Permanently delete selected users? This cannot be undone.')">Delete</button>
         </div>
 
         <div style="overflow-x:auto;">
@@ -52,7 +53,7 @@
                     <tr>
                         <td><input type="checkbox" name="ids[]" value="{{ u.id }}" data-bulk></td>
                         <td>
-                            <div style="font-weight:500;">{{ u.username or 'Unnamed' }}</div>
+                            <a href="{{ url_for('admin.user_detail', uid=u.id) }}" style="font-weight:600; color:var(--accent); text-decoration:none;">{{ u.username or 'Unnamed' }}</a>
                             <div class="text-sm text-muted">ID: {{ u.id }}</div>
                         </td>
                         <td>
@@ -87,6 +88,11 @@
                                     <button class="btn-a btn-a-sm btn-a-outline" title="Impersonate User"><i class="fa-solid fa-mask"></i></button>
                                 </form>
                                 {% endif %}
+                                
+                                <form method="POST" action="{{ url_for('admin.delete_user', uid=u.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this user? This cannot be undone.')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn-a btn-a-sm btn-a-outline text-danger" title="Delete User"><i class="fa-solid fa-trash"></i></button>
+                                </form>
                             </div>
                         </td>
                     </tr>

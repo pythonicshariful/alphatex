@@ -16,20 +16,33 @@ BD_PHONE_RE = re.compile(r'^\+8801[3-9]\d{8}$')
 def verify_turnstile(token):
     secret = current_app.config.get('TURNSTILE_SECRET_KEY')
     if not secret:
-        return True # Skip verification if not configured
-    
+        return True
+    if not token:
+        return False
+    data = {
+        'secret': secret,
+        'response': token
+    }
     try:
-        data = {
-            'secret': secret,
-            'response': token,
-            'remoteip': request.remote_addr
-        }
         res = requests.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', data=data)
-        if res.json().get('success'):
-            return True
+        return res.json().get('success', False)
     except Exception as e:
         current_app.logger.error(f"Turnstile error: {e}")
-    return False
+        return False
+
+
+def log_user_login(user):
+    from models import UserLoginLog
+    try:
+        log = UserLoginLog(
+            user_id=user.id,
+            ip_address=request.remote_addr,
+            user_agent=request.user_agent.string if request.user_agent else None
+        )
+        db.session.add(log)
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(f"Failed to log user login: {e}")
 
 # -------------------------------------------------------
 # OTP Utilities
@@ -159,6 +172,7 @@ def register_set_password():
         db.session.add(user)
         db.session.commit()
         login_user(user, remember=True)
+        log_user_login(user)
         session.pop('reg_phone', None)
         session.pop('reg_phone_verified', None)
         flash('Welcome to ILLIYEEN! Your account has been created.', 'success')
@@ -205,6 +219,7 @@ def login_password():
     ).first()
     if user and user.check_password(password):
         login_user(user, remember=remember)
+        log_user_login(user)
         return redirect(url_for('shop.index'))
     flash('Invalid credentials. Please try again.', 'error')
     return redirect(url_for('auth.login'))
@@ -247,6 +262,7 @@ def login_verify():
             return render_template('auth/otp_verify.html', phone=phone, purpose='login', remember=remember)
         user = User.query.filter_by(phone=phone).first()
         login_user(user, remember=remember)
+        log_user_login(user)
         session.pop('login_phone', None)
         return redirect(url_for('shop.index'))
     return render_template('auth/otp_verify.html', phone=phone, purpose='login')
@@ -345,6 +361,7 @@ def google_callback():
     db.session.commit()
     
     login_user(user, remember=True)
+    log_user_login(user)
     
     # Post-login redirect: prompt profile completion if incomplete
     if not user.profile_complete:
@@ -388,6 +405,7 @@ def facebook_callback():
     db.session.commit()
     
     login_user(user, remember=True)
+    log_user_login(user)
     
     if not user.profile_complete:
         flash('Welcome! Please complete your profile to enable seamless checkouts and delivery.', 'info')

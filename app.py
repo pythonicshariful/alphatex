@@ -41,6 +41,17 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
 
+    @app.before_request
+    def check_banned_status():
+        from flask_login import current_user, logout_user
+        from flask import flash, redirect, url_for
+        if current_user and current_user.is_authenticated:
+            if getattr(current_user, 'is_banned', False):
+                reason = getattr(current_user, 'banned_reason', 'Violation of terms')
+                logout_user()
+                flash(f'Your account has been restricted: {reason}', 'error')
+                return redirect(url_for('auth.login'))
+
     # Register blueprints
     from auth.routes import auth_bp
     from admin.routes import admin_bp

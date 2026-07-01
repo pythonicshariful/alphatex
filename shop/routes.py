@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, url_for, redirect
 from flask_login import login_required, current_user
-from extensions import db
+from extensions import db, limiter
 from models import Category, Product, CarouselSlide, IMAGE_SLOT_LABELS, Offer
 
 shop_bp = Blueprint('shop', __name__)
@@ -112,6 +112,7 @@ def api_search():
 
 @shop_bp.route('/checkout', methods=['GET', 'POST'])
 @login_required
+@limiter.limit('10/minute')
 def checkout():
     from models import DeliveryAddress, Order, OrderItem, Product
     
@@ -185,6 +186,7 @@ def checkout():
 
 @shop_bp.route('/checkout/api/address/add', methods=['POST'])
 @login_required
+@limiter.limit('10/minute')
 def checkout_add_address():
     from models import DeliveryAddress, ADDRESS_LABELS
     f = request.get_json() or {}
