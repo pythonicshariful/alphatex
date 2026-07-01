@@ -819,3 +819,17 @@
 .bento-item img.parallax-img {
   height: 120%; top: -10%; position: relative;
 }
+
+/* ─── Hero Slide Button Visibility Fix ─────────────── */
+.slide-content .btn {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  background: transparent !important;
+}
+.slide-content .btn:hover {
+  color: #000000 !important;
+  border-color: var(--accent) !important;
+}
+.slide-content .btn::before {
+  background: var(--accent) !important;
+}

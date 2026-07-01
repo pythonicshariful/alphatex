@@ -545,6 +545,10 @@ def carousel(admin):
         subheading = request.form.get('subheading')
         button_text = request.form.get('button_text')
         button_link = request.form.get('button_link')
+        try:
+            order = int(request.form.get('order', 0))
+        except (TypeError, ValueError):
+            order = 0
         
         if file and file.filename:
             filename = secure_filename(file.filename)
@@ -558,7 +562,8 @@ def carousel(admin):
                 heading=heading,
                 subheading=subheading,
                 button_text=button_text,
-                button_link=button_link
+                button_link=button_link,
+                order=order
             )
             db.session.add(slide)
             db.session.commit()
