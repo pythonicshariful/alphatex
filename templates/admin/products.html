@@ -1,59 +1,69 @@
 {% extends "admin/base.html" %}
 {% block title %}Products | alphatex Admin{% endblock %}
+{% block breadcrumb %}<span>/</span> <span>Catalogue</span> <span>/</span> <span>Products</span>{% endblock %}
 
 {% block content %}
-<div class="admin-header" style="display:flex;justify-content:space-between;align-items:center;">
+<div class="admin-page-header">
     <div>
         <h1>Products</h1>
-        <p>{{ products | length }} products across {{ categories | length }} categories</p>
+        <p>Manage product catalog, pricing, and visibility.</p>
     </div>
-    <a href="{{ url_for('admin.add_product') }}" class="btn">Add New Product</a>
+    <div class="page-actions">
+        <a href="{{ url_for('admin.add_product') }}" class="btn-a btn-a-primary"><i class="fa-solid fa-plus"></i> Add Product</a>
+    </div>
 </div>
 
-<!-- Products Table -->
 <div class="admin-section">
-    <h2>All Products</h2>
-    <table class="admin-table">
-        <thead>
-            <tr>
-                <th>ID</th><th>Name</th><th>Price</th><th>Category</th><th>Featured</th><th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for product in products %}
-            <tr>
-                <td>{{ product.id }}</td>
-                <td>
-                    <div style="display:flex;align-items:center;gap:1rem;">
-                        {% if product.hero_image %}
-                        <img src="{{ product.hero_image.src_300 }}" alt="{{ product.name }}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;">
+    <div class="table-toolbar">
+        <input type="text" class="table-search" data-target="#products-table" placeholder="Search product name...">
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="admin-table sortable" id="products-table">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th data-col="1" data-dir="asc">Name <span class="sort-icon"></span></th>
+                    <th data-col="2">Category <span class="sort-icon"></span></th>
+                    <th data-col="3">Price <span class="sort-icon"></span></th>
+                    <th data-col="4">Featured <span class="sort-icon"></span></th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td>
+                        <img src="{{ p.hero_image.src_fallback if p.hero_image else 'https://placehold.co/40x50' }}" 
+                             style="width:40px;height:50px;object-fit:cover;border-radius:6px;border:1px solid var(--a-border);">
+                    </td>
+                    <td>
+                        <div style="font-weight:600;color:var(--a-text);">{{ p.name }}</div>
+                    </td>
+                    <td><span class="badge badge-neutral">{{ p.category.name if p.category else 'None' }}</span></td>
+                    <td style="font-weight:500;">৳{{ p.price }}</td>
+                    <td class="text-sm">
+                        {% if p.is_featured %}
+                            <span class="badge badge-success">Yes</span>
                         {% else %}
-                        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;">
+                            <span class="badge badge-neutral">No</span>
                         {% endif %}
-                        {{ product.name }}
-                    </div>
-                </td>
-                <td style="color:var(--accent-color);">{{ product.price }}</td>
-                <td>{{ product.category.name if product.category else product.category_id }}</td>
-                <td>{% if product.is_featured %}<span style="color:#4caf50;">✓ Yes</span>{% else %}No{% endif %}</td>
-                <td>
-                    <div style="display:flex;gap:.5rem;">
-                        <a href="{{ url_for('admin.edit_product', pid=product.id) }}" class="btn btn-sm" style="background:var(--surface-color);color:var(--text-primary);border:1px solid var(--border-color);font-size:.8rem;padding:.3rem .7rem;">Edit</a>
-                        <form method="POST" action="{{ url_for('admin.delete_product', pid=product.id) }}"
-                              onsubmit="return confirm('Delete this product?');">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" style="background:none;border:1px solid #ff4a4a;color:#ff4a4a;padding:.3rem .7rem;cursor:pointer;border-radius:2px;font-size:.8rem;">
-                                Delete
-                            </button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-            {% if not products %}
-            <tr><td colspan="6" style="text-align:center;padding:2rem;">No products found.</td></tr>
-            {% endif %}
-        </tbody>
-    </table>
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:.5rem;">
+                            <a href="{{ url_for('admin.edit_product', pid=p.id) }}" class="btn-a btn-a-sm btn-a-outline">Edit</a>
+                            <form method="POST" action="{{ url_for('admin.delete_product', pid=p.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this product?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn-a btn-a-sm btn-a-outline text-danger"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="empty-state"><p>No products found.</p></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

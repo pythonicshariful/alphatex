@@ -1,0 +1,93 @@
+{% extends "admin/base.html" %}
+{% block title %}Orders | alphatex Admin{% endblock %}
+{% block breadcrumb %}<span>/</span> <span>Commerce</span> <span>/</span> <span>Orders</span>{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <div>
+        <h1>Orders</h1>
+        <p>Manage and process customer orders.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn-a btn-a-outline" onclick="exportTableCSV('orders-table', 'orders.csv')">
+            <i class="fa-solid fa-download"></i> Export
+        </button>
+    </div>
+</div>
+
+<div class="admin-section">
+    <div class="table-toolbar">
+        <input type="text" class="table-search" data-target="#orders-table" placeholder="Search Order ID or Customer...">
+    </div>
+
+    <form id="bulk-form" method="POST" action="{{ url_for('admin.bulk_order_action') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="bulk-bar">
+            <span><span id="bulk-count">0</span> selected</span>
+            <button type="submit" name="action" value="process" class="btn-a btn-a-sm btn-a-outline">Mark Processing</button>
+            <button type="submit" name="action" value="ship" class="btn-a btn-a-sm btn-a-outline">Mark Shipped</button>
+            <button type="submit" name="action" value="deliver" class="btn-a btn-a-sm btn-a-outline">Mark Delivered</button>
+            <button type="submit" name="action" value="cancel" class="btn-a btn-a-sm btn-a-danger">Cancel</button>
+        </div>
+
+        <div style="overflow-x:auto;">
+            <table class="admin-table sortable" id="orders-table">
+                <thead>
+                    <tr>
+                        <th class="col-check"><input type="checkbox" data-select-all></th>
+                        <th data-col="0" data-dir="desc">Order ID <span class="sort-icon"></span></th>
+                        <th data-col="1">Customer <span class="sort-icon"></span></th>
+                        <th data-col="2">Delivery Location <span class="sort-icon"></span></th>
+                        <th data-col="3">Date <span class="sort-icon"></span></th>
+                        <th data-col="4">Total <span class="sort-icon"></span></th>
+                        <th data-col="5">Status <span class="sort-icon"></span></th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><input type="checkbox" name="ids[]" value="{{ order.id }}" data-bulk></td>
+                        <td style="font-weight:600;font-family:monospace;">#{{ order.id }}</td>
+                        <td>
+                            <div>{{ order.delivery_address.recipient_name if order.delivery_address else (order.user.full_name or order.user.username or 'Guest') }}</div>
+                            <div class="text-sm text-muted">{{ order.delivery_address.phone if order.delivery_address else (order.user.phone or order.user.email or '') }}</div>
+                        </td>
+                        <td>
+                            {% if order.delivery_address %}
+                                <div style="font-weight:500;">{{ order.delivery_address.district }}, {{ order.delivery_address.division }}</div>
+                                <div class="text-sm text-muted">{{ order.delivery_address.upazila }}</div>
+                            {% else %}
+                                <div class="text-sm text-muted" style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    {{ order.shipping_address or 'N/A' }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ order.created_at.strftime('%b %d, %H:%M') }}</td>
+                        <td style="font-weight:500;">৳{{ order.total_amount }}</td>
+                        <td>
+                            {% if order.status == 'Pending' %}
+                                <span class="badge badge-warn">Pending</span>
+                            {% elif order.status == 'Processing' %}
+                                <span class="badge badge-info">Processing</span>
+                            {% elif order.status == 'Shipped' %}
+                                <span class="badge badge-info" style="background:rgba(41,128,185,.2)">Shipped</span>
+                            {% elif order.status == 'Delivered' %}
+                                <span class="badge badge-success">Delivered</span>
+                            {% elif order.status == 'Cancelled' %}
+                                <span class="badge badge-danger">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin.order_detail', oid=order.id) }}" class="btn-a btn-a-sm btn-a-outline">View</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8" class="empty-state"><p>No orders found.</p></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
+</div>
+{% endblock %}

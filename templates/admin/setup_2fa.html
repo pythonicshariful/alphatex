@@ -1,9 +1,13 @@
 {% extends "admin/base.html" %}
 {% block title %}Setup 2FA | alphatex Admin{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
 {% block auth_content %}
 <div class="auth-page" style="background:var(--surface-color);">
-    <div class="auth-card reveal" style="max-width:500px;">
+    <div class="auth-card" style="max-width:500px;">
         <div class="auth-logo">alphatex</div>
         <h1 class="auth-title">Setup 2FA</h1>
         <p class="auth-subtitle">Mandatory for all admin accounts. Scan the QR code with Google Authenticator.</p>

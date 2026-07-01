@@ -166,7 +166,9 @@ function initSearch() {
                     <div class="search-result-item" onclick="window.location.href='/category/${p.category_id}'">
                         <img class="search-result-img" src="/static/images/${p.image}" alt="${p.name}">
                         <span class="search-result-name">${p.name}</span>
-                        <span class="search-result-price">${p.price}</span>
+                        ${p.compare_at_price && parseFloat(p.compare_at_price) > parseFloat(p.price) 
+                            ? `<span class="search-result-price"><span style="color:var(--text-2);text-decoration:line-through;margin-right:6px;font-size:0.9em;">৳${p.compare_at_price}</span>৳${p.price}</span>` 
+                            : `<span class="search-result-price">৳${p.price}</span>`}
                     </div>`).join('') || '<p style="color:var(--text-2);font-size:.85rem;padding:.5rem 0;">No results found.</p>';
             } catch {}
         }, 300);
@@ -383,7 +385,9 @@ function initInfiniteScroll() {
                     </a>
                     <div class="product-info">
                         <h4 class="product-name">${p.name}</h4>
-                        <p class="product-price">${p.price}</p>
+                        ${p.compare_at_price && parseFloat(p.compare_at_price) > parseFloat(p.price) 
+                            ? `<p class="product-price"><span style="color:var(--text-2);text-decoration:line-through;margin-right:8px;font-size:0.9em;">৳${p.compare_at_price}</span>৳${p.price}</p>`
+                            : `<p class="product-price">৳${p.price}</p>`}
                     </div>`;
                 grid.insertBefore(div, sentinel);
                 requestAnimationFrame(() => div.classList.add('active'));

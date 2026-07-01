@@ -1,5 +1,57 @@
+# Python cache files
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment files
 .env
+.flaskenv
+
+# Databases & local stores
 shop.db
+*.db
+*.sqlite3
+
+# User uploaded avatars (prevent bloating repo with mock avatars)
+static/images/avatars/user_*
+
+# IDE / Editor configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*~
+
+# OS specific files
+.DS_Store
+Thumbs.db
+db.json

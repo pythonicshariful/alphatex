@@ -1,0 +1,254 @@
+{% extends "admin/base.html" %}
+{% block title %}Order #{{ order.id }} | alphatex Admin{% endblock %}
+{% block breadcrumb %}
+<span>/</span> <span>Commerce</span> 
+<span>/</span> <a href="{{ url_for('admin.orders') }}">Orders</a> 
+<span>/</span> <span>#{{ order.id }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <div>
+        <h1>Order #{{ order.id }}</h1>
+        <p>Placed on {{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+    </div>
+    <div class="page-actions">
+        <span class="badge badge-neutral" style="font-size:1rem;padding:.4rem 1rem;">
+            Status: <strong>{{ order.status }}</strong>
+        </span>
+    </div>
+</div>
+
+<div class="chart-grid">
+    <div class="admin-section" style="margin-bottom:0;">
+        <div class="admin-section-header">
+            <h2>Items Ordered</h2>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Details</th>
+                        <th>Price</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items %}
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:.75rem;">
+                                <img src="{{ item.product.hero_image.src_fallback if item.product.hero_image else 'https://placehold.co/40x50' }}" 
+                                     style="width:36px;height:48px;object-fit:cover;border-radius:4px;border:1px solid var(--a-border);">
+                                <div style="font-weight:500;">{{ item.product.name }}</div>
+                            </div>
+                        </td>
+                        <td class="text-muted">
+                            Color: {{ item.color }}<br>
+                            Size: {{ item.size or 'N/A' }}
+                        </td>
+                        <td>৳{{ item.price }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td style="font-weight:600;">৳{{ item.price * item.quantity }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section-body" style="border-top:1px solid var(--a-border); display:flex; justify-content:flex-end;">
+            <div style="text-align:right;">
+                <div class="text-muted" style="margin-bottom:.5rem;">Subtotal: ৳{{ order.total_amount }}</div>
+                <div style="font-size:1.2rem;font-weight:700;color:var(--a-text);">Total: ৳{{ order.total_amount }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="admin-section">
+            <div class="admin-section-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>Customer & Delivery Info</h2>
+                <button type="button" class="btn-a btn-a-sm btn-a-outline" id="toggle-edit-address">Edit Info</button>
+            </div>
+            <div class="section-body">
+                <div style="margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid var(--a-border);">
+                    <div style="font-weight:600; font-size:1.05rem; margin-bottom:.25rem;">Customer Account</div>
+                    <strong>{{ order.user.display_name if order.user else 'Guest User' }}</strong><br>
+                    {% if order.user and order.user.email %}
+                        <a href="mailto:{{ order.user.email }}" style="color:var(--a-accent); font-size:0.9rem;">{{ order.user.email }}</a><br>
+                    {% endif %}
+                    {% if order.user and order.user.phone %}
+                        <a href="tel:{{ order.user.phone }}" style="color:var(--a-accent); font-size:0.9rem;">{{ order.user.phone }}</a><br>
+                    {% endif %}
+                    <span style="font-size:0.8rem; color:var(--text-muted);">Joined: {{ order.user.created_at.strftime('%Y-%m-%d') if order.user else 'N/A' }}</span>
+                </div>
+
+                <!-- Display Address -->
+                <div id="address-display-view">
+                    <div style="font-weight:600; font-size:1.05rem; margin-bottom:.25rem;">Recipient Delivery Details</div>
+                    {% if order.delivery_address %}
+                        <strong>{{ order.delivery_address.recipient_name }}</strong><br>
+                        <a href="tel:{{ order.delivery_address.phone }}" style="color:var(--a-accent); font-weight:500;">{{ order.delivery_address.phone }}</a><br>
+                        <p class="text-muted" style="line-height:1.5; margin-top:.5rem; font-size:0.9rem;">
+                            {{ order.delivery_address.full_address }}
+                        </p>
+                        {% if order.delivery_address.delivery_instructions %}
+                            <div style="margin-top:.8rem; padding:.5rem; background:rgba(201,168,76,.08); border-left:3px solid var(--a-accent); font-style:italic; font-size:0.85rem; color:var(--a-text);">
+                                <strong>Instructions:</strong> {{ order.delivery_address.delivery_instructions }}
+                            </div>
+                        {% endif %}
+                        {% if order.delivery_address.maps_link %}
+                            <div style="margin-top:.8rem;">
+                                <a href="{{ order.delivery_address.maps_link }}" target="_blank" class="btn-a btn-a-sm btn-a-outline" style="display:inline-flex; align-items:center; gap:.4rem; width:100%; justify-content:center;">
+                                    <i class="fa-solid fa-map-location-dot"></i> View on Google Maps
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-muted text-sm" style="line-height:1.5; font-size:0.9rem;">
+                            {{ order.shipping_address or 'No delivery address specified.' }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Edit Address Form (Hidden by default) -->
+                <form id="address-edit-form" method="POST" style="display:none; margin-top:1rem;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="status" value="{{ order.status }}">
+                    
+                    {% if order.delivery_address %}
+                    <div style="display:flex; flex-direction:column; gap:.8rem;">
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.8rem; font-weight:600;">Recipient Name</label>
+                            <input type="text" name="recipient_name" class="form-control" value="{{ order.delivery_address.recipient_name }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.8rem; font-weight:600;">Recipient Phone</label>
+                            <input type="text" name="phone" class="form-control" value="{{ order.delivery_address.phone }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.8rem; font-weight:600;">Division</label>
+                            <input type="text" name="division" class="form-control" value="{{ order.delivery_address.division }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.8rem; font-weight:600;">District</label>
+                            <input type="text" name="district" class="form-control" value="{{ order.delivery_address.district }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.8rem; font-weight:600;">Upazila</label>
+                            <input type="text" name="upazila" class="form-control" value="{{ order.delivery_address.upazila }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.8rem; font-weight:600;">Area / Mohalla</label>
+                            <input type="text" name="area" class="form-control" value="{{ order.delivery_address.area or '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.8rem; font-weight:600;">Road / Street</label>
+                            <input type="text" name="road" class="form-control" value="{{ order.delivery_address.road or '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.8rem; font-weight:600;">House / Holding No.</label>
+                            <input type="text" name="house_no" class="form-control" value="{{ order.delivery_address.house_no or '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.8rem; font-weight:600;">Apartment / Flat</label>
+                            <input type="text" name="apartment" class="form-control" value="{{ order.delivery_address.apartment or '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.8rem; font-weight:600;">Postal Code</label>
+                            <input type="text" name="postal_code" class="form-control" value="{{ order.delivery_address.postal_code or '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size:0.8rem; font-weight:600;">Google Maps URL</label>
+                            <input type="url" name="maps_link" class="form-control" value="{{ order.delivery_address.maps_link or '' }}">
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="form-group">
+                        <label class="form-label" style="font-size:0.8rem; font-weight:600;">Delivery Address</label>
+                        <textarea name="shipping_address" class="form-control" rows="4" required>{{ order.shipping_address or '' }}</textarea>
+                    </div>
+                    {% endif %}
+                    <div style="display:flex; gap:.5rem; margin-top:1rem;">
+                        <button type="submit" class="btn-a btn-a-primary" style="flex:1; justify-content:center;">Save Address</button>
+                        <button type="button" class="btn-a btn-a-outline" id="cancel-edit-address">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <div class="admin-section-header">
+                <h2>Fulfillment & Logistics</h2>
+            </div>
+            <div class="section-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label class="form-label" style="font-size:0.8rem; font-weight:600; margin-bottom:.3rem; display:block;">Order Status</label>
+                        <select name="status" class="form-control">
+                            <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
+                            <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                            <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                            <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label class="form-label" style="font-size:0.8rem; font-weight:600; margin-bottom:.3rem; display:block;">Courier Partner Name</label>
+                        <input type="text" name="courier_name" class="form-control" value="{{ order.courier_name or '' }}" placeholder="e.g. Pathao, Steadfast, RedX">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label class="form-label" style="font-size:0.8rem; font-weight:600; margin-bottom:.3rem; display:block;">Courier Tracking ID</label>
+                        <input type="text" name="tracking_number" class="form-control" value="{{ order.tracking_number or '' }}" placeholder="Enter Tracking Number">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label class="form-label" style="font-size:0.8rem; font-weight:600; margin-bottom:.3rem; display:block;">Courier Tracking URL</label>
+                        <input type="url" name="courier_tracking" class="form-control" value="{{ order.courier_tracking or '' }}" placeholder="Link to Courier tracking page">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:1.5rem;">
+                        <label class="form-label" style="font-size:0.8rem; font-weight:600; margin-bottom:.3rem; display:block;">Order Notes / Shipment Instructions</label>
+                        <textarea name="order_notes" class="form-control" rows="3" placeholder="Notes seen by delivery agents...">{{ order.order_notes or '' }}</textarea>
+                    </div>
+
+                    <button type="submit" class="btn-a btn-a-primary" style="width:100%; justify-content:center;">Update Fulfillment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnToggle = document.getElementById('toggle-edit-address');
+    const btnCancel = document.getElementById('cancel-edit-address');
+    const viewAddress = document.getElementById('address-display-view');
+    const formAddress = document.getElementById('address-edit-form');
+
+    if (btnToggle && viewAddress && formAddress) {
+        btnToggle.addEventListener('click', function() {
+            if (formAddress.style.display === 'none') {
+                formAddress.style.display = 'block';
+                viewAddress.style.display = 'none';
+                btnToggle.style.display = 'none';
+            }
+        });
+    }
+
+    if (btnCancel && viewAddress && formAddress && btnToggle) {
+        btnCancel.addEventListener('click', function() {
+            formAddress.style.display = 'none';
+            viewAddress.style.display = 'block';
+            btnToggle.style.display = 'inline-block';
+        });
+    }
+});
+</script>
+{% endblock %}

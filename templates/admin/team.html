@@ -1,0 +1,154 @@
+{% extends "admin/base.html" %}
+{% block title %}Admin Team | alphatex Admin{% endblock %}
+{% block breadcrumb %}<span>/</span> <span>People</span> <span>/</span> <span>Admin Team</span>{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <div>
+        <h1>Admin Team</h1>
+        <p>Manage administrative users and Role-Based Access Control (RBAC).</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn-a btn-a-primary" onclick="openModal('add-admin-modal')"><i class="fa-solid fa-user-plus"></i> New Admin</button>
+    </div>
+</div>
+
+<div class="admin-section">
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Admin</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Last Login</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in all_admins %}
+                <tr>
+                    <td>
+                        <div style="font-weight:600;color:var(--a-text);">{{ a.username }}</div>
+                        <div class="text-sm text-muted">{{ a.email }}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-info">{{ a.role | replace('_', ' ') | title }}</span>
+                        <div class="text-sm text-muted" style="margin-top:4px; max-width: 200px;">
+                            {{ ADMIN_ROLES[a.role]|join(', ') }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if a.is_locked %}
+                        <span class="badge badge-danger">Locked</span>
+                        {% else %}
+                        <span class="badge badge-success">Active</span>
+                        {% endif %}
+                        {% if a.is_2fa_enabled %}
+                        <span class="badge badge-neutral" style="margin-left:4px;" title="2FA Enabled"><i class="fa-solid fa-shield"></i></span>
+                        {% endif %}
+                    </td>
+                    <td class="text-sm text-muted">
+                        {{ a.login_logs[-1].timestamp.strftime('%Y-%m-%d %H:%M') if a.login_logs else 'Never' }}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:.5rem;">
+                            <!-- Change Role -->
+                            <button type="button" class="btn-a btn-a-sm btn-a-outline" onclick="openModal('role-modal-{{ a.id }}')">Edit Role</button>
+                            
+                            <!-- Lock/Unlock -->
+                            <form method="POST" action="{{ url_for('admin.lock_admin_member', aid=a.id) }}" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn-a btn-a-sm btn-a-outline text-warn">
+                                    {% if a.is_locked %}Unlock{% else %}Lock{% endif %}
+                                </button>
+                            </form>
+                            
+                            <!-- Delete -->
+                            {% if a.id != admin.id %}
+                            <form method="POST" action="{{ url_for('admin.delete_admin_member', aid=a.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this admin?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn-a btn-a-sm btn-a-outline text-danger"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Admin Modal -->
+<div class="modal-overlay" id="add-admin-modal">
+    <div class="modal-box">
+        <form method="POST" action="{{ url_for('admin.team') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-header">
+                <h3>Add New Admin</h3>
+                <button type="button" class="modal-close" onclick="closeModal('add-admin-modal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-control" required>
+                            {% for r in ADMIN_ROLES.keys() %}
+                            <option value="{{ r }}">{{ r | replace('_', ' ') | title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-a btn-a-outline" onclick="closeModal('add-admin-modal')">Cancel</button>
+                <button type="submit" class="btn-a btn-a-primary">Create Admin</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Role Modals -->
+{% for a in all_admins %}
+<div class="modal-overlay" id="role-modal-{{ a.id }}">
+    <div class="modal-box" style="max-width: 400px;">
+        <form method="POST" action="{{ url_for('admin.change_admin_role', aid=a.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-header">
+                <h3>Change Role: {{ a.username }}</h3>
+                <button type="button" class="modal-close" onclick="closeModal('role-modal-{{ a.id }}')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Select Role</label>
+                    <select name="role" class="form-control">
+                        {% for r in ADMIN_ROLES.keys() %}
+                        <option value="{{ r }}" {% if a.role == r %}selected{% endif %}>{{ r | replace('_', ' ') | title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn-a btn-a-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

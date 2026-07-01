@@ -1,0 +1,143 @@
+{% extends "admin/base.html" %}
+{% block title %}Security Center | alphatex Admin{% endblock %}
+{% block breadcrumb %}<span>/</span> <span>System</span> <span>/</span> <span>Security Center</span>{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <div>
+        <h1>Security Center</h1>
+        <p>Manage IP rules, monitor failed logins, and handle locked accounts.</p>
+    </div>
+</div>
+
+<div class="chart-grid">
+    <!-- IP Rules -->
+    <div class="admin-section" style="margin-bottom:0;">
+        <div class="admin-section-header">
+            <h2>IP Whitelist & Blacklist</h2>
+            <button class="btn-a btn-a-sm btn-a-primary" onclick="openModal('add-ip-modal')"><i class="fa-solid fa-plus"></i> Add Rule</button>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Type</th>
+                        <th>Note</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in ip_rules %}
+                    <tr>
+                        <td style="font-family:monospace;font-size:1rem;">{{ rule.ip_address }}</td>
+                        <td>
+                            <span class="ip-tag ip-{{ rule.rule_type }}">{{ rule.rule_type | upper }}</span>
+                        </td>
+                        <td class="text-muted text-sm">{{ rule.note or '—' }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.delete_ip_rule', rid=rule.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn-a btn-a-sm btn-a-outline" onclick="return confirm('Remove this IP rule?')"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="empty-state" style="padding:1.5rem;"><p>No IP rules configured.</p></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div>
+        <!-- Locked Accounts -->
+        <div class="admin-section">
+            <div class="admin-section-header">
+                <h2><i class="fa-solid fa-lock text-danger"></i> Locked Admins</h2>
+            </div>
+            <div class="section-body" style="padding:0;">
+                {% if locked_admins %}
+                <ul style="list-style:none;padding:0;margin:0;">
+                    {% for a in locked_admins %}
+                    <li style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid var(--a-border);">
+                        <div>
+                            <div style="font-weight:500;">{{ a.username }}</div>
+                            <div class="text-sm text-danger">Failed attempts: {{ a.failed_attempts }}</div>
+                        </div>
+                        <form method="POST" action="{{ url_for('admin.unlock_admin', aid=a.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn-a btn-a-sm btn-a-outline">Unlock</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="empty-state" style="padding:1.5rem;"><p>No accounts currently locked.</p></div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Failures -->
+        <div class="admin-section">
+            <div class="admin-section-header">
+                <h2><i class="fa-solid fa-triangle-exclamation text-warn"></i> Recent Login Failures</h2>
+            </div>
+            <div class="section-body" style="padding:0; max-height: 250px; overflow-y: auto;">
+                <table class="admin-table">
+                    <tbody>
+                        {% for fail in recent_fails %}
+                        <tr>
+                            <td>
+                                <div style="font-weight:500;">{{ fail.username_attempt }}</div>
+                                <div class="text-sm text-muted">{{ fail.ip_address }}</div>
+                            </td>
+                            <td>
+                                <span class="badge badge-danger">{{ fail.status }}</span>
+                            </td>
+                            <td class="text-sm text-muted text-right">{{ fail.timestamp.strftime('%b %d, %H:%M') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="empty-state" style="padding:1.5rem;"><p>No recent failures.</p></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add IP Modal -->
+<div class="modal-overlay" id="add-ip-modal">
+    <div class="modal-box">
+        <form method="POST" action="{{ url_for('admin.security') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-header">
+                <h3>Add IP Rule</h3>
+                <button type="button" class="modal-close" onclick="closeModal('add-ip-modal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">IP Address</label>
+                    <input type="text" name="ip_address" class="form-control" required placeholder="e.g. 192.168.1.100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rule Type</label>
+                    <select name="rule_type" class="form-control" required>
+                        <option value="blacklist">Blacklist (Block Access)</option>
+                        <option value="whitelist">Whitelist (Always Allow)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Note (Optional)</label>
+                    <input type="text" name="note" class="form-control" placeholder="e.g. Malicious crawler">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-a btn-a-outline" onclick="closeModal('add-ip-modal')">Cancel</button>
+                <button type="submit" class="btn-a btn-a-primary">Save Rule</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

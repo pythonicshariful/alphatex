@@ -4,83 +4,195 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Admin | alphatex{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    {% block head %}{% endblock %}
 </head>
 <body class="admin-body">
 
 {% if admin is defined %}
+
+<!-- Omnibar overlay -->
+<div class="omnibar-overlay" id="omnibar-overlay">
+    <div class="omnibar-box">
+        <input class="omnibar-input" id="omnibar-input" placeholder="Search pages, users, orders…" autocomplete="off">
+        <div class="omnibar-results" id="omnibar-results"></div>
+    </div>
+</div>
+
+<!-- Layout -->
 <div class="admin-layout">
-    <!-- Sidebar -->
-    <aside class="admin-sidebar">
+
+    <!-- ── Sidebar ─────────────────────────────────── -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+
         <div class="admin-brand">
-            <span>alphatex</span>
+            <span class="brand-logo">alphatex</span>
             <small>Admin Panel</small>
+            <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" title="Toggle sidebar">
+                <i class="fa-solid fa-bars"></i>
+            </button>
         </div>
+
         <div class="admin-user-info">
-            <i class="fa-solid fa-user-shield"></i>
+            <div class="avatar"><i class="fa-solid fa-user-shield"></i></div>
             <div>
                 <p>{{ admin.username }}</p>
                 <small>{{ admin.role | replace('_', ' ') | title }}</small>
             </div>
         </div>
+
         <nav class="admin-nav">
+            <!-- Overview -->
+            <span class="nav-group-label">Overview</span>
             <a href="{{ url_for('admin.dashboard') }}" class="admin-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
-                <i class="fa-solid fa-gauge"></i> Dashboard
+                <i class="fa-solid fa-gauge"></i><span class="sidebar-label">Dashboard</span>
             </a>
+
+            <!-- Catalogue -->
             {% if admin.has_permission('products') %}
+            <span class="nav-group-label">Catalogue</span>
             <a href="{{ url_for('admin.categories') }}" class="admin-nav-item {% if request.endpoint == 'admin.categories' %}active{% endif %}">
-                <i class="fa-solid fa-list"></i> Categories
+                <i class="fa-solid fa-list"></i><span class="sidebar-label">Categories</span>
             </a>
-            <a href="{{ url_for('admin.products') }}" class="admin-nav-item {% if request.endpoint == 'admin.products' %}active{% endif %}">
-                <i class="fa-solid fa-shirt"></i> Products
+            <a href="{{ url_for('admin.offers') }}" class="admin-nav-item {% if request.endpoint == 'admin.offers' %}active{% endif %}">
+                <i class="fa-solid fa-gift"></i><span class="sidebar-label">Offers & Campaigns</span>
+            </a>
+            <a href="{{ url_for('admin.products') }}" class="admin-nav-item {% if 'product' in request.endpoint %}active{% endif %}">
+                <i class="fa-solid fa-shirt"></i><span class="sidebar-label">Products</span>
+            </a>
+            <a href="{{ url_for('admin.inventory') }}" class="admin-nav-item {% if request.endpoint == 'admin.inventory' %}active{% endif %}">
+                <i class="fa-solid fa-boxes-stacked"></i><span class="sidebar-label">Inventory</span>
+            </a>
+            {% if admin.has_permission('settings') %}
+            <a href="{{ url_for('admin.carousel') }}" class="admin-nav-item {% if request.endpoint == 'admin.carousel' %}active{% endif %}">
+                <i class="fa-solid fa-images"></i><span class="sidebar-label">Carousel</span>
+            </a>
+            {% endif %}
+            {% endif %}
+
+            <!-- Commerce -->
+            {% if admin.has_permission('orders') %}
+            <span class="nav-group-label">Commerce</span>
+            <a href="{{ url_for('admin.orders') }}" class="admin-nav-item {% if 'order' in request.endpoint %}active{% endif %}">
+                <i class="fa-solid fa-box-open"></i><span class="sidebar-label">Orders</span>
+            </a>
+            <a href="{{ url_for('admin.coupons') }}" class="admin-nav-item {% if request.endpoint == 'admin.coupons' %}active{% endif %}">
+                <i class="fa-solid fa-tag"></i><span class="sidebar-label">Coupons</span>
+            </a>
+            {% endif %}
+
+            <!-- People -->
+            {% if admin.has_permission('users') %}
+            <span class="nav-group-label">People</span>
+            <a href="{{ url_for('admin.users') }}" class="admin-nav-item {% if request.endpoint == 'admin.users' %}active{% endif %}">
+                <i class="fa-solid fa-users"></i><span class="sidebar-label">Customers</span>
             </a>
             {% endif %}
             {% if admin.has_permission('settings') %}
-            <a href="{{ url_for('admin.carousel') }}" class="admin-nav-item {% if request.endpoint == 'admin.carousel' %}active{% endif %}">
-                <i class="fa-solid fa-images"></i> Carousel
+            <a href="{{ url_for('admin.team') }}" class="admin-nav-item {% if request.endpoint == 'admin.team' %}active{% endif %}">
+                <i class="fa-solid fa-user-shield"></i><span class="sidebar-label">Admin Team</span>
             </a>
             {% endif %}
-            {% if admin.has_permission('users') %}
-            <a href="{{ url_for('admin.users') }}" class="admin-nav-item {% if request.endpoint == 'admin.users' %}active{% endif %}">
-                <i class="fa-solid fa-users"></i> Customers
-            </a>
-            {% endif %}
+
+            <!-- System -->
+            {% if admin.has_permission('logs') or admin.has_permission('settings') %}
+            <span class="nav-group-label">System</span>
             {% if admin.has_permission('logs') %}
-            <a href="{{ url_for('admin.login_history') }}" class="admin-nav-item {% if request.endpoint == 'admin.login_history' %}active{% endif %}">
-                <i class="fa-solid fa-shield-halved"></i> Login History
+            <a href="{{ url_for('admin.audit_log') }}" class="admin-nav-item {% if request.endpoint == 'admin.audit_log' %}active{% endif %}">
+                <i class="fa-solid fa-scroll"></i><span class="sidebar-label">Audit Log</span>
             </a>
+            <a href="{{ url_for('admin.security') }}" class="admin-nav-item {% if request.endpoint == 'admin.security' %}active{% endif %}">
+                <i class="fa-solid fa-shield-halved"></i><span class="sidebar-label">Security</span>
+            </a>
+            <a href="{{ url_for('admin.login_history') }}" class="admin-nav-item {% if request.endpoint == 'admin.login_history' %}active{% endif %}">
+                <i class="fa-solid fa-clock-rotate-left"></i><span class="sidebar-label">Login History</span>
+            </a>
+            {% endif %}
+            {% if admin.has_permission('settings') %}
+            <a href="{{ url_for('admin.settings') }}" class="admin-nav-item {% if request.endpoint == 'admin.settings' %}active{% endif %}">
+                <i class="fa-solid fa-gear"></i><span class="sidebar-label">Settings</span>
+            </a>
+            {% endif %}
             {% endif %}
         </nav>
+
         <div class="admin-sidebar-footer">
-            <div id="session-timer" style="color:var(--text-secondary);font-size:.75rem;margin-bottom:.5rem;">
-                Session: <span id="timer-display">30:00</span>
-            </div>
-            <a href="{{ url_for('admin.logout') }}" class="admin-nav-item" style="color:#ff4a4a;">
-                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            <div class="session-timer">⏱ Session: <span id="timer-display">30:00</span></div>
+            <a href="{{ url_for('admin.logout') }}" class="admin-nav-item" style="color: var(--a-danger);">
+                <i class="fa-solid fa-right-from-bracket"></i><span class="sidebar-label">Logout</span>
             </a>
         </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="admin-main">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            <div style="margin-bottom:1.5rem;">
-              {% for cat, msg in messages %}
-                <div class="admin-alert admin-alert-{{ cat }}">{{ msg }}</div>
-              {% endfor %}
+    <!-- ── Main ──────────────────────────────────────── -->
+    <div class="admin-content-wrap" id="admin-content-wrap">
+
+        <!-- Topbar -->
+        <header class="admin-topbar">
+            <div class="breadcrumbs">
+                <a href="{{ url_for('admin.dashboard') }}"><i class="fa-solid fa-house" style="font-size:.75rem;"></i></a>
+                {% block breadcrumb %}{% endblock %}
             </div>
-          {% endif %}
-        {% endwith %}
-        {% block content %}{% endblock %}
-    </main>
+
+            <!-- Omnibar trigger -->
+            <button class="omnibar-trigger" id="omnibar-trigger">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Search…</span>
+                <kbd>Ctrl K</kbd>
+            </button>
+
+            <div class="topbar-actions">
+                <!-- Theme toggle -->
+                <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle theme">
+                    <i class="fa-solid fa-sun"></i>
+                </button>
+                <!-- Notification bell -->
+                <button class="notif-btn" title="Notifications">
+                    <i class="fa-solid fa-bell"></i>
+                </button>
+            </div>
+        </header>
+
+        {% if session.get('impersonating') %}
+        <div class="impersonation-banner">
+            <i class="fa-solid fa-mask"></i>
+            You are viewing as user <strong>{{ session.get('impersonating_name') }}</strong>.
+            <a href="{{ url_for('admin.stop_impersonation') }}">Exit Impersonation</a>
+        </div>
+        {% endif %}
+
+        <!-- Flash messages -->
+        <main class="admin-main">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="admin-alerts">
+                {% for cat, msg in messages %}
+                <div class="admin-alert admin-alert-{{ cat }}">
+                    <i class="fa-solid {% if cat == 'success' %}fa-check-circle{% elif cat == 'error' or cat == 'danger' %}fa-circle-xmark{% elif cat == 'warning' %}fa-triangle-exclamation{% else %}fa-info-circle{% endif %}"></i>
+                    {{ msg }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
 </div>
+
 {% else %}
     {% block auth_content %}{% endblock %}
 {% endif %}
 
+<!-- Toast container (auto-created by JS) -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {% block scripts %}{% endblock %}
 </body>

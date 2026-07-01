@@ -1,0 +1,101 @@
+{% extends 'user/base.html' %}
+
+{% block account_content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">Welcome back, {{ current_user.display_name }}</h1>
+    <p class="dashboard-subtitle">Manage your personal info, saved delivery addresses, and track order histories.</p>
+</div>
+
+<!-- Overview Stats Cards -->
+<div class="overview-stats">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">{{ current_user.orders|length }}</span>
+            <span class="stat-label">Total Orders</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-location-dot"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">{{ addr_count }}</span>
+            <span class="stat-label">Saved Addresses</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fa-regular fa-heart"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">{{ wishlist_count }}</span>
+            <span class="stat-label">Wishlist Items</span>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Completion Indicator Card -->
+<div class="profile-card" style="margin-bottom: 2rem;">
+    <div class="profile-card-header" style="border: none; padding-bottom: 0; margin-bottom: 1rem;">
+        <h4 style="font-size: 1.1rem; font-weight: 600;">Profile Completion Status</h4>
+        <span style="font-weight: 600; color: var(--accent);">{{ completion }}%</span>
+    </div>
+    <div class="progress-container">
+        <div class="progress-bar" style="width: {{ completion }}%;"></div>
+    </div>
+    {% if completion < 100 %}
+    <p style="font-size: 0.88rem; color: var(--text-2); margin-top: 1rem;">
+        Complete your profile to speed up checkouts!
+        <a href="{{ url_for('user.profile') }}" style="color: var(--accent); text-decoration: underline;">Fill details now</a>
+    </p>
+    {% endif %}
+</div>
+
+<!-- Recent Orders Card -->
+<div class="profile-card">
+    <div class="profile-card-header">
+        <h2 class="profile-card-title">Recent Orders</h2>
+        {% if recent_orders %}
+        <a href="{{ url_for('user.orders') }}" style="font-size: 0.9rem; color: var(--accent); text-decoration: underline;">View All</a>
+        {% endif %}
+    </div>
+
+    {% if recent_orders %}
+    <div class="orders-table-wrapper">
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                    <td style="font-weight: 500;">#{{ order.id }}</td>
+                    <td>{{ order.created_at.strftime('%d %b, %Y') }}</td>
+                    <td>
+                        <span class="badge badge-{{ order.status|lower }}">
+                            {{ order.status }}
+                        </span>
+                    </td>
+                    <td style="font-weight: 600;">{{ order.total_amount }}</td>
+                    <td>
+                        <a href="{{ url_for('user.order_detail', order_id=order.id) }}" style="color: var(--accent);">
+                            <i class="fa-regular fa-eye"></i> View Details
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 2rem; color: var(--text-2);">
+        <i class="fa-solid fa-bag-shopping fa-2x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+        <p>You haven't placed any orders yet.</p>
+        <a href="{{ url_for('shop.index') }}" class="btn btn-fill" style="display: inline-flex; margin-top: 1rem; padding: 0.6rem 1.5rem; font-size: 0.88rem;">Start Shopping</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

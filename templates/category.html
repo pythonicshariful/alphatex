@@ -50,7 +50,20 @@
             </a>
             <div class="product-info">
                 <h4 class="product-name">{{ product.name }}</h4>
-                <p class="product-price">{{ product.price }}</p>
+                {% if product.compare_at_price %}
+                    {% set p_price = product.price|float %}
+                    {% set p_compare = product.compare_at_price|float %}
+                    {% if p_compare > p_price %}
+                    <p class="product-price">
+                        <span style="color:var(--text-2);text-decoration:line-through;margin-right:8px;font-size:0.9em;">৳{{ product.compare_at_price }}</span>
+                        ৳{{ product.price }}
+                    </p>
+                    {% else %}
+                    <p class="product-price">৳{{ product.price }}</p>
+                    {% endif %}
+                {% else %}
+                <p class="product-price">৳{{ product.price }}</p>
+                {% endif %}
                 <div class="product-swatches">
                     <span class="swatch active" style="background:#1a1a1a;" title="Black"></span>
                     <span class="swatch" style="background:#f5f0e8;" title="Ivory"></span>

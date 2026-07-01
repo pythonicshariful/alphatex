@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ offer.title }} | alphatex{% endblock %}
+{% block header_class %}solid-header{% endblock %}
+
+{% block content %}
+
+{% if offer.banner_image %}
+<div style="width: 100%; max-height: 400px; overflow: hidden; margin-bottom: 2rem; position: relative;">
+    <img src="{{ url_for('static', filename='images/offers/' + offer.banner_image) }}" 
+         alt="{{ offer.title }}" 
+         style="width: 100%; height: auto; object-fit: cover; display: block;">
+    <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 50%); display:flex; align-items:flex-end; padding: 2rem;">
+        <h1 style="color: white; font-size: 2.5rem; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">{{ offer.title }}</h1>
+    </div>
+</div>
+{% else %}
+<div class="page-header">
+    <span class="section-label">Special Offer</span>
+    <h1 class="reveal">{{ offer.title }}</h1>
+</div>
+{% endif %}
+
+<section class="section" style="padding-top: 0;">
+    <div class="products-grid" id="offer-product-grid">
+        {% for product in products %}
+        <div class="product-card reveal">
+            <button class="wishlist-btn" data-id="{{ product.id }}">
+                <i class="fa-regular fa-heart"></i>
+            </button>
+            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="display:block;">
+                <div class="product-image">
+                    {% set hero = product.hero_image %}
+                    {% if hero %}
+                    <div class="img-box" style="aspect-ratio:3/4;">
+                        <img class="blur-placeholder" src="{{ hero.blur_data_uri }}" alt="" aria-hidden="true">
+                        <picture>
+                            <source type="image/webp" srcset="{{ hero.srcset }}" sizes="(max-width:600px) 50vw, 25vw">
+                            <img src="{{ hero.src(600) }}"
+                                 alt="{{ hero.alt_text }}"
+                                 width="600" height="800"
+                                 loading="lazy"
+                                 class="blur-up"
+                                 onload="this.classList.add('loaded')">
+                        </picture>
+                    </div>
+                    {% else %}
+                    <img src="/static/images/{{ product.image }}" alt="{{ product.name }}" loading="lazy" width="600" height="800">
+                    {% endif %}
+                    <div class="product-quick">
+                        <button class="add-to-cart-btn"
+                            onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                            Add to Cart
+                        </button>
+                        <button class="quick-view-btn qv-trigger" onclick="event.preventDefault(); window.openQuickView('{{ product.name|replace('\'', '\\\'') }}', '{{ product.price }}', '{{ hero.src(600) if hero else url_for('static', filename='images/' + product.image) }}', '', '{{ url_for('shop.product_detail', product_id=product.id) }}')">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </a>
+            <div class="product-info">
+                <h4 class="product-name">{{ product.name }}</h4>
+                {% if product.compare_at_price %}
+                    {% set p_price = product.price|float %}
+                    {% set p_compare = product.compare_at_price|float %}
+                    {% if p_compare > p_price %}
+                    <p class="product-price">
+                        <span style="color:var(--text-2);text-decoration:line-through;margin-right:8px;font-size:0.9em;">৳{{ product.compare_at_price }}</span>
+                        <span style="color:var(--danger);font-weight:600;">৳{{ product.price }}</span>
+                    </p>
+                    {% else %}
+                    <p class="product-price">৳{{ product.price }}</p>
+                    {% endif %}
+                {% else %}
+                <p class="product-price">৳{{ product.price }}</p>
+                {% endif %}
+                <div class="product-swatches">
+                    <span class="swatch active" style="background:#1a1a1a;" title="Black"></span>
+                    <span class="swatch" style="background:#f5f0e8;" title="Ivory"></span>
+                    <span class="swatch" style="background:#3d2b1f;" title="Brown"></span>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
+            <h2>More items coming soon!</h2>
+            <p class="text-muted">Stay tuned for amazing deals in this offer.</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

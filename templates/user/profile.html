@@ -1,0 +1,92 @@
+{% extends 'user/base.html' %}
+
+{% block account_content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">Profile Details</h1>
+    <p class="dashboard-subtitle">Update your personal account credentials and security details.</p>
+</div>
+
+<div class="profile-card">
+    <div class="profile-card-header">
+        <h2 class="profile-card-title">Personal Information</h2>
+    </div>
+
+    <form action="{{ url_for('user.profile') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label" for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" class="form-input" 
+                       value="{{ current_user.full_name or '' }}" placeholder="Enter your full name" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input type="text" id="username" class="form-input" 
+                       value="{{ current_user.username or '' }}" disabled>
+                <small style="color: var(--text-3); font-size: 0.78rem;">Username cannot be modified.</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" class="form-input" 
+                       value="{{ current_user.email or '' }}" disabled>
+                <small style="color: var(--text-3); font-size: 0.78rem;">Email address cannot be modified.</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="phone">Primary Mobile Number</label>
+                {% if current_user.phone %}
+                    <input type="tel" id="phone" class="form-input" 
+                           value="{{ current_user.phone }}" disabled>
+                    <small style="color: var(--text-3); font-size: 0.78rem;">Primary number is verified and locked.</small>
+                {% else %}
+                    <input type="tel" id="phone" name="phone" class="form-input" 
+                           placeholder="e.g. 01XXXXXXXXX" required>
+                    <small style="color: var(--accent); font-size: 0.78rem;">Add your mobile number. Once saved, it cannot be modified.</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="alt_phone">Alternative Phone Number</label>
+                <input type="tel" id="alt_phone" name="alt_phone" class="form-input" 
+                       value="{{ current_user.alt_phone or '' }}" placeholder="e.g. 017XXXXXXXX">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="date_of_birth">Date of Birth</label>
+                <input type="date" id="date_of_birth" name="date_of_birth" class="form-input" 
+                       value="{{ current_user.date_of_birth.strftime('%Y-%m-%d') if current_user.date_of_birth else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="gender">Gender</label>
+                <select id="gender" name="gender" class="form-select">
+                    <option value="" {% if not current_user.gender %}selected{% endif %}>Select Gender</option>
+                    <option value="male" {% if current_user.gender == 'male' %}selected{% endif %}>Male</option>
+                    <option value="female" {% if current_user.gender == 'female' %}selected{% endif %}>Female</option>
+                    <option value="other" {% if current_user.gender == 'other' %}selected{% endif %}>Other</option>
+                    <option value="prefer_not" {% if current_user.gender == 'prefer_not' %}selected{% endif %}>Prefer not to say</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Google Account Connection</label>
+                <div style="display: flex; align-items: center; gap: 0.6rem; padding: 0.8rem; background: var(--surface-2); border-radius: var(--r); border: 1px solid var(--border);">
+                    <i class="fa-brands fa-google" style="color: #4285F4; font-size: 1.1rem;"></i>
+                    {% if current_user.social_provider == 'google' %}
+                        <span style="font-size: 0.9rem; color: var(--success); font-weight: 500;">Connected</span>
+                    {% else %}
+                        <span style="font-size: 0.9rem; color: var(--text-2);">Not Linked</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn btn-fill" style="padding: 0.75rem 2rem;">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

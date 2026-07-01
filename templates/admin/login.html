@@ -2,35 +2,35 @@
 {% block title %}Admin Login | alphatex{% endblock %}
 
 {% block auth_content %}
-<div class="auth-page" style="background:var(--surface-color);">
-    <div class="auth-card reveal">
-        <div class="auth-logo">alphatex</div>
-        <h1 class="auth-title">Admin Portal</h1>
-        <p class="auth-subtitle">Secure access for authorized personnel only</p>
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--a-bg);">
+    <div style="background: var(--a-surface); border: 1px solid var(--a-border); border-radius: 12px; width: 100%; max-width: 400px; padding: 2.5rem; box-shadow: 0 12px 40px rgba(0,0,0,0.2);">
+        
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-family: var(--font-heading, serif); font-size: 1.8rem; color: var(--a-accent); letter-spacing: 0.1em; margin-bottom: 0.5rem;">alphatex</div>
+            <h1 style="font-size: 1.2rem; font-weight: 600; color: var(--a-text);">Admin Portal</h1>
+            <p style="font-size: 0.85rem; color: var(--a-text2); margin-top: 0.25rem;">Secure access for authorized personnel only</p>
+        </div>
 
         {% if error %}
-        <div class="admin-alert admin-alert-error" style="margin-bottom:1.5rem;">{{ error }}</div>
+        <div class="admin-alert admin-alert-danger" style="margin-bottom:1.5rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-circle-xmark"></i> {{ error }}
+        </div>
         {% endif %}
 
         <form method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
-                <label>Admin Email</label>
-                <input type="email" name="email" class="form-control" placeholder="admin@alphatex.com"
-                       required autocomplete="username">
+                <label class="form-label">Admin Email</label>
+                <input type="email" name="email" class="form-control" placeholder="admin@alphatex.com" required autocomplete="username">
             </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" class="form-control"
-                       placeholder="Complex password required" required autocomplete="current-password">
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
             </div>
-            <button type="submit" class="btn" style="width:100%;margin-top:1rem;">
+            <button type="submit" class="btn-a btn-a-primary" style="width:100%; justify-content:center; padding: 0.8rem;">
                 <i class="fa-solid fa-shield-halved"></i> Secure Login
             </button>
         </form>
-        <p style="color:var(--text-secondary);font-size:.75rem;text-align:center;margin-top:2rem;">
-            2FA verification required on next step. Unauthorized access is logged.
-        </p>
     </div>
 </div>
 {% endblock %}

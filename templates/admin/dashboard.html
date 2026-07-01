@@ -1,43 +1,131 @@
 {% extends "admin/base.html" %}
 {% block title %}Dashboard | alphatex Admin{% endblock %}
+{% block breadcrumb %}<span>/</span> <span>Dashboard</span>{% endblock %}
 
 {% block content %}
-<div class="admin-header">
-    <h1>Dashboard</h1>
-    <p>Welcome back, {{ admin.username }}. You have <strong>{{ admin.role | replace('_', ' ') | title }}</strong> access.</p>
-</div>
-
-<div class="admin-stats-grid">
-    <div class="admin-stat-card">
-        <i class="fa-solid fa-shirt fa-2x" style="color:var(--accent-color);margin-bottom:1rem;"></i>
-        <h2>{{ stats.products }}</h2>
-        <p>Products</p>
+<div class="admin-page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Welcome back, <strong>{{ admin.username }}</strong> · {{ admin.role | replace('_', ' ') | title }}</p>
     </div>
-    <div class="admin-stat-card">
-        <i class="fa-solid fa-layer-group fa-2x" style="color:var(--accent-color);margin-bottom:1rem;"></i>
-        <h2>{{ stats.categories }}</h2>
-        <p>Categories</p>
-    </div>
-    <div class="admin-stat-card">
-        <i class="fa-solid fa-users fa-2x" style="color:var(--accent-color);margin-bottom:1rem;"></i>
-        <h2>{{ stats.users }}</h2>
-        <p>Customers</p>
-    </div>
-    <div class="admin-stat-card">
-        <i class="fa-solid fa-user-shield fa-2x" style="color:var(--accent-color);margin-bottom:1rem;"></i>
-        <h2>{{ stats.admins }}</h2>
-        <p>Admin Users</p>
+    <div class="page-actions">
+        <div class="date-range-pills">
+            {% for d in [7, 30, 90] %}
+            <button class="date-pill {% if range_days == d %}active{% endif %}" data-range="{{ d }}"
+                onclick="window.location.href='?range={{ d }}'">{{ d }}d</button>
+            {% endfor %}
+        </div>
     </div>
 </div>
 
-<div class="admin-section">
-    <h2>Your Role Permissions</h2>
-    <div style="display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem;">
-        {% for perm in admin.permissions %}
-        <span style="background:var(--surface-color);border:1px solid var(--accent-color);color:var(--accent-color);padding:.3rem 1rem;border-radius:4px;font-size:.85rem;text-transform:capitalize;">
-            {{ perm | replace('_', ' ') }}
-        </span>
-        {% endfor %}
+<!-- KPI Grid -->
+<div class="kpi-grid">
+    <div class="kpi-card" style="--kpi-color:#c9a84c;">
+        <div class="kpi-icon"><i class="fa-solid fa-coins"></i></div>
+        <div class="kpi-value">{{ stats.revenue }}</div>
+        <div class="kpi-label">Total Revenue</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#2980b9;">
+        <div class="kpi-icon"><i class="fa-solid fa-box-open"></i></div>
+        <div class="kpi-value">{{ stats.orders }}</div>
+        <div class="kpi-label">Total Orders</div>
+        <div class="kpi-sub">{{ stats.pending }} pending</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#27ae60;">
+        <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+        <div class="kpi-value">{{ stats.users }}</div>
+        <div class="kpi-label">Customers</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#9b59b6;">
+        <div class="kpi-icon"><i class="fa-solid fa-shirt"></i></div>
+        <div class="kpi-value">{{ stats.products }}</div>
+        <div class="kpi-label">Products</div>
+        <div class="kpi-sub">{{ stats.categories }} categories</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#e74c3c;">
+        <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
+        <div class="kpi-value">{{ stats.pending }}</div>
+        <div class="kpi-label">Pending Orders</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#f39c12;">
+        <div class="kpi-icon"><i class="fa-solid fa-user-shield"></i></div>
+        <div class="kpi-value">{{ stats.admins }}</div>
+        <div class="kpi-label">Admin Accounts</div>
     </div>
 </div>
+
+<!-- Charts -->
+<div class="chart-grid">
+    <!-- Revenue chart -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3><i class="fa-solid fa-chart-line" style="color:var(--a-accent);margin-right:.4rem;"></i>Revenue (Last {{ range_days }}d)</h3>
+        </div>
+        <div style="height:260px; position:relative;">
+            <canvas id="revenue-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- Orders by status -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3><i class="fa-solid fa-chart-bar" style="color:var(--a-accent);margin-right:.4rem;"></i>Orders by Status</h3>
+        </div>
+        <div style="height:260px; position:relative;">
+            <canvas id="orders-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Category breakdown + Recent Audit Log -->
+<div style="display:grid;grid-template-columns:1fr 1.6fr;gap:1.25rem;margin-bottom:1.5rem;">
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3><i class="fa-solid fa-chart-pie" style="color:var(--a-accent);margin-right:.4rem;"></i>Products by Category</h3>
+        </div>
+        <div style="height:220px;position:relative;">
+            <canvas id="category-chart"></canvas>
+        </div>
+    </div>
+
+    <div class="admin-section" style="margin:0;">
+        <div class="admin-section-header">
+            <h2><i class="fa-solid fa-scroll" style="color:var(--a-accent);margin-right:.4rem;"></i>Recent Activity</h2>
+            <a href="{{ url_for('admin.audit_log') }}" class="btn-a btn-a-outline btn-a-sm">View All</a>
+        </div>
+        {% if recent_logs %}
+        <div class="audit-timeline">
+            {% for log in recent_logs %}
+            <div class="audit-entry">
+                <div class="audit-dot"></div>
+                <div style="flex:1;min-width:0;">
+                    <div class="audit-action">{{ log.action | replace('_', ' ') | title }}</div>
+                    <div class="audit-detail">{{ log.details or '—' }}</div>
+                    <div class="audit-admin">by {{ log.admin_username }} · <span class="audit-time">{{ log.timestamp.strftime('%b %d, %H:%M') }}</span></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state"><i class="fa-solid fa-scroll"></i><p>No activity yet.</p></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+initRevenueChart({
+    labels: {{ rev_labels | tojson }},
+    values: {{ rev_values | tojson }}
+});
+initOrdersBarChart({
+    labels: {{ order_statuses | tojson }},
+    values: {{ order_counts | tojson }}
+});
+initCategoryChart({
+    labels: {{ cat_labels | tojson }},
+    values: {{ cat_counts | tojson }}
+});
+</script>
 {% endblock %}

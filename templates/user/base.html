@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}My Account | alphatex{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% block account_head %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="account-container">
+    <!-- Sidebar -->
+    <aside class="account-sidebar">
+        <div class="sidebar-user-info">
+            <div class="avatar-wrapper">
+                <img src="{{ current_user.avatar_url }}" alt="Profile Picture" class="avatar-image" id="avatar-preview">
+                <label for="avatar-input" class="avatar-edit-btn" title="Change Avatar">
+                    <i class="fa-solid fa-camera"></i>
+                </label>
+                <form id="avatar-form" class="avatar-input-wrapper">
+                    <input type="file" id="avatar-input" name="avatar" accept="image/*">
+                </form>
+            </div>
+            <h3 class="sidebar-user-name">{{ current_user.display_name }}</h3>
+            <p class="sidebar-user-email">{{ current_user.email or current_user.phone }}</p>
+        </div>
+
+        <nav class="account-nav">
+            <a href="{{ url_for('user.dashboard') }}" class="account-nav-item {% if request.endpoint == 'user.dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-line"></i> Dashboard
+            </a>
+            <a href="{{ url_for('user.profile') }}" class="account-nav-item {% if request.endpoint == 'user.profile' %}active{% endif %}">
+                <i class="fa-regular fa-user"></i> Profile Details
+            </a>
+            <a href="{{ url_for('user.addresses') }}" class="account-nav-item {% if request.endpoint in ['user.addresses', 'user.address_add', 'user.address_edit'] %}active{% endif %}">
+                <i class="fa-solid fa-location-dot"></i> Delivery Addresses
+            </a>
+            <a href="{{ url_for('user.orders') }}" class="account-nav-item {% if request.endpoint in ['user.orders', 'user.order_detail'] %}active{% endif %}">
+                <i class="fa-solid fa-bag-shopping"></i> My Orders
+            </a>
+            {% if not current_user.social_provider or current_user.password_hash %}
+            <a href="{{ url_for('user.change_password') }}" class="account-nav-item {% if request.endpoint == 'user.change_password' %}active{% endif %}">
+                <i class="fa-solid fa-key"></i> Change Password
+            </a>
+            {% endif %}
+            <a href="{{ url_for('auth.logout') }}" class="account-nav-item" style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1.5rem; color: var(--danger);">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="account-content">
+        {% block account_content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const avatarInput = document.getElementById('avatar-input');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const formData = new FormData();
+                formData.append('avatar', this.files[0]);
+
+                // Show loading state
+                const preview = document.getElementById('avatar-preview');
+                const originalSrc = preview.src;
+                preview.style.opacity = '0.5';
+
+                fetch('{{ url_for("user.avatar_upload") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    preview.style.opacity = '1';
+                    if (data.success) {
+                        preview.src = data.url;
+                        if (typeof showToast === 'function') {
+                            showToast('Profile picture updated!', 'success');
+                        } else {
+                            alert('Profile picture updated successfully!');
+                        }
+                    } else {
+                        preview.src = originalSrc;
+                        alert(data.error || 'Upload failed');
+                    }
+                })
+                .catch(err => {
+                    preview.style.opacity = '1';
+                    preview.src = originalSrc;
+                    console.error(err);
+                    alert('An error occurred during upload.');
+                });
+            }
+        });
+    }
+});
+</script>
+{% block account_scripts %}{% endblock %}
+{% endblock %}

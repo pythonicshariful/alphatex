@@ -1,6 +1,6 @@
 from flask import Flask
 from config import Config
-from extensions import db, login_manager, limiter, csrf
+from extensions import db, login_manager, limiter, csrf, oauth
 from models import User
 from migrate import migrate_legacy_images
 import pyotp
@@ -15,7 +15,25 @@ def create_app():
     login_manager.init_app(app)
     limiter.init_app(app)
     csrf.init_app(app)
+    oauth.init_app(app)
 
+    # Register OAuth providers
+    oauth.register(
+        name='google',
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        client_kwargs={
+            'scope': 'openid email profile'
+        }
+    )
+    oauth.register(
+        name='facebook',
+        api_base_url='https://graph.facebook.com/v16.0/',
+        access_token_url='https://graph.facebook.com/v16.0/oauth/access_token',
+        authorize_url='https://www.facebook.com/v16.0/dialog/oauth',
+        client_kwargs={
+            'scope': 'email public_profile'
+        }
+    )
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'
 
@@ -27,9 +45,11 @@ def create_app():
     from auth.routes import auth_bp
     from admin.routes import admin_bp
     from shop.routes import shop_bp
+    from user.routes import user_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(shop_bp)
+    app.register_blueprint(user_bp)
 
     with app.app_context():
         db.create_all()
@@ -64,15 +84,15 @@ def seed_db():
         secret = pyotp.random_base32()
         admin = AdminUser(
             username='superadmin',
-            email='admin@illiyeen.com',
+            email='test@gmail.com',
             role='super_admin',
             totp_secret=secret,
             is_2fa_enabled=False,
         )
-        admin.set_password('Admin@1234')
+        admin.set_password('12345678')
         db.session.add(admin)
         db.session.commit()
-        print(f'[Seed] Super admin created: admin@illiyeen.com / Admin@1234')
+        print(f'[Seed] Super admin created: test@gmail.com / 12345678')
         print(f'[Seed] TOTP Secret (for manual setup): {secret}')
 
 

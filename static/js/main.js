@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ── Dark Mode (load from storage) ──────────────────────
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
     // ── Header scroll effect ────────────────────────────────

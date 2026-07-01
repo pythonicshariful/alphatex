@@ -27,3 +27,9 @@ class Config:
 
     # IP whitelist (empty = disabled)
     ADMIN_ALLOWED_IPS = [ip.strip() for ip in (os.environ.get('ADMIN_ALLOWED_IPS') or '').split(',') if ip.strip()]
+
+    # OAuth Credentials
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+    FACEBOOK_CLIENT_ID = os.environ.get('FACEBOOK_CLIENT_ID')
+    FACEBOOK_CLIENT_SECRET = os.environ.get('FACEBOOK_CLIENT_SECRET')

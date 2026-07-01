@@ -1,0 +1,74 @@
+{% extends 'user/base.html' %}
+
+{% block account_content %}
+<div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1 class="dashboard-title">Saved Addresses</h1>
+        <p class="dashboard-subtitle">Manage multiple shipping addresses for faster checkouts.</p>
+    </div>
+    <a href="{{ url_for('user.address_add') }}" class="btn btn-fill" style="padding: 0.65rem 1.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fa-solid fa-plus"></i> Add New Address
+    </a>
+</div>
+
+{% if addresses %}
+<div class="addresses-grid">
+    {% for addr in addresses %}
+    <div class="address-card {% if addr.is_default %}default-address{% endif %}">
+        <div>
+            <div class="address-header">
+                <span class="address-label label-{{ addr.label|lower }}">{{ addr.label }}</span>
+                {% if addr.is_default %}
+                    <span class="address-default-badge"><i class="fa-solid fa-circle-check"></i> Default</span>
+                {% endif %}
+            </div>
+            <div class="address-body">
+                <h4 class="address-name">{{ addr.recipient_name }}</h4>
+                <p class="address-phone"><i class="fa-solid fa-phone" style="font-size: 0.8rem; margin-right: 0.3rem;"></i> {{ addr.phone }}</p>
+                <p class="address-text">{{ addr.full_address }}</p>
+                {% if addr.delivery_instructions %}
+                    <p style="font-size: 0.82rem; color: var(--accent); margin-top: 0.5rem; font-style: italic;">
+                        <i class="fa-solid fa-circle-info"></i> {{ addr.delivery_instructions }}
+                    </p>
+                {% endif %}
+                {% if addr.maps_link %}
+                    <p style="margin-top: 0.5rem;">
+                        <a href="{{ addr.maps_link }}" target="_blank" style="color: var(--accent); font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.3rem;">
+                            <i class="fa-solid fa-map-location-dot"></i> View on Google Maps
+                        </a>
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="address-actions">
+            <a href="{{ url_for('user.address_edit', addr_id=addr.id) }}" class="address-action-btn">
+                <i class="fa-regular fa-pen-to-square"></i> Edit
+            </a>
+            <form action="{{ url_for('user.address_delete', addr_id=addr.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this address?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="address-action-btn delete-btn">
+                    <i class="fa-regular fa-trash-can"></i> Delete
+                </button>
+            </form>
+            {% if not addr.is_default %}
+            <form action="{{ url_for('user.address_set_default', addr_id=addr.id) }}" method="POST" style="display: inline; margin-left: auto;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="address-action-btn" style="color: var(--accent);">
+                    Set Default
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="profile-card" style="text-align: center; padding: 3rem 1.5rem; color: var(--text-2);">
+    <i class="fa-solid fa-location-dot fa-3x" style="margin-bottom: 1.5rem; opacity: 0.5;"></i>
+    <h3>No Saved Addresses</h3>
+    <p style="margin-bottom: 2rem;">Please add a delivery address to complete order checkouts.</p>
+    <a href="{{ url_for('user.address_add') }}" class="btn btn-fill" style="padding: 0.75rem 2rem;">Add Your First Address</a>
+</div>
+{% endif %}
+{% endblock %}

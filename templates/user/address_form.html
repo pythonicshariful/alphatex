@@ -1,0 +1,208 @@
+{% extends 'user/base.html' %}
+
+{% block account_content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">{% if address %}Edit Address{% else %}Add Delivery Address{% endif %}</h1>
+    <p class="dashboard-subtitle">Please enter correct shipment and contact details for deliveries inside Bangladesh.</p>
+</div>
+
+<div class="profile-card">
+    <form action="{% if address %}{{ url_for('user.address_edit', addr_id=address.id) }}{% else %}{{ url_for('user.address_add') }}{% endif %}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label" for="recipient_name">Recipient Full Name *</label>
+                <input type="text" id="recipient_name" name="recipient_name" class="form-input" 
+                       value="{{ address.recipient_name if address else '' }}" placeholder="Who should receive this delivery?" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="phone">Recipient Mobile Number *</label>
+                <input type="tel" id="phone" name="phone" class="form-input" 
+                       value="{{ address.phone if address else '' }}" placeholder="e.g. 01XXXXXXXXX" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="division">Division *</label>
+                <select id="division" name="division" class="form-select" required>
+                    <option value="">Select Division</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="district">District *</label>
+                <select id="district" name="district" class="form-select" required disabled>
+                    <option value="">Select District</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="upazila">Upazila / Thana *</label>
+                <select id="upazila" name="upazila" class="form-select" required disabled>
+                    <option value="">Select Upazila / Thana</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="union_ward">Union / Ward (Optional)</label>
+                <input type="text" id="union_ward" name="union_ward" class="form-input" 
+                       value="{{ address.union_ward if address and address.union_ward else '' }}" placeholder="Enter Union or Ward No.">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="area">Area / Locality / Mohalla *</label>
+                <input type="text" id="area" name="area" class="form-input" 
+                       value="{{ address.area if address and address.area else '' }}" placeholder="e.g. Banani Road 11 / Sector 3" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="road">Road / Street Name (Optional)</label>
+                <input type="text" id="road" name="road" class="form-input" 
+                       value="{{ address.road if address and address.road else '' }}" placeholder="e.g. Road 15/A">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="house_no">House / Holding No. (Optional)</label>
+                <input type="text" id="house_no" name="house_no" class="form-input" 
+                       value="{{ address.house_no if address else '' }}" placeholder="e.g. House 42 or Holding 128">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="apartment">Flat / Apartment / Suite (Optional)</label>
+                <input type="text" id="apartment" name="apartment" class="form-input" 
+                       value="{{ address.apartment if address and address.apartment else '' }}" placeholder="e.g. Flat 4B, 3rd Floor">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="postal_code">Postal Code / ZIP (Optional)</label>
+                <input type="text" id="postal_code" name="postal_code" class="form-input" 
+                       value="{{ address.postal_code if address and address.postal_code else '' }}" placeholder="e.g. 1213">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="label">Address Label</label>
+                <select id="label" name="label" class="form-select">
+                    {% for l in labels %}
+                    <option value="{{ l }}" {% if address and address.label == l %}selected{% endif %}>{{ l }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group full-width">
+                <label class="form-label" for="maps_link">Google Maps URL (Optional)</label>
+                <input type="url" id="maps_link" name="maps_link" class="form-input" 
+                       value="{{ address.maps_link if address and address.maps_link else '' }}" placeholder="Paste Google Maps location link (https://maps.google.com/...)">
+            </div>
+
+            <div class="form-group full-width">
+                <label class="form-label" for="delivery_instructions">Special Delivery Instructions (Optional)</label>
+                <textarea id="delivery_instructions" name="delivery_instructions" class="form-input" rows="3" 
+                          placeholder="e.g. Please leave package at reception or ring bell twice.">{{ address.delivery_instructions if address and address.delivery_instructions else '' }}</textarea>
+            </div>
+
+            <div class="form-group full-width" style="flex-direction: row; align-items: center; gap: 0.8rem; margin-top: 0.5rem;">
+                <input type="checkbox" id="is_default" name="is_default" value="true" {% if address and address.is_default %}checked{% endif %}>
+                <label for="is_default" style="font-size: 0.95rem; cursor: pointer; user-select: none;">Set as default delivery address</label>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn btn-fill" style="padding: 0.75rem 2.5rem;">Save Address</button>
+            <a href="{{ url_for('user.addresses') }}" class="btn" style="padding: 0.75rem 2.5rem; border: 1px solid var(--border);">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block account_scripts %}
+<script src="{{ url_for('static', filename='js/bd_locations.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const divisionSel = document.getElementById('division');
+    const districtSel = document.getElementById('district');
+    const upazilaSel = document.getElementById('upazila');
+
+    // Initial values if editing
+    const initialDiv = "{{ address.division if address else '' }}";
+    const initialDist = "{{ address.district if address else '' }}";
+    const initialUpz = "{{ address.upazila if address else '' }}";
+
+    // Populate divisions
+    for (let div in bdLocations) {
+        let opt = document.createElement('option');
+        opt.value = div;
+        opt.textContent = div;
+        if (div === initialDiv) opt.selected = true;
+        divisionSel.appendChild(opt);
+    }
+
+    // Trigger division load on load if edit mode
+    if (initialDiv) {
+        populateDistricts(initialDiv, initialDist);
+    }
+
+    divisionSel.addEventListener('change', function() {
+        const div = this.value;
+        if (!div) {
+            resetSelect(districtSel, 'Select District');
+            resetSelect(upazilaSel, 'Select Upazila / Thana');
+            return;
+        }
+        populateDistricts(div);
+    });
+
+    districtSel.addEventListener('change', function() {
+        const div = divisionSel.value;
+        const dist = this.value;
+        if (!dist) {
+            resetSelect(upazilaSel, 'Select Upazila / Thana');
+            return;
+        }
+        populateUpazilas(div, dist);
+    });
+
+    function populateDistricts(div, selectVal = '') {
+        resetSelect(districtSel, 'Select District');
+        resetSelect(upazilaSel, 'Select Upazila / Thana');
+        
+        districtSel.disabled = false;
+        const districts = bdLocations[div];
+        for (let dist in districts) {
+            let opt = document.createElement('option');
+            opt.value = dist;
+            opt.textContent = dist;
+            if (dist === selectVal) opt.selected = true;
+            districtSel.appendChild(opt);
+        }
+
+        if (selectVal) {
+            populateUpazilas(div, selectVal, initialUpz);
+        }
+    }
+
+    function populateUpazilas(div, dist, selectVal = '') {
+        resetSelect(upazilaSel, 'Select Upazila / Thana');
+        
+        upazilaSel.disabled = false;
+        const upazilas = bdLocations[div][dist];
+        upazilas.forEach(upz => {
+            let opt = document.createElement('option');
+            opt.value = upz;
+            opt.textContent = upz;
+            if (upz === selectVal) opt.selected = true;
+            upazilaSel.appendChild(opt);
+        });
+    }
+
+    function resetSelect(selectEl, placeholderText) {
+        selectEl.innerHTML = '';
+        let opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = placeholderText;
+        selectEl.appendChild(opt);
+        selectEl.disabled = true;
+    }
+});
+</script>
+{% endblock %}

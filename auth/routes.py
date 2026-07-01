@@ -307,6 +307,95 @@ def reset_set_password():
     return render_template('auth/set_password.html', phone=phone, mode='reset')
 
 
+# -------------------------------------------------------
+# Social Login
+# -------------------------------------------------------
+
+@auth_bp.route('/login/google')
+def google_login():
+    from extensions import oauth
+    redirect_uri = url_for('auth.google_callback', _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
+
+@auth_bp.route('/callback/google')
+def google_callback():
+    from extensions import oauth
+    token = oauth.google.authorize_access_token()
+    user_info = token.get('userinfo')
+    if not user_info:
+        flash('Failed to fetch user info from Google.', 'error')
+        return redirect(url_for('auth.login'))
+    
+    email = user_info.get('email')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        # Save initial name from google to full_name
+        full_name = user_info.get('name')
+        user = User(email=email, social_provider='google', is_verified=True, 
+                    username=email.split('@')[0], full_name=full_name)
+        db.session.add(user)
+        db.session.commit()
+    else:
+        user.social_provider = 'google'
+        user.is_verified = True
+        db.session.commit()
+    
+    # Update last login
+    user.last_login = datetime.utcnow()
+    db.session.commit()
+    
+    login_user(user, remember=True)
+    
+    # Post-login redirect: prompt profile completion if incomplete
+    if not user.profile_complete:
+        flash('Welcome! Please complete your profile to enable seamless checkouts and delivery.', 'info')
+        return redirect(url_for('user.profile'))
+        
+    return redirect(url_for('shop.index'))
+
+
+@auth_bp.route('/login/facebook')
+def facebook_login():
+    from extensions import oauth
+    redirect_uri = url_for('auth.facebook_callback', _external=True)
+    return oauth.facebook.authorize_redirect(redirect_uri)
+
+@auth_bp.route('/callback/facebook')
+def facebook_callback():
+    from extensions import oauth
+    token = oauth.facebook.authorize_access_token()
+    resp = oauth.facebook.get('me?fields=id,name,email')
+    user_info = resp.json()
+    if not user_info.get('email'):
+        flash('Failed to fetch email from Facebook.', 'error')
+        return redirect(url_for('auth.login'))
+    
+    email = user_info.get('email')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        full_name = user_info.get('name')
+        user = User(email=email, social_provider='facebook', is_verified=True, 
+                    username=email.split('@')[0], full_name=full_name)
+        db.session.add(user)
+        db.session.commit()
+    else:
+        user.social_provider = 'facebook'
+        user.is_verified = True
+        db.session.commit()
+    
+    # Update last login
+    user.last_login = datetime.utcnow()
+    db.session.commit()
+    
+    login_user(user, remember=True)
+    
+    if not user.profile_complete:
+        flash('Welcome! Please complete your profile to enable seamless checkouts and delivery.', 'info')
+        return redirect(url_for('user.profile'))
+        
+    return redirect(url_for('shop.index'))
+
+
 @auth_bp.route('/logout')
 @login_required
 def logout():

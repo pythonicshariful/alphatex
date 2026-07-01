@@ -1,35 +1,51 @@
 {% extends "admin/base.html" %}
 {% block title %}Login History | alphatex Admin{% endblock %}
+{% block breadcrumb %}<span>/</span> <span>System</span> <span>/</span> <span>Login History</span>{% endblock %}
 
 {% block content %}
-<div class="admin-header">
-    <h1>Login History</h1>
-    <p>Last 200 admin login attempts (success &amp; failed)</p>
+<div class="admin-page-header">
+    <div>
+        <h1>Login History</h1>
+        <p>Monitor all administrative login attempts.</p>
+    </div>
 </div>
+
 <div class="admin-section">
-    <table class="admin-table">
-        <thead>
-            <tr><th>Timestamp</th><th>Email</th><th>IP Address</th><th>Status</th><th>User Agent</th></tr>
-        </thead>
-        <tbody>
-            {% for log in logs %}
-            <tr>
-                <td style="font-size:.8rem;color:var(--text-secondary);">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                <td>{{ log.email }}</td>
-                <td><code style="font-size:.8rem;">{{ log.ip_address }}</code></td>
-                <td>
-                    {% if log.status == 'success' %}
-                        <span style="color:#4caf50;font-weight:500;">✓ Success</span>
-                    {% elif log.status == 'locked' %}
-                        <span style="color:#ff4a4a;font-weight:500;">🔒 Locked</span>
-                    {% else %}
-                        <span style="color:#ff9800;">✗ {{ log.status | replace('_', ' ') | title }}</span>
-                    {% endif %}
-                </td>
-                <td style="font-size:.75rem;color:var(--text-secondary);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ log.user_agent }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Username Attempt</th>
+                    <th>Status</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td style="white-space:nowrap;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td style="font-weight:500;color:var(--a-text);">{{ log.username_attempt }}</td>
+                    <td>
+                        {% if log.status == 'success' %}
+                            <span class="badge badge-success">Success</span>
+                        {% elif log.status == 'fail_password' %}
+                            <span class="badge badge-danger">Failed Password</span>
+                        {% elif log.status == 'fail_2fa' %}
+                            <span class="badge badge-warn">Failed 2FA</span>
+                        {% elif log.status == 'locked' %}
+                            <span class="badge badge-danger">Account Locked</span>
+                        {% else %}
+                            <span class="badge badge-neutral">{{ log.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-sm text-muted">{{ log.ip_address }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="empty-state"><p>No login history recorded.</p></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

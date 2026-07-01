@@ -1,0 +1,134 @@
+{% extends "admin/base.html" %}
+{% block title %}Coupons | alphatex Admin{% endblock %}
+{% block breadcrumb %}<span>/</span> <span>Commerce</span> <span>/</span> <span>Coupons</span>{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <div>
+        <h1>Coupons & Discounts</h1>
+        <p>Manage promotional codes and cart discounts.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn-a btn-a-primary" onclick="openModal('add-coupon-modal')"><i class="fa-solid fa-plus"></i> New Coupon</button>
+    </div>
+</div>
+
+<div class="admin-section">
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Discount</th>
+                    <th>Constraints</th>
+                    <th>Usage</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in coupons %}
+                <tr>
+                    <td style="font-weight:600; font-family:monospace; font-size:1rem; color:var(--a-accent);">
+                        {{ c.code }}
+                    </td>
+                    <td>
+                        {% if c.discount_type == 'percent' %}
+                            <span class="badge badge-info">{{ c.value }}% OFF</span>
+                        {% else %}
+                            <span class="badge badge-info">৳{{ c.value }} OFF</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="text-sm text-muted">
+                            Min order: ৳{{ c.min_order }}<br>
+                            Expires: {{ c.expires_at.strftime('%Y-%m-%d') if c.expires_at else 'Never' }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="stock-bar-wrap">
+                            <span class="text-sm">{{ c.times_used }} / {{ c.max_uses if c.max_uses else '∞' }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if not c.is_valid %}
+                            <span class="badge badge-danger">Inactive/Expired</span>
+                        {% else %}
+                            <span class="badge badge-success">Active</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:.5rem;">
+                            <form method="POST" action="{{ url_for('admin.toggle_coupon', cid=c.id) }}" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn-a btn-a-sm btn-a-outline">
+                                    {% if c.is_active %}Disable{% else %}Enable{% endif %}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin.delete_coupon', cid=c.id) }}" style="display:inline;" onsubmit="return confirm('Delete this coupon?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn-a btn-a-sm btn-a-outline text-danger"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="empty-state"><p>No coupons found.</p></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="add-coupon-modal">
+    <div class="modal-box">
+        <form method="POST" action="{{ url_for('admin.coupons') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-header">
+                <h3>Create Coupon</h3>
+                <button type="button" class="modal-close" onclick="closeModal('add-coupon-modal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Coupon Code</label>
+                        <input type="text" name="code" class="form-control" style="text-transform:uppercase;" required placeholder="e.g. SUMMER20">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Type</label>
+                        <select name="discount_type" class="form-control" required>
+                            <option value="percent">Percentage (%)</option>
+                            <option value="fixed">Fixed Amount (৳)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Discount Value</label>
+                        <input type="number" name="value" class="form-control" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Min Order Amount (৳)</label>
+                        <input type="number" name="min_order" class="form-control" value="0" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Max Uses (Leave blank for unlimited)</label>
+                        <input type="number" name="max_uses" class="form-control" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Expiration Date</label>
+                        <input type="date" name="expires_at" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-a btn-a-outline" onclick="closeModal('add-coupon-modal')">Cancel</button>
+                <button type="submit" class="btn-a btn-a-primary">Create Coupon</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

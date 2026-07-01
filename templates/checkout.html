@@ -1,0 +1,550 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout | alphatex{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+<style>
+.checkout-container {
+    max-width: 1200px;
+    margin: 100px auto 60px auto;
+    padding: 0 5%;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
+}
+
+.checkout-section-title {
+    font-family: var(--font-h);
+    font-size: 1.6rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.8rem;
+    margin-bottom: 1.5rem;
+}
+
+.address-select-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    transition: all var(--t);
+    position: relative;
+}
+
+.address-select-card:hover {
+    border-color: var(--accent);
+}
+
+.address-select-card.selected {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+}
+
+.address-select-card input[type="radio"] {
+    margin-top: 0.35rem;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.checkout-summary-item {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1rem;
+}
+
+.checkout-summary-item img {
+    width: 50px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.checkout-summary-item-info {
+    flex-grow: 1;
+}
+
+.checkout-summary-item-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.checkout-summary-item-price {
+    font-weight: 600;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--t);
+}
+
+.modal-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 2rem;
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 991px) {
+    .checkout-container {
+        grid-template-columns: 1fr;
+        margin-top: 80px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container" id="checkout-main-view">
+    <!-- Left Column: Address Selection & Payment -->
+    <div>
+        <!-- Shipping Address Section -->
+        <div class="profile-card" style="margin-bottom: 2rem;">
+            <div class="checkout-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>1. Shipping Address</span>
+                <button class="btn btn-fill" id="btn-add-address-checkout" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                    <i class="fa-solid fa-plus"></i> Add New
+                </button>
+            </div>
+
+            <div id="address-list-container">
+                {% if addresses %}
+                    {% for addr in addresses %}
+                    <div class="address-select-card {% if addr.is_default %}selected{% endif %}" data-addr-id="{{ addr.id }}">
+                        <input type="radio" name="selected_address" value="{{ addr.id }}" {% if addr.is_default %}checked{% endif %}>
+                        <div style="flex-grow: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                                <strong style="font-size: 1rem;">{{ addr.recipient_name }}</strong>
+                                <span class="address-label label-{{ addr.label|lower }}" style="font-size: 0.7rem; padding: 0.1rem 0.4rem;">{{ addr.label }}</span>
+                            </div>
+                            <p style="font-size: 0.88rem; color: var(--text-2); margin-bottom: 0.3rem;">{{ addr.phone }}</p>
+                            <p style="font-size: 0.88rem; color: var(--text-2);">{{ addr.full_address }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 2rem; color: var(--text-2);" id="no-addresses-notice">
+                        <i class="fa-solid fa-location-dot fa-2x" style="margin-bottom: 0.8rem; opacity: 0.5;"></i>
+                        <p>No shipping addresses found. Please add an address to proceed.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Special Instructions Notes -->
+        <div class="profile-card">
+            <div class="checkout-section-title">2. Order Notes</div>
+            <textarea id="order-notes" class="form-input" rows="3" style="width: 100%; resize: vertical;" placeholder="Special notes for delivery (optional)..."></textarea>
+        </div>
+    </div>
+
+    <!-- Right Column: Order Summary & Checkout Action -->
+    <div class="order-summary-sidebar">
+        <div class="profile-card">
+            <div class="checkout-section-title">Order Summary</div>
+            
+            <div id="checkout-summary-items-list">
+                <!-- Injected via JS -->
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="summary-subtotal">৳0</span>
+                </div>
+                <div class="summary-row" style="margin-top: 0.5rem;">
+                    <span>Delivery Charge</span>
+                    <span style="color: var(--success);" id="summary-shipping">Free</span>
+                </div>
+                <div class="summary-row total" style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem; font-size: 1.2rem; font-weight: 600;">
+                    <span>Total</span>
+                    <span id="summary-total">৳0</span>
+                </div>
+            </div>
+
+            <button class="btn btn-fill" id="btn-place-order" style="width: 100%; justify-content: center; margin-top: 1.5rem; padding: 1rem;">
+                Place Order (Cash on Delivery)
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Address during Checkout -->
+<div class="modal-backdrop" id="address-modal">
+    <div class="modal-box">
+        <h3 class="checkout-section-title" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <span>Add Delivery Address</span>
+            <button type="button" id="btn-close-modal" style="background: none; border: none; font-size: 1.5rem; color: var(--text-2); cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+        </h3>
+
+        <form id="checkout-address-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="recipient_name">Recipient Full Name *</label>
+                    <input type="text" id="recipient_name" class="form-input" placeholder="Recipient's Name" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="phone">Recipient Mobile Number *</label>
+                    <input type="tel" id="phone" class="form-input" placeholder="e.g. 01XXXXXXXXX" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="division">Division *</label>
+                    <select id="division" class="form-select" required>
+                        <option value="">Select Division</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="district">District *</label>
+                    <select id="district" class="form-select" required disabled>
+                        <option value="">Select District</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="upazila">Upazila / Thana *</label>
+                    <select id="upazila" class="form-select" required disabled>
+                        <option value="">Select Upazila / Thana</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="union_ward">Union / Ward (Optional)</label>
+                    <input type="text" id="union_ward" class="form-input" placeholder="Enter Union or Ward No.">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="area">Area / Locality / Mohalla *</label>
+                    <input type="text" id="area" class="form-input" placeholder="e.g. Banani Road 11" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="road">Road / Street Name (Optional)</label>
+                    <input type="text" id="road" class="form-input" placeholder="e.g. Road 15/A">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="house_no">House / Holding No. (Optional)</label>
+                    <input type="text" id="house_no" class="form-input" placeholder="e.g. House 42">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="apartment">Flat / Apartment (Optional)</label>
+                    <input type="text" id="apartment" class="form-input" placeholder="e.g. Flat 4B">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="postal_code">Postal Code (Optional)</label>
+                    <input type="text" id="postal_code" class="form-input" placeholder="e.g. 1213">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="label">Address Label</label>
+                    <select id="label" class="form-select">
+                        {% for l in labels %}
+                        <option value="{{ l }}">{{ l }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label" for="maps_link">Google Maps URL (Optional)</label>
+                    <input type="url" id="maps_link" class="form-input" placeholder="Paste Google Maps URL">
+                </div>
+
+                <div class="form-group full-width" style="flex-direction: row; align-items: center; gap: 0.8rem; margin-top: 0.5rem;">
+                    <input type="checkbox" id="is_default" value="true">
+                    <label for="is_default" style="font-size: 0.95rem; cursor: pointer;">Set as default delivery address</label>
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-fill" style="flex: 1; justify-content: center;">Save & Use Address</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/bd_locations.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cartKey = 'illyeen_cart';
+    let cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+
+    // Render summary items
+    const summaryList = document.getElementById('checkout-summary-items-list');
+    const subtotalEl = document.getElementById('summary-subtotal');
+    const totalEl = document.getElementById('summary-total');
+
+    function calculateTotal() {
+        return cart.reduce((sum, item) => {
+            const price = parseFloat(item.price.replace(/[^0-9.]/g, ''));
+            return sum + (price * item.qty);
+        }, 0);
+    }
+
+    function renderSummary() {
+        if (!cart.length) {
+            document.getElementById('checkout-main-view').innerHTML = `
+                <div class="profile-card" style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem;">
+                    <i class="fa-solid fa-bag-shopping fa-3x" style="margin-bottom: 1.5rem; opacity: 0.5;"></i>
+                    <h3>Your Cart is Empty</h3>
+                    <p style="margin-bottom: 2rem; color: var(--text-2);">Add items to your cart before checking out.</p>
+                    <a href="{{ url_for('shop.index') }}" class="btn btn-fill" style="padding: 0.8rem 2.5rem; display: inline-flex;">Continue Shopping</a>
+                </div>`;
+            return;
+        }
+
+        summaryList.innerHTML = cart.map(item => `
+            <div class="checkout-summary-item">
+                <img src="/static/images/${item.image}" alt="${item.name}">
+                <div class="checkout-summary-item-info">
+                    <div class="checkout-summary-item-name">${item.name}</div>
+                    <div style="font-size: 0.82rem; color: var(--text-2);">Qty: ${item.qty}</div>
+                </div>
+                <div class="checkout-summary-item-price">${item.price}</div>
+            </div>`).join('');
+
+        const total = calculateTotal();
+        subtotalEl.textContent = `৳${total.toLocaleString()}`;
+        totalEl.textContent = `৳${total.toLocaleString()}`;
+    }
+
+    renderSummary();
+
+    // Select address card click behaviour
+    const addressContainer = document.getElementById('address-list-container');
+    if (addressContainer) {
+        addressContainer.addEventListener('click', function(e) {
+            const card = e.target.closest('.address-select-card');
+            if (card) {
+                document.querySelectorAll('.address-select-card').forEach(el => el.classList.remove('selected'));
+                card.classList.add('selected');
+                const radio = card.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
+            }
+        });
+    }
+
+    // Modal behavior
+    const modal = document.getElementById('address-modal');
+    const btnOpen = document.getElementById('btn-add-address-checkout');
+    const btnClose = document.getElementById('btn-close-modal');
+
+    btnOpen.addEventListener('click', () => modal.classList.add('open'));
+    btnClose.addEventListener('click', () => modal.classList.remove('open'));
+
+    // Populate Divisions in Modal Form
+    const divisionSel = document.getElementById('division');
+    const districtSel = document.getElementById('district');
+    const upazilaSel = document.getElementById('upazila');
+
+    for (let div in bdLocations) {
+        let opt = document.createElement('option');
+        opt.value = div;
+        opt.textContent = div;
+        divisionSel.appendChild(opt);
+    }
+
+    divisionSel.addEventListener('change', function() {
+        const div = this.value;
+        if (!div) {
+            resetSelect(districtSel, 'Select District');
+            resetSelect(upazilaSel, 'Select Upazila / Thana');
+            return;
+        }
+        districtSel.disabled = false;
+        resetSelect(districtSel, 'Select District');
+        resetSelect(upazilaSel, 'Select Upazila / Thana');
+        
+        for (let dist in bdLocations[div]) {
+            let opt = document.createElement('option');
+            opt.value = dist;
+            opt.textContent = dist;
+            districtSel.appendChild(opt);
+        }
+    });
+
+    districtSel.addEventListener('change', function() {
+        const div = divisionSel.value;
+        const dist = this.value;
+        if (!dist) {
+            resetSelect(upazilaSel, 'Select Upazila / Thana');
+            return;
+        }
+        upazilaSel.disabled = false;
+        resetSelect(upazilaSel, 'Select Upazila / Thana');
+        
+        bdLocations[div][dist].forEach(upz => {
+            let opt = document.createElement('option');
+            opt.value = upz;
+            opt.textContent = upz;
+            upazilaSel.appendChild(opt);
+        });
+    });
+
+    function resetSelect(selectEl, placeholderText) {
+        selectEl.innerHTML = '';
+        let opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = placeholderText;
+        selectEl.appendChild(opt);
+        selectEl.disabled = true;
+    }
+
+    // Submit new address via AJAX
+    const addressForm = document.getElementById('checkout-address-form');
+    addressForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const payload = {
+            recipient_name: document.getElementById('recipient_name').value.trim(),
+            phone: document.getElementById('phone').value.trim(),
+            division: divisionSel.value,
+            district: districtSel.value,
+            upazila: upazilaSel.value,
+            union_ward: document.getElementById('union_ward').value.trim(),
+            area: document.getElementById('area').value.trim(),
+            road: document.getElementById('road').value.trim(),
+            house_no: document.getElementById('house_no').value.trim(),
+            apartment: document.getElementById('apartment').value.trim(),
+            postal_code: document.getElementById('postal_code').value.trim(),
+            label: document.getElementById('label').value,
+            maps_link: document.getElementById('maps_link').value.trim(),
+            is_default: document.getElementById('is_default').checked
+        };
+
+        fetch('{{ url_for("shop.checkout_add_address") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Hide modal
+                modal.classList.remove('open');
+                
+                // Clear form
+                addressForm.reset();
+                resetSelect(districtSel, 'Select District');
+                resetSelect(upazilaSel, 'Select Upazila / Thana');
+
+                // Remove "no address" notice if visible
+                const notice = document.getElementById('no-addresses-notice');
+                if (notice) notice.remove();
+
+                // Unselect others
+                document.querySelectorAll('.address-select-card').forEach(el => el.classList.remove('selected'));
+
+                // Append card to container and select it
+                const newCard = document.createElement('div');
+                newCard.className = 'address-select-card selected';
+                newCard.dataset.addrId = data.address.id;
+                newCard.innerHTML = `
+                    <input type="radio" name="selected_address" value="${data.address.id}" checked>
+                    <div style="flex-grow: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                            <strong style="font-size: 1rem;">${data.address.recipient_name}</strong>
+                            <span class="address-label label-${data.address.label.toLowerCase()}" style="font-size: 0.7rem; padding: 0.1rem 0.4rem;">${data.address.label}</span>
+                        </div>
+                        <p style="font-size: 0.88rem; color: var(--text-2); margin-bottom: 0.3rem;">${data.address.phone}</p>
+                        <p style="font-size: 0.88rem; color: var(--text-2);">${data.address.full_address}</p>
+                    </div>`;
+                
+                addressContainer.appendChild(newCard);
+                showToast('Address added and selected!', 'success');
+            } else {
+                alert(data.error || 'Failed to save address.');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('An error occurred while saving the address.');
+        });
+    });
+
+    // Place Order submission
+    const btnPlace = document.getElementById('btn-place-order');
+    btnPlace.addEventListener('click', function() {
+        const checkedRadio = document.querySelector('input[name="selected_address"]:checked');
+        if (!checkedRadio) {
+            alert('Please select or add a shipping address.');
+            return;
+        }
+
+        const payload = {
+            address_id: parseInt(checkedRadio.value),
+            items: cart,
+            order_notes: document.getElementById('order-notes').value.trim()
+        };
+
+        btnPlace.disabled = true;
+        btnPlace.textContent = 'Processing Order...';
+
+        fetch('{{ url_for("shop.checkout") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Clear cart from local storage
+                localStorage.removeItem(cartKey);
+                // Redirect
+                window.location.href = data.redirect_url;
+            } else {
+                btnPlace.disabled = false;
+                btnPlace.textContent = 'Place Order (Cash on Delivery)';
+                alert(data.error || 'Order placement failed.');
+            }
+        })
+        .catch(err => {
+            btnPlace.disabled = false;
+            btnPlace.textContent = 'Place Order (Cash on Delivery)';
+            console.error(err);
+            alert('An error occurred while placing the order.');
+        });
+    });
+});
+</script>
+{% endblock %}

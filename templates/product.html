@@ -81,28 +81,54 @@
     <div class="pdp-info">
         <div class="section-label" style="margin-bottom:.5rem;">{{ product.category.name }}</div>
         <h1 style="font-size:2.6rem;margin-bottom:.8rem;">{{ product.name }}</h1>
-        <div class="pdp-price">{{ product.price }}</div>
+        <div class="pdp-price" style="display:flex;align-items:center;gap:.8rem;font-size:1.4rem;color:var(--accent);font-weight:600;margin-bottom:1.5rem;">
+            {% if product.compare_at_price %}
+                {% set p_price = product.price|float %}
+                {% set p_compare = product.compare_at_price|float %}
+                {% if p_compare > p_price %}
+                    <span style="color:var(--text-2);text-decoration:line-through;font-size:1.1rem;font-weight:400;">৳{{ product.compare_at_price }}</span>
+                    <span>৳{{ product.price }}</span>
+                    <span style="background:var(--accent);color:#000;font-size:.75rem;padding:.2rem .6rem;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Save ৳{{ (p_compare - p_price)|round|int }}</span>
+                {% else %}
+                    <span>৳{{ product.price }}</span>
+                {% endif %}
+            {% else %}
+                <span>৳{{ product.price }}</span>
+            {% endif %}
+        </div>
 
         <!-- Color swatches -->
+        {% if unique_colors %}
         <div class="pdp-swatches-wrap" style="margin:1.5rem 0;">
             <p style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-2);margin-bottom:.6rem;">Colour</p>
             <div class="product-swatches" style="justify-content:flex-start;gap:.6rem;">
-                <span class="swatch active" style="background:#1a1a1a;width:24px;height:24px;" title="Onyx Black"></span>
-                <span class="swatch" style="background:#f5f0e8;width:24px;height:24px;" title="Ivory White"></span>
-                <span class="swatch" style="background:#3d2b1f;width:24px;height:24px;" title="Tobacco Brown"></span>
-                <span class="swatch" style="background:#1c3d5a;width:24px;height:24px;" title="Navy"></span>
-            </div>
-        </div>
-
-        <!-- Size selector -->
-        <div class="pdp-sizes" style="margin-bottom:1.8rem;">
-            <p style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-2);margin-bottom:.6rem;">Size</p>
-            <div class="size-grid">
-                {% for s in ['S','M','L','XL','XXL'] %}
-                <button class="size-btn {% if loop.index == 2 %}active{% endif %}">{{ s }}</button>
+                {% for color in unique_colors %}
+                <button class="swatch {% if loop.first %}active{% endif %}" 
+                        style="background:var(--border-color);width:auto;height:auto;padding:.4rem 1rem;border-radius:20px;font-size:.8rem;color:var(--text-primary);border:1px solid transparent;" 
+                        title="{{ color.name }}" 
+                        data-slot="{{ color.slot or '' }}"
+                        data-color="{{ color.name }}"
+                        onclick="selectVariantColor(this)">
+                    {{ color.name }}
+                </button>
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
+
+        <!-- Size selector -->
+        {% if unique_sizes %}
+        <div class="pdp-sizes" style="margin-bottom:1.8rem;">
+            <p style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-2);margin-bottom:.6rem;">Size</p>
+            <div class="size-grid">
+                {% for size in unique_sizes %}
+                <button class="size-btn {% if loop.first %}active{% endif %}"
+                        data-size="{{ size }}"
+                        onclick="selectVariantSize(this)">{{ size }}</button>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Add to cart -->
         <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
@@ -209,29 +235,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ── Size selector ────────────────────────────
-    document.querySelectorAll('.size-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        });
-    });
+    // ── Variant Selection ────────────────────────────
+    window.selectVariantSize = function(btn) {
+        document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    };
 
-    // ── Colour swatches ──────────────────────────
-    const swatches = document.querySelectorAll('.pdp-swatches-wrap .swatch');
-    swatches.forEach((sw, idx) => {
-        sw.addEventListener('click', () => {
-            swatches.forEach(s => s.classList.remove('active'));
-            sw.classList.add('active');
-            
-            // Change main image based on color swatch
-            // (For demo: maps the swatch index to an existing thumbnail)
-            if (thumbs.length > 0) {
-                const targetThumb = thumbs[idx % thumbs.length];
-                if (targetThumb) targetThumb.click();
+    window.selectVariantColor = function(btn) {
+        document.querySelectorAll('.pdp-swatches-wrap .swatch').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Find matching thumbnail slot if defined
+        const slot = btn.dataset.slot;
+        if (slot) {
+            const thumb = document.querySelector(`.pdp-thumb[data-slot="${slot}"]`);
+            if (thumb) {
+                thumb.click();
             }
-        });
-    });
+        }
+    };
 
     // ── Hover zoom (desktop only) ─────────────────
     const mainBox = document.getElementById('pdp-main-box');

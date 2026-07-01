@@ -75,7 +75,10 @@ def process_product_image(file_storage, product_id: int, slot: int,
     Process an uploaded FileStorage object.
     Returns a dict of fields ready to create a ProductImage record.
     """
-    from models import SLOT_TYPES as _ST
+    SLOT_TYPES = {
+        1: 'hero', 2: 'alternate', 3: 'detail', 4: 'detail',
+        5: 'lifestyle', 6: 'scale', 7: 'box'
+    }
     image_type = SLOT_TYPES.get(slot, 'hero')
     base_name = f'p{product_id}_slot{slot}'
     out_dir = _products_dir(product_id)

@@ -1,9 +1,13 @@
 {% extends "admin/base.html" %}
 {% block title %}Two-Factor Auth | alphatex Admin{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
 {% block auth_content %}
 <div class="auth-page" style="background:var(--surface-color);">
-    <div class="auth-card reveal">
+    <div class="auth-card">
         <div class="auth-logo">alphatex</div>
         <h1 class="auth-title">Two-Factor Authentication</h1>
         <p class="auth-subtitle">Enter the 6-digit code from your Google Authenticator app</p>

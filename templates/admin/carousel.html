@@ -1,81 +1,74 @@
 {% extends "admin/base.html" %}
-{% block title %}Carousel Settings | alphatex Admin{% endblock %}
+{% block title %}Carousel | alphatex Admin{% endblock %}
+{% block breadcrumb %}<span>/</span> <span>Catalogue</span> <span>/</span> <span>Carousel</span>{% endblock %}
 
 {% block content %}
-<div class="admin-header">
-    <h1>Homepage Carousel</h1>
-    <p>Manage the slides that appear on the top of the homepage.</p>
+<div class="admin-page-header">
+    <div>
+        <h1>Carousel Banners</h1>
+        <p>Manage the hero image slider on the homepage.</p>
+    </div>
 </div>
 
-<div class="admin-section" style="margin-bottom:2rem;">
-    <h2>Add New Slide</h2>
-    <form method="POST" action="{{ url_for('admin.carousel') }}" enctype="multipart/form-data" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div style="grid-column:1 / -1;">
-            <label style="display:block;font-size:.8rem;margin-bottom:.3rem;color:var(--text-secondary);">Image (High Res recommended, e.g. 2000x2000)</label>
-            <input type="file" name="image" class="form-control" accept="image/*" required>
+<div class="chart-grid">
+    <div class="admin-section" style="margin-bottom:0;">
+        <div class="admin-section-header">
+            <h2>Current Banners</h2>
         </div>
-        <div>
-            <label style="display:block;font-size:.8rem;margin-bottom:.3rem;color:var(--text-secondary);">Heading</label>
-            <input type="text" name="heading" class="form-control" placeholder="e.g. Eid Collection">
-        </div>
-        <div>
-            <label style="display:block;font-size:.8rem;margin-bottom:.3rem;color:var(--text-secondary);">Subheading</label>
-            <input type="text" name="subheading" class="form-control" placeholder="e.g. Elevate your presence.">
-        </div>
-        <div>
-            <label style="display:block;font-size:.8rem;margin-bottom:.3rem;color:var(--text-secondary);">Button Text</label>
-            <input type="text" name="button_text" class="form-control" placeholder="e.g. Explore Now">
-        </div>
-        <div>
-            <label style="display:block;font-size:.8rem;margin-bottom:.3rem;color:var(--text-secondary);">Button Link</label>
-            <input type="text" name="button_link" class="form-control" placeholder="e.g. /category/men">
-        </div>
-        <div style="grid-column:1 / -1;">
-            <button type="submit" class="btn">Upload Slide</button>
-        </div>
-    </form>
-</div>
-
-<div class="admin-section">
-    <h2>Current Slides</h2>
-    <table class="admin-table">
-        <thead>
-            <tr>
-                <th>ID</th><th>Image</th><th>Heading</th><th>Button</th><th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for slide in slides %}
-            <tr>
-                <td>{{ slide.id }}</td>
-                <td><img src="{{ slide.image }}" alt="Slide {{ slide.id }}" style="height:60px;border-radius:4px;"></td>
-                <td>
-                    <strong>{{ slide.heading or '(None)' }}</strong><br>
-                    <span style="font-size:0.8em;color:var(--text-secondary);">{{ slide.subheading }}</span>
-                </td>
-                <td>
-                    {% if slide.button_text %}
-                    {{ slide.button_text }} &rarr; <a href="{{ slide.button_link }}" style="color:var(--accent-color);">Link</a>
+        <div style="overflow-x:auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Preview</th>
+                        <th>Order</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in slides %}
+                    <tr>
+                        <td>
+                            <img src="{{ url_for('static', filename='images/' + item.image) }}" 
+                                 style="max-width:180px;height:auto;border-radius:4px;border:1px solid var(--a-border);">
+                        </td>
+                        <td style="font-weight:600;font-size:1.1rem;">{{ item.order }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.delete_carousel', sid=item.id) }}"
+                                  onsubmit="return confirm('Delete this banner?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-a btn-a-sm btn-a-outline text-danger"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
                     {% else %}
-                    (None)
-                    {% endif %}
-                </td>
-                <td>
-                    <form method="POST" action="{{ url_for('admin.delete_carousel', sid=slide.id) }}"
-                          onsubmit="return confirm('Delete this slide?');">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" style="background:none;border:1px solid #ff4a4a;color:#ff4a4a;padding:.3rem .7rem;cursor:pointer;border-radius:2px;font-size:.8rem;">
-                            Delete
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-            {% if not slides %}
-            <tr><td colspan="5" style="text-align:center;padding:2rem;">No slides found.</td></tr>
-            {% endif %}
-        </tbody>
-    </table>
+                    <tr><td colspan="3" class="empty-state"><p>No banners uploaded.</p></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div>
+        <div class="admin-section">
+            <div class="admin-section-header">
+                <h2>Add Banner</h2>
+            </div>
+            <div class="section-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-group">
+                        <label class="form-label">Upload Image</label>
+                        <input type="file" name="image" class="form-control" required accept="image/*">
+                        <small class="text-muted" style="display:block; margin-top:4px;">Recommended size: 1920x800 pixels (Wide Landscape)</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sort Order (Optional)</label>
+                        <input type="number" name="order" class="form-control" value="0">
+                    </div>
+                    <button type="submit" class="btn-a btn-a-primary" style="width:100%;justify-content:center;">Upload Banner</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

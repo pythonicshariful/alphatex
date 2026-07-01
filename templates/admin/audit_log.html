@@ -1,0 +1,62 @@
+{% extends "admin/base.html" %}
+{% block title %}Audit Log | alphatex Admin{% endblock %}
+{% block breadcrumb %}<span>/</span> <span>System</span> <span>/</span> <span>Audit Log</span>{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <div>
+        <h1>Audit Log</h1>
+        <p>Immutable timeline of all administrative actions and system events.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn-a btn-a-outline" onclick="exportTableCSV('audit-table', 'audit_log.csv')">
+            <i class="fa-solid fa-download"></i> Export CSV
+        </button>
+    </div>
+</div>
+
+<div class="admin-section">
+    <div class="table-toolbar">
+        <form method="GET" style="display:flex; flex:1;">
+            <input type="text" name="q" class="table-search" placeholder="Search logs by action, admin, or detail..." value="{{ q }}">
+            <button type="submit" class="btn-a btn-a-primary" style="margin-left:.75rem;">Search</button>
+        </form>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="admin-table sortable" id="audit-table">
+            <thead>
+                <tr>
+                    <th data-col="0" data-dir="desc">Timestamp <span class="sort-icon"></span></th>
+                    <th data-col="1">Admin <span class="sort-icon"></span></th>
+                    <th data-col="2">Action <span class="sort-icon"></span></th>
+                    <th data-col="3">Target <span class="sort-icon"></span></th>
+                    <th>Details</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td style="white-space:nowrap;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td style="font-weight:500;color:var(--a-accent);">{{ log.admin_username }}</td>
+                    <td><span class="badge badge-neutral">{{ log.action }}</span></td>
+                    <td>
+                        {% if log.target_type %}
+                        <div class="text-sm">{{ log.target_type }}</div>
+                        <div class="text-sm text-muted">ID: {{ log.target_id }}</div>
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                    <td>{{ log.details or '—' }}</td>
+                    <td class="text-muted text-sm">{{ log.ip_address }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="empty-state"><p>No audit logs found.</p></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

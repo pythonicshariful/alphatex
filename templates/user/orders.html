@@ -1,0 +1,73 @@
+{% extends 'user/base.html' %}
+
+{% block account_content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">Order History</h1>
+    <p class="dashboard-subtitle">Review status, shipping details, and items of your current/previous orders.</p>
+</div>
+
+<div class="profile-card">
+    {% if pagination.items %}
+    <div class="orders-table-wrapper">
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Placed On</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in pagination.items %}
+                <tr>
+                    <td style="font-weight: 500;">#{{ order.id }}</td>
+                    <td>{{ order.created_at.strftime('%d %b, %Y %I:%M %p') }}</td>
+                    <td>
+                        <span class="badge badge-{{ order.status|lower }}">
+                            {{ order.status }}
+                        </span>
+                    </td>
+                    <td style="font-weight: 600;">{{ order.total_amount }}</td>
+                    <td>
+                        <a href="{{ url_for('user.order_detail', order_id=order.id) }}" style="color: var(--accent); display: inline-flex; align-items: center; gap: 0.3rem;">
+                            <i class="fa-regular fa-eye"></i> View Order
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+        {% if pagination.has_prev %}
+            <a href="{{ url_for('user.orders', page=pagination.prev_num) }}" class="page-link"><i class="fa-solid fa-chevron-left"></i></a>
+        {% endif %}
+        
+        {% for page_num in pagination.iter_pages() %}
+            {% if page_num %}
+                <a href="{{ url_for('user.orders', page=page_num) }}" class="page-link {% if page_num == pagination.page %}active{% endif %}">{{ page_num }}</a>
+            {% else %}
+                <span class="page-link" style="border: none; cursor: default;">...</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+            <a href="{{ url_for('user.orders', page=pagination.next_num) }}" class="page-link"><i class="fa-solid fa-chevron-right"></i></a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div style="text-align: center; padding: 3rem 1.5rem; color: var(--text-2);">
+        <i class="fa-solid fa-bag-shopping fa-3x" style="margin-bottom: 1.5rem; opacity: 0.5;"></i>
+        <h3>No Orders Placed</h3>
+        <p style="margin-bottom: 2rem;">You haven't ordered any premium products yet.</p>
+        <a href="{{ url_for('shop.index') }}" class="btn btn-fill" style="padding: 0.75rem 2.5rem;">Explore Catalog</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

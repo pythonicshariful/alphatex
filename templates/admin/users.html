@@ -1,28 +1,129 @@
 {% extends "admin/base.html" %}
 {% block title %}Customers | alphatex Admin{% endblock %}
+{% block breadcrumb %}<span>/</span> <span>People</span> <span>/</span> <span>Customers</span>{% endblock %}
 
 {% block content %}
-<div class="admin-header">
-    <h1>Customers</h1>
-    <p>{{ users | length }} registered customer accounts</p>
+<div class="admin-page-header">
+    <div>
+        <h1>Customers</h1>
+        <p>Manage registered users, view profiles, and handle bans.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn-a btn-a-outline" onclick="exportTableCSV('users-table', 'customers.csv')">
+            <i class="fa-solid fa-download"></i> Export CSV
+        </button>
+    </div>
 </div>
+
 <div class="admin-section">
-    <table class="admin-table">
-        <thead>
-            <tr><th>ID</th><th>Phone</th><th>Email</th><th>Verified</th><th>Provider</th><th>Joined</th></tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.phone or '—' }}</td>
-                <td>{{ user.email or '—' }}</td>
-                <td>{% if user.is_verified %}<span style="color:#4caf50;">✓</span>{% else %}<span style="color:#ff4a4a;">✗</span>{% endif %}</td>
-                <td>{{ user.social_provider or 'Direct' }}</td>
-                <td style="color:var(--text-secondary);font-size:.85rem;">{{ user.created_at.strftime('%Y-%m-%d') }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-toolbar">
+        <form method="GET" style="display:flex; gap:1rem; flex:1;">
+            <input type="text" name="q" class="table-search" placeholder="Search by name, email, or phone..." value="{{ q }}">
+            <select name="status" class="table-filter" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                <option value="verified" {% if status_filter == 'verified' %}selected{% endif %}>Verified</option>
+                <option value="banned" {% if status_filter == 'banned' %}selected{% endif %}>Banned</option>
+            </select>
+        </form>
+    </div>
+
+    <form id="bulk-form" method="POST" action="{{ url_for('admin.bulk_user_action') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="bulk-bar">
+            <span><span id="bulk-count">0</span> selected</span>
+            <button type="submit" name="action" value="ban" class="btn-a btn-a-sm btn-a-danger" onclick="return confirm('Ban selected users?')">Ban</button>
+            <button type="submit" name="action" value="unban" class="btn-a btn-a-sm btn-a-outline" onclick="return confirm('Unban selected users?')">Unban</button>
+        </div>
+
+        <div style="overflow-x:auto;">
+            <table class="admin-table sortable" id="users-table">
+                <thead>
+                    <tr>
+                        <th class="col-check"><input type="checkbox" data-select-all></th>
+                        <th data-col="0" data-dir="asc">User <span class="sort-icon"></span></th>
+                        <th data-col="1">Contact <span class="sort-icon"></span></th>
+                        <th data-col="2">Status <span class="sort-icon"></span></th>
+                        <th data-col="3">Joined <span class="sort-icon"></span></th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td><input type="checkbox" name="ids[]" value="{{ u.id }}" data-bulk></td>
+                        <td>
+                            <div style="font-weight:500;">{{ u.username or 'Unnamed' }}</div>
+                            <div class="text-sm text-muted">ID: {{ u.id }}</div>
+                        </td>
+                        <td>
+                            <div>{{ u.email or '—' }}</div>
+                            <div class="text-sm text-muted">{{ u.phone or '—' }}</div>
+                        </td>
+                        <td>
+                            {% if u.is_banned %}
+                            <span class="badge badge-danger">Banned</span>
+                            <div class="text-sm text-muted" style="margin-top:4px;">{{ u.banned_reason }}</div>
+                            {% elif u.is_verified %}
+                            <span class="badge badge-success">Verified</span>
+                            {% else %}
+                            <span class="badge badge-neutral">Unverified</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <div style="display:flex;gap:.5rem;">
+                                {% if not u.is_banned %}
+                                <button type="button" class="btn-a btn-a-sm btn-a-outline" onclick="openModal('ban-modal-{{ u.id }}')">Ban</button>
+                                {% else %}
+                                <form method="POST" action="{{ url_for('admin.unban_user', uid=u.id) }}" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn-a btn-a-sm btn-a-outline">Unban</button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if admin.has_permission('settings') %}
+                                <form method="POST" action="{{ url_for('admin.impersonate_user', uid=u.id) }}" style="display:inline;" onsubmit="return confirm('Impersonate this user? All actions will be logged.')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn-a btn-a-sm btn-a-outline" title="Impersonate User"><i class="fa-solid fa-mask"></i></button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="empty-state"><p>No users found.</p></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
 </div>
+
+<!-- Ban Modals -->
+{% for u in users %}
+{% if not u.is_banned %}
+<div class="modal-overlay" id="ban-modal-{{ u.id }}">
+    <div class="modal-box">
+        <form method="POST" action="{{ url_for('admin.ban_user', uid=u.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-header">
+                <h3>Ban User: {{ u.username or u.email or u.phone }}</h3>
+                <button type="button" class="modal-close" onclick="closeModal('ban-modal-{{ u.id }}')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Reason for ban</label>
+                    <textarea name="reason" class="form-control" rows="3" required placeholder="e.g., Fraudulent activity"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-a btn-a-outline" onclick="closeModal('ban-modal-{{ u.id }}')">Cancel</button>
+                <button type="submit" class="btn-a btn-a-danger">Confirm Ban</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
 {% endblock %}

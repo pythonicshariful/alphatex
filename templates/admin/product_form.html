@@ -1,93 +1,172 @@
 {% extends "admin/base.html" %}
 {% block title %}{% if product %}Edit Product{% else %}Add Product{% endif %} | alphatex Admin{% endblock %}
+{% block breadcrumb %}
+<span>/</span> <span>Catalogue</span> 
+<span>/</span> <a href="{{ url_for('admin.products') }}">Products</a> 
+<span>/</span> <span>{% if product %}Edit{% else %}Add{% endif %}</span>
+{% endblock %}
 
 {% block content %}
-<div class="admin-header">
-    <h1>{% if product %}Edit Product: {{ product.name }}{% else %}Add New Product{% endif %}</h1>
-    <p>Upload images for all 7 slots. Images will be automatically optimized to WebP formats.</p>
+<div class="admin-page-header">
+    <div>
+        <h1>{% if product %}Edit Product: {{ product.name }}{% else %}Add New Product{% endif %}</h1>
+        <p>Update product details, images, and variants.</p>
+    </div>
 </div>
 
-<div class="admin-section" style="max-width:800px;margin:0 auto;">
-    <form method="POST" enctype="multipart/form-data" 
-          action="{% if product %}{{ url_for('admin.edit_product', pid=product.id) }}{% else %}{{ url_for('admin.add_product') }}{% endif %}" 
-          style="display:flex;flex-direction:column;gap:1.5rem;">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-            <div>
-                <label style="display:block;font-size:.85rem;margin-bottom:.5rem;color:var(--text-secondary);">Product Name</label>
-                <input type="text" name="name" class="form-control" required value="{{ product.name if product else '' }}">
+<form method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <div class="chart-grid">
+        <div class="admin-section" style="margin-bottom:0;">
+            <div class="admin-section-header">
+                <h2>Basic Details</h2>
             </div>
-            <div>
-                <label style="display:block;font-size:.85rem;margin-bottom:.5rem;color:var(--text-secondary);">Price (e.g. ৳350.00)</label>
-                <input type="text" name="price" class="form-control" required value="{{ product.price if product else '' }}">
-            </div>
-            <div>
-                <label style="display:block;font-size:.85rem;margin-bottom:.5rem;color:var(--text-secondary);">Category</label>
-                <select name="category_id" class="form-control" required style="background:var(--surface-color);color:var(--text-primary);">
-                    {% for cat in categories %}
-                    <option value="{{ cat.id }}" {% if product and product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+            <div class="section-body">
+                <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" name="name" class="form-control" value="{{ product.name if product else '' }}" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select name="category_id" class="form-control" required>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if product and product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Offer / Campaign (Optional)</label>
+                        <select name="offer_id" class="form-control">
+                            <option value="">None</option>
+                            {% for offer in offers %}
+                            <option value="{{ offer.id }}" {% if product and product.offer_id == offer.id %}selected{% endif %}>{{ offer.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Price (৳)</label>
+                        <input type="number" step="0.01" name="price" class="form-control" value="{{ product.price if product else '' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Previous Price (৳) (Optional)</label>
+                        <input type="number" step="0.01" name="compare_at_price" class="form-control" value="{{ product.compare_at_price if product else '' }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="5" required>{{ product.description if product else '' }}</textarea>
+                </div>
+                
+                <h3 style="margin:2rem 0 1rem; font-size:.9rem; color:var(--a-text);">Image Slots (Link to Variants)</h3>
+                <div class="text-sm text-muted" style="margin-bottom:1rem;">Upload images to specific slots below so you can link them to colors in the variants section.</div>
+                
+                <div style="display:flex; flex-wrap:wrap; gap:1rem;">
+                    {% set slot_labels = {1: 'Hero', 2: 'Alternate', 3: 'Detail', 4: 'Detail', 5: 'Lifestyle', 6: 'Scale', 7: 'Box'} %}
+                    {% for i in range(1, 8) %}
+                    <div style="flex:1 1 30%; min-width:200px; border:1px solid var(--a-border); border-radius:6px; padding:1rem;">
+                        <label class="form-label" style="font-weight:600;">Slot {{ i }} ({{ slot_labels[i] }})</label>
+                        
+                        {% set existing = namespace(img=none) %}
+                        {% if product and product.images %}
+                            {% for img in product.images %}
+                                {% if img.slot == i %}{% set existing.img = img %}{% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        
+                        {% if existing.img %}
+                            <div style="margin-bottom:.5rem;">
+                                <img src="{{ existing.img.src_fallback }}" style="width:100%;height:150px;object-fit:cover;border-radius:4px;background:#f9f9fa;">
+                            </div>
+                            <div class="text-sm text-muted" style="margin-bottom:.5rem;">Upload new file to replace:</div>
+                        {% endif %}
+                        <input type="file" name="image_slot_{{ i }}" class="form-control" accept="image/*" {% if i == 1 and not product %}required{% endif %}>
+                        <small class="text-muted" style="display:block; margin-top:4px;">Recommended size: 600x800 pixels (3:4 Ratio)</small>
+                    </div>
                     {% endfor %}
-                </select>
-            </div>
-            <div style="display:flex;align-items:flex-end;padding-bottom:.5rem;">
-                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
-                    <input type="checkbox" name="is_featured" value="1" {% if product and product.is_featured %}checked{% endif %}> 
-                    Mark as Featured Product
-                </label>
-            </div>
-            
-            <div style="grid-column:1 / -1;">
-                <label style="display:block;font-size:.85rem;margin-bottom:.5rem;color:var(--text-secondary);">Description</label>
-                <textarea name="description" class="form-control" rows="4" style="resize:vertical;">{{ product.description if product and product.description else '' }}</textarea>
+                </div>
             </div>
         </div>
 
-        <hr style="border:0;border-top:1px solid var(--border-color);margin:1rem 0;">
-        
-        <h3>Product Images (7 Slots)</h3>
-        <p style="font-size:.85rem;color:var(--text-secondary);margin-top:-.5rem;">Upload high-res square images (1:1 ratio, min 2000x2000px). Existing images will be replaced if new ones are uploaded.</p>
-
-        <div style="display:grid;grid-template-columns:1fr;gap:1.5rem;margin-top:1rem;">
-            {% set slots = {
-                1: ('Hero (Main)', 'Pure white background (RGB 255,255,255). Product fills 85% of the frame.'),
-                2: ('Alternate Angle', 'Show the back, side, or an open/unboxed view.'),
-                3: ('Detail / Macro', 'Extreme close-up of a key feature.'),
-                4: ('Lifestyle / In-Use', 'The product being used in a real-life setting.'),
-                5: ('Scale / Proportion', 'Show product next to a universally recognized object.'),
-                6: ('Infographic', 'A visually designed image highlighting key specs or benefits.'),
-                7: ('In the Box', 'A top-down "knolling" shot showing everything included.')
-            } %}
-            
-            {% for slot_num, labels in slots.items() %}
-            <div style="border:1px dashed var(--border-color);padding:1rem;border-radius:4px;display:flex;gap:1.5rem;align-items:center;">
-                <div style="width:80px;height:80px;background:var(--surface-color);display:flex;align-items:center;justify-content:center;border-radius:4px;overflow:hidden;">
-                    {% set existing_img = None %}
-                    {% if product %}
-                        {% for img in product.images if img.slot == slot_num %}
-                            {% set existing_img = img %}
-                        {% endfor %}
-                    {% endif %}
+        <div>
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>Variants (Colors & Sizes)</h2>
+                </div>
+                <div class="section-body">
+                    <div class="text-sm text-muted" style="margin-bottom:1rem;">
+                        Add colors and optional sizes. Link variants to an image slot (1-7) so the picture changes when a user selects this color.
+                    </div>
                     
-                    {% if existing_img %}
-                        <img src="{{ existing_img.src_300 }}" style="width:100%;height:100%;object-fit:cover;" alt="Slot {{ slot_num }}">
-                    {% else %}
-                        <span style="font-size:2rem;color:var(--text-secondary);opacity:0.5;">{{ slot_num }}</span>
-                    {% endif %}
-                </div>
-                <div style="flex:1;">
-                    <label style="display:block;font-weight:600;margin-bottom:.2rem;">Slot {{ slot_num }}: {{ labels[0] }}</label>
-                    <p style="font-size:.75rem;color:var(--text-secondary);margin-bottom:.8rem;">{{ labels[1] }}</p>
-                    <input type="file" name="image_slot_{{ slot_num }}" accept="image/*" class="form-control" style="padding:.4rem;">
+                    <div id="variants-container" style="display:flex;flex-direction:column;gap:1rem;">
+                        {% if product and product.variants %}
+                            {% for v in product.variants %}
+                            <div class="variant-row" style="display:flex;gap:.5rem;align-items:end;border:1px solid var(--a-border);padding:.75rem;border-radius:6px;">
+                                <div style="flex:1;"><label class="text-sm">Color</label><input type="text" name="v_color[]" class="form-control" value="{{ v.color or '' }}" placeholder="e.g. Red"></div>
+                                <div style="flex:1;"><label class="text-sm">Size (Optional)</label><input type="text" name="v_size[]" class="form-control" value="{{ v.size or '' }}" placeholder="e.g. M"></div>
+                                <div style="flex:1;"><label class="text-sm">SKU</label><input type="text" name="v_sku[]" class="form-control" value="{{ v.sku or '' }}" placeholder="SKU"></div>
+                                <div style="flex:1;"><label class="text-sm">Stock</label><input type="number" name="v_stock[]" class="form-control" value="{{ v.stock or 0 }}" min="0"></div>
+                                <div style="flex:1;"><label class="text-sm">Image Slot</label>
+                                    <select name="v_image_slot[]" class="form-control">
+                                        <option value="">None</option>
+                                        {% for i in range(1, 8) %}
+                                        <option value="{{ i }}" {% if v.image and v.image.slot == i %}selected{% endif %}>Slot {{ i }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="button" class="btn-a btn-a-sm btn-a-danger" onclick="this.parentElement.remove()" style="padding:.5rem .75rem;">X</button>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="variant-row" style="display:flex;gap:.5rem;align-items:end;border:1px solid var(--a-border);padding:.75rem;border-radius:6px;">
+                                <div style="flex:1;"><label class="text-sm">Color</label><input type="text" name="v_color[]" class="form-control" placeholder="e.g. Red"></div>
+                                <div style="flex:1;"><label class="text-sm">Size (Optional)</label><input type="text" name="v_size[]" class="form-control" placeholder="e.g. M"></div>
+                                <div style="flex:1;"><label class="text-sm">SKU</label><input type="text" name="v_sku[]" class="form-control" placeholder="SKU"></div>
+                                <div style="flex:1;"><label class="text-sm">Stock</label><input type="number" name="v_stock[]" class="form-control" value="10" min="0"></div>
+                                <div style="flex:1;"><label class="text-sm">Image Slot</label>
+                                    <select name="v_image_slot[]" class="form-control">
+                                        <option value="">None</option>
+                                        {% for i in range(1, 8) %}
+                                        <option value="{{ i }}">Slot {{ i }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="button" class="btn-a btn-a-sm btn-a-danger" onclick="this.parentElement.remove()" style="padding:.5rem .75rem;">X</button>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="button" class="btn-a btn-a-sm btn-a-outline" style="margin-top:1rem;" onclick="addVariantRow()">+ Add Variant</button>
                 </div>
             </div>
-            {% endfor %}
+            
+            <button type="submit" class="btn-a btn-a-primary" style="width:100%;justify-content:center;padding:1rem;">
+                {% if product %}Save Changes{% else %}Create Product{% endif %}
+            </button>
         </div>
-        
-        <div style="margin-top:2rem;display:flex;gap:1rem;justify-content:flex-end;">
-            <a href="{{ url_for('admin.products') }}" class="btn" style="background:var(--surface-color);color:var(--text-primary);border:1px solid var(--border-color);">Cancel</a>
-            <button type="submit" class="btn">{% if product %}Save Changes{% else %}Add Product{% endif %}</button>
+    </div>
+</form>
+
+<script>
+function addVariantRow() {
+    const container = document.getElementById('variants-container');
+    const html = `
+    <div class="variant-row" style="display:flex;gap:.5rem;align-items:end;border:1px solid var(--a-border);padding:.75rem;border-radius:6px;">
+        <div style="flex:1;"><label class="text-sm">Color</label><input type="text" name="v_color[]" class="form-control" placeholder="e.g. Red"></div>
+        <div style="flex:1;"><label class="text-sm">Size (Optional)</label><input type="text" name="v_size[]" class="form-control" placeholder="e.g. M"></div>
+        <div style="flex:1;"><label class="text-sm">SKU</label><input type="text" name="v_sku[]" class="form-control" placeholder="SKU"></div>
+        <div style="flex:1;"><label class="text-sm">Stock</label><input type="number" name="v_stock[]" class="form-control" value="0" min="0"></div>
+        <div style="flex:1;"><label class="text-sm">Image Slot</label>
+            <select name="v_image_slot[]" class="form-control">
+                <option value="">None</option>
+                <option value="1">Slot 1</option><option value="2">Slot 2</option><option value="3">Slot 3</option>
+                <option value="4">Slot 4</option><option value="5">Slot 5</option><option value="6">Slot 6</option><option value="7">Slot 7</option>
+            </select>
         </div>
-    </form>
-</div>
+        <button type="button" class="btn-a btn-a-sm btn-a-danger" onclick="this.parentElement.remove()" style="padding:.5rem .75rem;">X</button>
+    </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+}
+</script>
 {% endblock %}
