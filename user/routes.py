@@ -129,16 +129,14 @@ def avatar_upload():
         return jsonify({'error': 'File too large. Maximum 5 MB.'}), 400
 
     avatars_dir = os.path.join(current_app.root_path, 'static', 'images', 'avatars')
-    os.makedirs(avatars_dir, exist_ok=True)
+    filename_base = f'user_{current_user.id}'
+    
+    from utils.images import optimize_and_save_image
+    saved_filename = optimize_and_save_image(file, avatars_dir, filename_base, max_width=300)
 
-    ext = file.filename.rsplit('.', 1)[1].lower()
-    filename = f'user_{current_user.id}.{ext}'
-    filepath = os.path.join(avatars_dir, filename)
-    file.save(filepath)
-
-    current_user.avatar = filename
+    current_user.avatar = saved_filename
     db.session.commit()
-    return jsonify({'url': f'/static/images/avatars/{filename}', 'success': True})
+    return jsonify({'url': f'/static/images/avatars/{saved_filename}', 'success': True})
 
 
 # -------------------------------------------------------

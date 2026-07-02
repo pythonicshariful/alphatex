@@ -465,11 +465,19 @@ def categories(admin):
         # Add new category
         cat_id = request.form.get('id')
         name = request.form.get('name')
-        image = request.form.get('image', 'product_1.jpg')
+        file = request.files.get('image')
+        
         if Category.query.get(cat_id):
             flash('Category ID already exists.', 'error')
         else:
-            cat = Category(id=cat_id, name=name, image=image)
+            image_filename = 'product_1.jpg'
+            if file and file.filename:
+                from utils.images import optimize_and_save_image
+                upload_dir = os.path.join(current_app.root_path, 'static', 'images')
+                filename_base = f"category_{secure_filename(cat_id)}"
+                image_filename = optimize_and_save_image(file, upload_dir, filename_base, max_width=800)
+            
+            cat = Category(id=cat_id, name=name, image=image_filename)
             db.session.add(cat)
             db.session.commit()
             flash('Category added.', 'success')
@@ -505,12 +513,11 @@ def offers(admin):
             from werkzeug.utils import secure_filename
             import os
             from flask import current_app
+            from utils.images import optimize_and_save_image
             filename = secure_filename(file.filename)
+            filename_base = os.path.splitext(filename)[0]
             upload_dir = os.path.join(current_app.root_path, 'static', 'images', 'offers')
-            os.makedirs(upload_dir, exist_ok=True)
-            filepath = os.path.join(upload_dir, filename)
-            file.save(filepath)
-            banner_image = filename
+            banner_image = optimize_and_save_image(file, upload_dir, filename_base, max_width=1200)
             
         if Offer.query.filter_by(slug=slug).first():
             flash('Offer slug already exists.', 'error')
@@ -552,14 +559,17 @@ def carousel(admin):
             order = 0
         
         if file and file.filename:
+            from werkzeug.utils import secure_filename
+            import os
+            from flask import current_app
+            from utils.images import optimize_and_save_image
             filename = secure_filename(file.filename)
+            filename_base = os.path.splitext(filename)[0]
             upload_dir = os.path.join(current_app.root_path, 'static', 'images')
-            os.makedirs(upload_dir, exist_ok=True)
-            filepath = os.path.join(upload_dir, filename)
-            file.save(filepath)
+            saved_filename = optimize_and_save_image(file, upload_dir, filename_base, max_width=2000)
             
             slide = CarouselSlide(
-                image=filename,
+                image=saved_filename,
                 heading=heading,
                 subheading=subheading,
                 button_text=button_text,

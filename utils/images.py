@@ -151,3 +151,33 @@ def migrate_legacy_image(product, static_root: str) -> bool:
     db.session.commit()
     print(f'[Migration] Product {product.id} "{product.name}" → hero WebP created.')
     return True
+
+
+def optimize_and_save_image(file_storage, dest_dir, filename_base, max_width=None, quality=82) -> str:
+    """
+    Reads an uploaded file (like a FileStorage object), converts it to WebP format,
+    resizes it if it exceeds max_width (retaining aspect ratio), optimizes it, and
+    saves it to dest_dir.
+    Returns the new filename (e.g., 'filename_base.webp').
+    """
+    img = Image.open(file_storage.stream)
+    img.load()
+    
+    # Handle transparency / modes
+    if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+        img = img.convert('RGBA')
+    else:
+        img = img.convert('RGB')
+        
+    orig_w, orig_h = img.size
+    if max_width and orig_w > max_width:
+        h = int(orig_h * (max_width / orig_w))
+        img = img.resize((max_width, h), Image.LANCZOS)
+        
+    out_filename = f"{filename_base}.webp"
+    out_path = Path(dest_dir) / out_filename
+    os.makedirs(dest_dir, exist_ok=True)
+    
+    img.save(out_path, 'WEBP', quality=quality, method=6)
+    return out_filename
+

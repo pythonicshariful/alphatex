@@ -49,7 +49,7 @@
 <!-- Add Category Modal -->
 <div class="modal-overlay" id="add-cat-modal">
     <div class="modal-box">
-        <form method="POST" action="{{ url_for('admin.categories') }}">
+        <form method="POST" action="{{ url_for('admin.categories') }}" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-header">
                 <h3>Add New Category</h3>
@@ -65,8 +65,8 @@
                     <input type="text" name="name" class="form-control" required placeholder="Men">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Image filename (legacy)</label>
-                    <input type="text" name="image" class="form-control" placeholder="men_category.jpg">
+                    <label class="form-label">Category Image</label>
+                    <input type="file" name="image" class="form-control" accept="image/*" required>
                 </div>
             </div>
             <div class="modal-footer">
