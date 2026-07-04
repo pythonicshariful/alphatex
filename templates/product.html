@@ -97,6 +97,25 @@
             {% endif %}
         </div>
 
+        <!-- Availability / Stock Status -->
+        <div style="margin:1.2rem 0; font-size:0.88rem; display:flex; align-items:center; gap:0.5rem;">
+            <span style="color:var(--text-2);">Availability:</span>
+            {% if product.stock > 0 %}
+                <span class="stock-status in-stock" style="color:#4cd137; font-weight:600; display:inline-flex; align-items:center; gap:4px;">
+                    <i class="fa-solid fa-circle-check"></i>
+                    {% if site_settings.get('show_exact_stock') == 'true' %}
+                        In Stock ({{ product.stock }} available)
+                    {% else %}
+                        In Stock
+                    {% endif %}
+                </span>
+            {% else %}
+                <span class="stock-status out-of-stock" style="color:#e84118; font-weight:600; display:inline-flex; align-items:center; gap:4px;">
+                    <i class="fa-solid fa-circle-xmark"></i> Out of Stock
+                </span>
+            {% endif %}
+        </div>
+
         <!-- Color swatches -->
         {% if unique_colors %}
         <div class="pdp-swatches-wrap" style="margin:1.5rem 0;">
@@ -130,12 +149,22 @@
         </div>
         {% endif %}
 
-        <!-- Add to cart -->
+        <!-- Add to cart & Buy Now -->
         <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
-            <button class="btn btn-fill add-to-cart-btn" style="flex:1;min-width:180px;font-size:.8rem;"
-                onclick="addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
-                <i class="fa-solid fa-bag-shopping"></i> Add to Cart
-            </button>
+            {% if product.stock > 0 %}
+                <button class="btn btn-fill add-to-cart-btn" style="flex:1;min-width:150px;font-size:.8rem;"
+                    onclick="addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                    <i class="fa-solid fa-bag-shopping"></i> Add to Cart
+                </button>
+                <button class="btn btn-accent buy-now-btn" style="flex:1;min-width:150px;font-size:.8rem;background:var(--accent);color:#000;border:1px solid var(--accent);"
+                    onclick="buyNow('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}')">
+                    <i class="fa-solid fa-bolt"></i> Buy Now
+                </button>
+            {% else %}
+                <button class="btn btn-fill" style="flex:1;min-width:150px;font-size:.8rem;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);cursor:not-allowed;" disabled>
+                    <i class="fa-solid fa-ban"></i> Out of Stock
+                </button>
+            {% endif %}
             <button class="wishlist-btn" data-id="{{ product.id }}"
                 style="position:static;width:52px;height:52px;border:1px solid var(--border);border-radius:var(--r);background:transparent;font-size:1.1rem;">
                 <i class="fa-regular fa-heart"></i>

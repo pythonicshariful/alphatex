@@ -46,12 +46,27 @@
                     {% else %}
                     <img src="/static/images/{{ product.image }}" alt="{{ product.name }}" loading="lazy" width="600" height="800">
                     {% endif %}
+                    {% if product.stock <= 0 %}
+                    <div style="position:absolute; top:10px; left:10px; background:rgba(232,65,24,0.9); color:#fff; font-size:.62rem; font-weight:700; text-transform:uppercase; padding:.3rem .6rem; border-radius:4px; z-index:10; letter-spacing:.05em;">
+                        Out of Stock
+                    </div>
+                    {% endif %}
                     <div class="product-quick">
-                        <button class="add-to-cart-btn"
-                            onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
-                            Add to Cart
-                        </button>
-                        <button class="quick-view-btn qv-trigger" onclick="event.preventDefault(); window.openQuickView('{{ product.name|replace('\'', '\\\'') }}', '{{ product.price }}', '{{ hero.src(600) if hero else url_for('static', filename='images/' + product.image) }}', '', '{{ url_for('shop.product_detail', product_id=product.id) }}')">
+                        {% if product.stock > 0 %}
+                            <button class="add-to-cart-btn"
+                                onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                                Add to Cart
+                            </button>
+                            <button class="order-now-btn" style="background:var(--accent); color:#000;"
+                                onclick="event.preventDefault();buyNow('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}')">
+                                Order Now
+                            </button>
+                        {% else %}
+                            <button style="background:transparent; color:#e84118; font-weight:600; cursor:default; border:none; letter-spacing:0.05em; padding:.5rem 1.1rem;" disabled>
+                                Out of Stock
+                            </button>
+                        {% endif %}
+                        <button class="quick-view-btn qv-trigger" onclick="event.preventDefault(); window.openQuickView('{{ product.id }}', '{{ product.name|replace('\'', '\\\'') }}', '{{ product.price }}', '{{ hero.src(600) if hero else url_for('static', filename='images/' + product.image) }}', '', '{{ url_for('shop.product_detail', product_id=product.id) }}')">
                             <i class="fa-regular fa-eye"></i>
                         </button>
                     </div>

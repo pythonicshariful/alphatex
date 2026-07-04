@@ -123,6 +123,7 @@ class Product(db.Model):
     offer_id = db.Column(db.Integer, db.ForeignKey('offer.id'), nullable=True)
     is_featured = db.Column(db.Boolean, default=False)
     description = db.Column(db.Text, nullable=True)
+    stock = db.Column(db.Integer, default=0, nullable=False)
     images = db.relationship('ProductImage', backref='product', lazy=True,
                              order_by='ProductImage.slot', cascade='all, delete-orphan')
 
@@ -432,4 +433,31 @@ class UserLoginLog(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref=db.backref('login_logs', lazy=True, cascade='all, delete-orphan'))
+
+
+class ProductViewLog(db.Model):
+    __tablename__ = 'product_view_log'
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(45), nullable=False)
+    category_id = db.Column(db.String(50), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class NewsletterSubscriber(db.Model):
+    __tablename__ = 'newsletter_subscriber'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    subscribed_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ContactMessage(db.Model):
+    __tablename__ = 'contact_message'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(150), nullable=False)
+    subject = db.Column(db.String(250), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default='unread')  # 'unread' | 'read' | 'replied'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 

@@ -98,6 +98,17 @@
             </a>
             {% endif %}
 
+            <!-- Communications -->
+            {% if admin.has_permission('settings') %}
+            <span class="nav-group-label">Communications</span>
+            <a href="{{ url_for('admin.contacts') }}" class="admin-nav-item {% if request.endpoint == 'admin.contacts' %}active{% endif %}">
+                <i class="fa-solid fa-envelope"></i><span class="sidebar-label">Contact Messages</span>
+            </a>
+            <a href="{{ url_for('admin.subscribers') }}" class="admin-nav-item {% if request.endpoint == 'admin.subscribers' %}active{% endif %}">
+                <i class="fa-solid fa-paper-plane"></i><span class="sidebar-label">Newsletter Subs</span>
+            </a>
+            {% endif %}
+
             <!-- System -->
             {% if admin.has_permission('logs') or admin.has_permission('settings') %}
             <span class="nav-group-label">System</span>

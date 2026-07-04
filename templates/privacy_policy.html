@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy | alphatex{% endblock %}
+
+{% block head %}
+<style>
+.static-hero {
+    position:relative; padding:7rem 2rem 5rem; text-align:center; overflow:hidden;
+    background:linear-gradient(135deg,var(--surface) 0%,var(--bg) 100%);
+    border-bottom:1px solid var(--border);
+}
+.static-hero::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse 80% 60% at 50% 0%,hsla(45,90%,55%,.12),transparent 70%);
+    pointer-events:none;
+}
+.static-hero .label {
+    display:inline-block; font-size:.7rem; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--accent); background:hsla(45,90%,55%,.12);
+    padding:.35rem .9rem; border-radius:2rem; margin-bottom:1.2rem;
+}
+.static-hero h1 {
+    font-family:var(--font-h); font-weight:300;
+    font-size:clamp(2.2rem,5vw,3.5rem); letter-spacing:.04em; margin-bottom:1rem;
+}
+.static-hero p { color:var(--text-secondary); max-width:520px; margin:0 auto; font-size:.95rem; line-height:1.7; }
+
+.legal-layout { display:grid; grid-template-columns:220px 1fr; gap:3rem; max-width:1000px; margin:0 auto; padding:5rem 2rem; }
+@media(max-width:768px){ .legal-layout { grid-template-columns:1fr; } }
+
+/* Sticky TOC */
+.legal-toc { position:sticky; top:5rem; height:fit-content; }
+.legal-toc h4 { font-size:.72rem; text-transform:uppercase; letter-spacing:.12em; color:var(--text-secondary); margin-bottom:1rem; }
+.toc-link {
+    display:block; padding:.45rem .8rem; border-radius:8px; font-size:.82rem; color:var(--text-secondary);
+    text-decoration:none; margin-bottom:.2rem; transition:all .2s ease; border-left:2px solid transparent;
+}
+.toc-link:hover { color:var(--accent); background:hsla(45,90%,55%,.08); border-left-color:var(--accent); }
+.toc-link.active { color:var(--accent); background:hsla(45,90%,55%,.1); border-left-color:var(--accent); font-weight:600; }
+@media(max-width:768px){ .legal-toc { display:none; } }
+
+/* Content */
+.legal-content { max-width:680px; }
+.legal-section { margin-bottom:3rem; animation:fadeUp .6s ease both; scroll-margin-top:6rem; }
+.legal-section h2 {
+    font-family:var(--font-h); font-weight:400; font-size:1.4rem;
+    margin-bottom:1rem; display:flex; align-items:center; gap:.7rem;
+}
+.legal-section h2 i { color:var(--accent); font-size:.9rem; }
+.legal-section p { color:var(--text-secondary); font-size:.875rem; line-height:1.8; margin-bottom:1rem; }
+.legal-section ul { margin:.5rem 0 1rem 1rem; }
+.legal-section ul li { color:var(--text-secondary); font-size:.875rem; line-height:1.8; margin-bottom:.4rem; }
+.legal-section ul li::marker { color:var(--accent); }
+
+.effective-bar {
+    display:flex; align-items:center; gap:.8rem;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:.9rem 1.2rem; margin-bottom:3rem; font-size:.82rem; color:var(--text-secondary);
+}
+.effective-bar i { color:var(--accent); }
+.divider-line { border:none; border-top:1px solid var(--border); margin:2rem 0; }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="static-hero">
+    <div class="label">Legal</div>
+    <h1>Privacy Policy</h1>
+    <p>We take your privacy seriously. This policy explains what data we collect, how we use it, and your rights.</p>
+</div>
+
+<section style="background:var(--bg);">
+    <div class="legal-layout">
+        <!-- TOC -->
+        <nav class="legal-toc">
+            <h4>Contents</h4>
+            <a href="#collection" class="toc-link">Data We Collect</a>
+            <a href="#use" class="toc-link">How We Use It</a>
+            <a href="#sharing" class="toc-link">Data Sharing</a>
+            <a href="#cookies" class="toc-link">Cookies</a>
+            <a href="#retention" class="toc-link">Data Retention</a>
+            <a href="#rights" class="toc-link">Your Rights</a>
+            <a href="#security" class="toc-link">Security</a>
+            <a href="#contact-pp" class="toc-link">Contact</a>
+        </nav>
+
+        <!-- Content -->
+        <div class="legal-content">
+            <div class="effective-bar">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span><strong>Effective Date:</strong> 1 January 2026 &nbsp;·&nbsp; <strong>Last Updated:</strong> 1 July 2026</span>
+            </div>
+
+            <div class="legal-section" id="collection" style="animation-delay:.05s">
+                <h2><i class="fa-solid fa-database"></i> Data We Collect</h2>
+                <p>When you use alphatex, we may collect the following types of information:</p>
+                <ul>
+                    <li><strong>Account information:</strong> Name, email address, and password (hashed) when you register.</li>
+                    <li><strong>Order information:</strong> Delivery address, phone number, and order history.</li>
+                    <li><strong>Browsing data:</strong> IP address, pages visited, products viewed, and session duration.</li>
+                    <li><strong>Device data:</strong> Browser type, operating system, and screen resolution.</li>
+                    <li><strong>Communications:</strong> Messages you send us via the contact form.</li>
+                </ul>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="use" style="animation-delay:.1s">
+                <h2><i class="fa-solid fa-sliders"></i> How We Use It</h2>
+                <p>We use your data solely to deliver and improve our services:</p>
+                <ul>
+                    <li>Processing and fulfilling your orders.</li>
+                    <li>Sending order confirmations and delivery updates via phone.</li>
+                    <li>Personalising your homepage with products relevant to your interests.</li>
+                    <li>Improving our website, product listings, and user experience.</li>
+                    <li>Preventing fraud and maintaining security.</li>
+                    <li>Responding to customer support queries.</li>
+                </ul>
+                <p>We do not use your data for unsolicited marketing without your explicit consent.</p>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="sharing" style="animation-delay:.15s">
+                <h2><i class="fa-solid fa-share-nodes"></i> Data Sharing</h2>
+                <p>We do not sell, rent, or trade your personal information. We may share data with:</p>
+                <ul>
+                    <li><strong>Delivery partners</strong> (name, address, phone) solely to fulfil your order.</li>
+                    <li><strong>Payment processors</strong> if digital payments are introduced in future.</li>
+                    <li><strong>Legal authorities</strong> if required by law or a valid court order.</li>
+                </ul>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="cookies" style="animation-delay:.2s">
+                <h2><i class="fa-solid fa-cookie-bite"></i> Cookies</h2>
+                <p>We use essential cookies to keep you logged in and remember your cart. We also use anonymous analytics cookies to understand how visitors use our site. No tracking cookies are shared with advertisers. See our <a href="{{ url_for('shop.cookie_policy') }}" style="color:var(--accent);">Cookie Policy</a> for details.</p>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="retention" style="animation-delay:.25s">
+                <h2><i class="fa-solid fa-clock-rotate-left"></i> Data Retention</h2>
+                <p>We retain personal data for as long as necessary to fulfil the purpose it was collected for:</p>
+                <ul>
+                    <li>Account data: until you request deletion.</li>
+                    <li>Order records: 5 years (for legal and tax purposes).</li>
+                    <li>Browsing/IP logs: 12 months.</li>
+                </ul>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="rights" style="animation-delay:.3s">
+                <h2><i class="fa-solid fa-user-shield"></i> Your Rights</h2>
+                <p>You have the right to:</p>
+                <ul>
+                    <li><strong>Access</strong> the personal data we hold about you.</li>
+                    <li><strong>Correct</strong> inaccurate or incomplete information.</li>
+                    <li><strong>Delete</strong> your account and associated data.</li>
+                    <li><strong>Object</strong> to how we process your data.</li>
+                    <li><strong>Export</strong> your data in a portable format.</li>
+                </ul>
+                <p>To exercise any of these rights, contact us at <a href="mailto:privacy@alphatex.com" style="color:var(--accent);">privacy@alphatex.com</a>.</p>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="security" style="animation-delay:.35s">
+                <h2><i class="fa-solid fa-lock"></i> Security</h2>
+                <p>All passwords are stored using industry-standard hashing. Our website uses HTTPS encryption. While we implement robust safeguards, no system is 100% secure — we recommend using a strong, unique password for your account.</p>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="contact-pp" style="animation-delay:.4s">
+                <h2><i class="fa-solid fa-envelope"></i> Contact About Privacy</h2>
+                <p>For any privacy-related questions or requests, please reach out to:</p>
+                <p><strong>Email:</strong> <a href="mailto:privacy@alphatex.com" style="color:var(--accent);">privacy@alphatex.com</a><br>
+                <strong>Address:</strong> alphatex Studio, Gulshan-2, Dhaka 1212, Bangladesh</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const tocLinks = document.querySelectorAll('.toc-link');
+const sections = document.querySelectorAll('.legal-section[id]');
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            tocLinks.forEach(l => l.classList.remove('active'));
+            const active = document.querySelector(`.toc-link[href="#${e.target.id}"]`);
+            if (active) active.classList.add('active');
+        }
+    });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+{% endblock %}

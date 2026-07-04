@@ -130,30 +130,70 @@
         <div class="profile-card" style="margin-bottom: 2rem;">
             <div class="checkout-section-title" style="display: flex; justify-content: space-between; align-items: center;">
                 <span>1. Shipping Address</span>
+                {% if current_user.is_authenticated %}
                 <button class="btn btn-fill" id="btn-add-address-checkout" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
                     <i class="fa-solid fa-plus"></i> Add New
                 </button>
+                {% endif %}
             </div>
 
             <div id="address-list-container">
-                {% if addresses %}
-                    {% for addr in addresses %}
-                    <div class="address-select-card {% if addr.is_default %}selected{% endif %}" data-addr-id="{{ addr.id }}">
-                        <input type="radio" name="selected_address" value="{{ addr.id }}" {% if addr.is_default %}checked{% endif %}>
-                        <div style="flex-grow: 1;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-                                <strong style="font-size: 1rem;">{{ addr.recipient_name }}</strong>
-                                <span class="address-label label-{{ addr.label|lower }}" style="font-size: 0.7rem; padding: 0.1rem 0.4rem;">{{ addr.label }}</span>
+                {% if current_user.is_authenticated %}
+                    {% if addresses %}
+                        {% for addr in addresses %}
+                        <div class="address-select-card {% if addr.is_default %}selected{% endif %}" data-addr-id="{{ addr.id }}">
+                            <input type="radio" name="selected_address" value="{{ addr.id }}" {% if addr.is_default %}checked{% endif %}>
+                            <div style="flex-grow: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                                    <strong style="font-size: 1rem;">{{ addr.recipient_name }}</strong>
+                                    <span class="address-label label-{{ addr.label|lower }}" style="font-size: 0.7rem; padding: 0.1rem 0.4rem;">{{ addr.label }}</span>
+                                </div>
+                                <p style="font-size: 0.88rem; color: var(--text-2); margin-bottom: 0.3rem;">{{ addr.phone }}</p>
+                                <p style="font-size: 0.88rem; color: var(--text-2);">{{ addr.full_address }}</p>
                             </div>
-                            <p style="font-size: 0.88rem; color: var(--text-2); margin-bottom: 0.3rem;">{{ addr.phone }}</p>
-                            <p style="font-size: 0.88rem; color: var(--text-2);">{{ addr.full_address }}</p>
                         </div>
-                    </div>
-                    {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        <div style="text-align: center; padding: 2rem; color: var(--text-2);" id="no-addresses-notice">
+                            <i class="fa-solid fa-location-dot fa-2x" style="margin-bottom: 0.8rem; opacity: 0.5;"></i>
+                            <p>No shipping addresses found. Please add an address to proceed.</p>
+                        </div>
+                    {% endif %}
                 {% else %}
-                    <div style="text-align: center; padding: 2rem; color: var(--text-2);" id="no-addresses-notice">
-                        <i class="fa-solid fa-location-dot fa-2x" style="margin-bottom: 0.8rem; opacity: 0.5;"></i>
-                        <p>No shipping addresses found. Please add an address to proceed.</p>
+                    <!-- Guest Checkout Form -->
+                    <div class="guest-checkout-form" style="display: flex; flex-direction: column; gap: 1.2rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="guest-name" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">Full Name</label>
+                            <input type="text" id="guest-name" class="form-input" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text);" placeholder="Recipient's Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="guest-phone" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">Phone Number</label>
+                            <input type="tel" id="guest-phone" class="form-input" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text);" placeholder="01XXXXXXXXX" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">Division</label>
+                            <select id="guest-division" class="form-input" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text); cursor:pointer;" required>
+                                <option value="">Select Division</option>
+                            </select>
+                        </div>
+                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">District</label>
+                                <select id="guest-district" class="form-input" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text); cursor:pointer;" disabled required>
+                                    <option value="">Select District</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">Upazila / Thana</label>
+                                <select id="guest-upazila" class="form-input" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text); cursor:pointer;" disabled required>
+                                    <option value="">Select Upazila / Thana</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="guest-street" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">Street Address</label>
+                            <textarea id="guest-street" class="form-input" rows="2" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text); resize: vertical;" placeholder="House #, Road #, Area/Locality" required></textarea>
+                        </div>
                     </div>
                 {% endif %}
             </div>
@@ -363,59 +403,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnOpen = document.getElementById('btn-add-address-checkout');
     const btnClose = document.getElementById('btn-close-modal');
 
-    btnOpen.addEventListener('click', () => modal.classList.add('open'));
-    btnClose.addEventListener('click', () => modal.classList.remove('open'));
-
-    // Populate Divisions in Modal Form
-    const divisionSel = document.getElementById('division');
-    const districtSel = document.getElementById('district');
-    const upazilaSel = document.getElementById('upazila');
-
-    for (let div in bdLocations) {
-        let opt = document.createElement('option');
-        opt.value = div;
-        opt.textContent = div;
-        divisionSel.appendChild(opt);
-    }
-
-    divisionSel.addEventListener('change', function() {
-        const div = this.value;
-        if (!div) {
-            resetSelect(districtSel, 'Select District');
-            resetSelect(upazilaSel, 'Select Upazila / Thana');
-            return;
-        }
-        districtSel.disabled = false;
-        resetSelect(districtSel, 'Select District');
-        resetSelect(upazilaSel, 'Select Upazila / Thana');
-        
-        for (let dist in bdLocations[div]) {
-            let opt = document.createElement('option');
-            opt.value = dist;
-            opt.textContent = dist;
-            districtSel.appendChild(opt);
-        }
-    });
-
-    districtSel.addEventListener('change', function() {
-        const div = divisionSel.value;
-        const dist = this.value;
-        if (!dist) {
-            resetSelect(upazilaSel, 'Select Upazila / Thana');
-            return;
-        }
-        upazilaSel.disabled = false;
-        resetSelect(upazilaSel, 'Select Upazila / Thana');
-        
-        bdLocations[div][dist].forEach(upz => {
-            let opt = document.createElement('option');
-            opt.value = upz;
-            opt.textContent = upz;
-            upazilaSel.appendChild(opt);
-        });
-    });
+    if (btnOpen) btnOpen.addEventListener('click', () => modal.classList.add('open'));
+    if (btnClose) btnClose.addEventListener('click', () => modal.classList.remove('open'));
 
     function resetSelect(selectEl, placeholderText) {
+        if (!selectEl) return;
         selectEl.innerHTML = '';
         let opt = document.createElement('option');
         opt.value = '';
@@ -424,95 +416,179 @@ document.addEventListener('DOMContentLoaded', function() {
         selectEl.disabled = true;
     }
 
-    // Submit new address via AJAX
-    const addressForm = document.getElementById('checkout-address-form');
-    addressForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const payload = {
-            recipient_name: document.getElementById('recipient_name').value.trim(),
-            phone: document.getElementById('phone').value.trim(),
-            division: divisionSel.value,
-            district: districtSel.value,
-            upazila: upazilaSel.value,
-            union_ward: document.getElementById('union_ward').value.trim(),
-            area: document.getElementById('area').value.trim(),
-            road: document.getElementById('road').value.trim(),
-            house_no: document.getElementById('house_no').value.trim(),
-            apartment: document.getElementById('apartment').value.trim(),
-            postal_code: document.getElementById('postal_code').value.trim(),
-            label: document.getElementById('label').value,
-            maps_link: document.getElementById('maps_link').value.trim(),
-            is_default: document.getElementById('is_default').checked
-        };
+    function setupLocationDropdowns(divId, distId, upzId) {
+        const divisionSel = document.getElementById(divId);
+        const districtSel = document.getElementById(distId);
+        const upazilaSel = document.getElementById(upzId);
+        if (!divisionSel || !districtSel || !upazilaSel) return;
 
-        fetch('{{ url_for("shop.checkout_add_address") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                // Hide modal
-                modal.classList.remove('open');
-                
-                // Clear form
-                addressForm.reset();
-                resetSelect(districtSel, 'Select District');
-                resetSelect(upazilaSel, 'Select Upazila / Thana');
+        for (let div in bdLocations) {
+            let opt = document.createElement('option');
+            opt.value = div;
+            opt.textContent = div;
+            divisionSel.appendChild(opt);
+        }
 
-                // Remove "no address" notice if visible
-                const notice = document.getElementById('no-addresses-notice');
-                if (notice) notice.remove();
-
-                // Unselect others
-                document.querySelectorAll('.address-select-card').forEach(el => el.classList.remove('selected'));
-
-                // Append card to container and select it
-                const newCard = document.createElement('div');
-                newCard.className = 'address-select-card selected';
-                newCard.dataset.addrId = data.address.id;
-                newCard.innerHTML = `
-                    <input type="radio" name="selected_address" value="${data.address.id}" checked>
-                    <div style="flex-grow: 1;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-                            <strong style="font-size: 1rem;">${data.address.recipient_name}</strong>
-                            <span class="address-label label-${data.address.label.toLowerCase()}" style="font-size: 0.7rem; padding: 0.1rem 0.4rem;">${data.address.label}</span>
-                        </div>
-                        <p style="font-size: 0.88rem; color: var(--text-2); margin-bottom: 0.3rem;">${data.address.phone}</p>
-                        <p style="font-size: 0.88rem; color: var(--text-2);">${data.address.full_address}</p>
-                    </div>`;
-                
-                addressContainer.appendChild(newCard);
-                showToast('Address added and selected!', 'success');
-            } else {
-                alert(data.error || 'Failed to save address.');
+        divisionSel.addEventListener('change', function() {
+            const div = this.value;
+            resetSelect(districtSel, 'Select District');
+            resetSelect(upazilaSel, 'Select Upazila / Thana');
+            if (!div) return;
+            
+            for (let dist in bdLocations[div]) {
+                let opt = document.createElement('option');
+                opt.value = dist;
+                opt.textContent = dist;
+                districtSel.appendChild(opt);
             }
-        })
-        .catch(err => {
-            console.error(err);
-            alert('An error occurred while saving the address.');
+            districtSel.disabled = false;
         });
-    });
+
+        districtSel.addEventListener('change', function() {
+            const div = divisionSel.value;
+            const dist = this.value;
+            resetSelect(upazilaSel, 'Select Upazila / Thana');
+            if (!dist) return;
+            
+            bdLocations[div][dist].forEach(upz => {
+                let opt = document.createElement('option');
+                opt.value = upz;
+                opt.textContent = upz;
+                upazilaSel.appendChild(opt);
+            });
+            upazilaSel.disabled = false;
+        });
+    }
+
+    // Populate Divisions in Modal Form (if logged in)
+    setupLocationDropdowns('division', 'district', 'upazila');
+
+    // Populate Divisions in Guest Form (if guest)
+    setupLocationDropdowns('guest-division', 'guest-district', 'guest-upazila');
+
+    // Submit new address via AJAX (only for logged in users)
+    const addressForm = document.getElementById('checkout-address-form');
+    if (addressForm) {
+        addressForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const divisionSel = document.getElementById('division');
+            const districtSel = document.getElementById('district');
+            const upazilaSel = document.getElementById('upazila');
+            
+            const payload = {
+                recipient_name: document.getElementById('recipient_name').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                division: divisionSel.value,
+                district: districtSel.value,
+                upazila: upazilaSel.value,
+                union_ward: document.getElementById('union_ward').value.trim(),
+                area: document.getElementById('area').value.trim(),
+                road: document.getElementById('road').value.trim(),
+                house_no: document.getElementById('house_no').value.trim(),
+                apartment: document.getElementById('apartment').value.trim(),
+                postal_code: document.getElementById('postal_code').value.trim(),
+                label: document.getElementById('label').value,
+                maps_link: document.getElementById('maps_link').value.trim(),
+                is_default: document.getElementById('is_default').checked
+            };
+
+            fetch('{{ url_for("shop.checkout_add_address") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Hide modal
+                    modal.classList.remove('open');
+                    
+                    // Clear form
+                    addressForm.reset();
+                    resetSelect(districtSel, 'Select District');
+                    resetSelect(upazilaSel, 'Select Upazila / Thana');
+
+                    // Remove "no address" notice if visible
+                    const notice = document.getElementById('no-addresses-notice');
+                    if (notice) notice.remove();
+
+                    // Unselect others
+                    document.querySelectorAll('.address-select-card').forEach(el => el.classList.remove('selected'));
+
+                    // Append card to container and select it
+                    const newCard = document.createElement('div');
+                    newCard.className = 'address-select-card selected';
+                    newCard.dataset.addrId = data.address.id;
+                    newCard.innerHTML = `
+                        <input type="radio" name="selected_address" value="${data.address.id}" checked>
+                        <div style="flex-grow: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                                <strong style="font-size: 1rem;">${data.address.recipient_name}</strong>
+                                <span class="address-label label-${data.address.label.toLowerCase()}" style="font-size: 0.7rem; padding: 0.1rem 0.4rem;">${data.address.label}</span>
+                            </div>
+                            <p style="font-size: 0.88rem; color: var(--text-2); margin-bottom: 0.3rem;">${data.address.phone}</p>
+                            <p style="font-size: 0.88rem; color: var(--text-2);">${data.address.full_address}</p>
+                        </div>`;
+                    
+                    addressContainer.appendChild(newCard);
+                    showToast('Address added and selected!', 'success');
+                } else {
+                    alert(data.error || 'Failed to save address.');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('An error occurred while saving the address.');
+            });
+        });
+    }
 
     // Place Order submission
     const btnPlace = document.getElementById('btn-place-order');
     btnPlace.addEventListener('click', function() {
-        const checkedRadio = document.querySelector('input[name="selected_address"]:checked');
-        if (!checkedRadio) {
-            alert('Please select or add a shipping address.');
-            return;
-        }
-
-        const payload = {
-            address_id: parseInt(checkedRadio.value),
+        let payload = {
             items: cart,
             order_notes: document.getElementById('order-notes').value.trim()
         };
+
+        const isGuestCheckout = !document.getElementById('address-list-container').querySelector('.address-select-card');
+        
+        if (!isGuestCheckout) {
+            // Logged in flow
+            const checkedRadio = document.querySelector('input[name="selected_address"]:checked');
+            if (!checkedRadio) {
+                alert('Please select or add a shipping address.');
+                return;
+            }
+            payload.address_id = parseInt(checkedRadio.value);
+        } else {
+            // Guest flow
+            const guestName = document.getElementById('guest-name').value.trim();
+            const guestPhone = document.getElementById('guest-phone').value.trim();
+            const guestDivision = document.getElementById('guest-division').value;
+            const guestDistrict = document.getElementById('guest-district').value;
+            const guestUpazila = document.getElementById('guest-upazila').value;
+            const guestStreet = document.getElementById('guest-street').value.trim();
+
+            if (!guestName || !guestPhone || !guestDivision || !guestDistrict || !guestUpazila || !guestStreet) {
+                alert('Please fill all required recipient name, phone, and address details.');
+                return;
+            }
+
+            // Normalise phone number client-side for validation
+            if (!/^\+?(88)?01[3-9]\d{8}$/.test(guestPhone)) {
+                alert('Please enter a valid Bangladeshi mobile number (e.g. 017XXXXXXXX).');
+                return;
+            }
+
+            payload.guest_name = guestName;
+            payload.guest_phone = guestPhone;
+            payload.guest_address = `${guestStreet}, ${guestUpazila}, ${guestDistrict}, ${guestDivision}, Bangladesh`;
+        }
 
         btnPlace.disabled = true;
         btnPlace.textContent = 'Processing Order...';

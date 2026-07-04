@@ -163,7 +163,7 @@ function initSearch() {
                 const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
                 const data = await res.json();
                 resultsBox.innerHTML = data.results.map(p => `
-                    <div class="search-result-item" onclick="window.location.href='/category/${p.category_id}'">
+                    <div class="search-result-item" onclick="window.location.href='/product/${p.id}'">
                         <img class="search-result-img" src="/static/images/${p.image}" alt="${p.name}">
                         <span class="search-result-name">${p.name}</span>
                         ${p.compare_at_price && parseFloat(p.compare_at_price) > parseFloat(p.price) 
@@ -297,6 +297,17 @@ function addToCart(id, name, price, image, btn) {
 // Expose to inline onclick handlers
 window.addToCart = addToCart;
 
+function buyNow(id, name, price, image) {
+    const existing = cart.find(i => i.id === id);
+    if (!existing) {
+        cart.push({ id, name, price, image, qty: 1 });
+        saveCart();
+        updateBadge();
+    }
+    window.location.href = '/checkout';
+}
+window.buyNow = buyNow;
+
 // ══════════════════════════════════════════════════════
 // WISHLIST
 // ══════════════════════════════════════════════════════
@@ -372,12 +383,23 @@ function initInfiniteScroll() {
                         </picture>
                     </div>` : `<img src="/static/images/${p.image}" alt="${p.name}" loading="lazy">`;
 
+                const oosBadge = p.stock <= 0 ? `
+                    <div style="position:absolute; top:10px; left:10px; background:rgba(232,65,24,0.9); color:#fff; font-size:.62rem; font-weight:700; text-transform:uppercase; padding:.3rem .6rem; border-radius:4px; z-index:10; letter-spacing:.05em;">
+                        Out of Stock
+                    </div>` : '';
+                const quickActionsHtml = p.stock > 0 ? `
+                                <button class="add-to-cart-btn" onclick="event.preventDefault();addToCart('${p.id}','${p.name}','${p.price}','${p.image}',this)">Add to Cart</button>
+                                <button class="order-now-btn" style="background:var(--accent); color:#000;" onclick="event.preventDefault();buyNow('${p.id}','${p.name}','${p.price}','${p.image}')">Order Now</button>`
+                            : `
+                                <button style="background:transparent; color:#e84118; font-weight:600; cursor:default; border:none; letter-spacing:0.05em; padding:.5rem 1.1rem;" disabled>Out of Stock</button>`;
+
                 div.innerHTML = `
                     <a href="/product/${p.id}" style="display:block;">
                         <div class="product-image">
                             ${imgHtml}
+                            ${oosBadge}
                             <div class="product-quick">
-                                <button class="add-to-cart-btn" onclick="event.preventDefault();addToCart('${p.id}','${p.name}','${p.price}','${p.image}',this)">Add to Cart</button>
+                                ${quickActionsHtml}
                                 <button class="quick-view-btn" onclick="event.preventDefault();window.location.href='/product/${p.id}'"><i class="fa-regular fa-eye"></i></button>
                             </div>
                             <button class="wishlist-btn" data-id="${p.id}" onclick="event.preventDefault();"><i class="fa-regular fa-heart"></i></button>
@@ -402,37 +424,7 @@ function initInfiniteScroll() {
     io.observe(sentinel);
 }
 
-// ══════════════════════════════════════════════════════
-// CART DRAWER
-// ══════════════════════════════════════════════════════
-function initCartDrawer() {
-    const overlay = qs('#cart-overlay');
-    const drawer = qs('#cart-drawer');
-    const closeBtn = qs('#cart-close-btn');
-    const triggers = qsa('[data-cart-open]');
-    
-    if (!drawer || !overlay) return;
 
-    function openCart() {
-        overlay.classList.add('open');
-        drawer.classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeCart() {
-        overlay.classList.remove('open');
-        drawer.classList.remove('open');
-        document.body.style.overflow = '';
-    }
-
-    triggers.forEach(t => t.addEventListener('click', (e) => {
-        e.preventDefault();
-        openCart();
-    }));
-
-    closeBtn.addEventListener('click', closeCart);
-    overlay.addEventListener('click', closeCart);
-}
 
 // ══════════════════════════════════════════════════════
 // QUICK VIEW MODAL
@@ -455,12 +447,33 @@ function initQuickView() {
     });
     
     // Add logic here later to open modal and populate data
-    window.openQuickView = function(name, price, img, desc, link) {
+    window.openQuickView = function(id, name, price, img, desc, link) {
         qs('#qv-title').textContent = name;
         qs('#qv-price').textContent = price;
         qs('#qv-desc').textContent = desc || "Experience the pinnacle of luxury. Hand-crafted and strictly limited edition.";
         qs('#qv-img').src = img;
         qs('#qv-link').href = link;
+        
+        let cleanImage = img;
+        if (img.includes('/static/images/')) {
+            cleanImage = img.split('/static/images/')[1];
+        }
+
+        const addBtn = qs('#qv-add-btn');
+        const buyBtn = qs('#qv-buy-btn');
+
+        if (addBtn) {
+            addBtn.onclick = function(e) {
+                e.preventDefault();
+                addToCart(id, name, price, cleanImage, this);
+            };
+        }
+        if (buyBtn) {
+            buyBtn.onclick = function(e) {
+                e.preventDefault();
+                buyNow(id, name, price, cleanImage);
+            };
+        }
         
         overlay.classList.add('open');
         document.body.style.overflow = 'hidden';

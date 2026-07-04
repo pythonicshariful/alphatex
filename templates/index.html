@@ -55,19 +55,12 @@
     </div>
 </div>
 
-<!-- ─── Flash Sale ─────────────────────────────────── -->
-<section class="flash-sale" id="flash-timer-end">
+<!-- ─── Recommended For You ────────────────────────── -->
+<section class="flash-sale">
     <div class="flash-header">
         <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-            <span class="flash-badge"><i class="fa-solid fa-fire"></i> Flash Sale</span>
-            <h2 style="font-size:1.6rem;font-weight:400;">Today's Deals</h2>
-        </div>
-        <div class="flash-timer">
-            <div class="timer-block"><div class="timer-num" id="ft-h">08</div><div class="timer-label">Hrs</div></div>
-            <span class="timer-colon">:</span>
-            <div class="timer-block"><div class="timer-num" id="ft-m">00</div><div class="timer-label">Min</div></div>
-            <span class="timer-colon">:</span>
-            <div class="timer-block"><div class="timer-num" id="ft-s">00</div><div class="timer-label">Sec</div></div>
+            <span class="flash-badge" style="background:var(--accent); color:#000;"><i class="fa-solid fa-star"></i> Recommended</span>
+            <h2 style="font-size:1.6rem;font-weight:400;">Recommended For You</h2>
         </div>
     </div>
     <div class="flash-track">
@@ -85,8 +78,14 @@
                     <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}">
                     {% endif %}
                     
+                    {% if product.stock <= 0 %}
+                    <div style="position:absolute; top:10px; left:10px; background:rgba(232,65,24,0.9); color:#fff; font-size:.62rem; font-weight:700; text-transform:uppercase; padding:.3rem .6rem; border-radius:4px; z-index:10; letter-spacing:.05em;">
+                        Out of Stock
+                    </div>
+                    {% endif %}
+                    
                     <button class="btn btn-sm btn-icon qv-trigger"
-                            onclick="event.preventDefault(); window.openQuickView('{{ product.name }}', '{{ product.price }}', '{{ hero.src(600) if hero else url_for('static', filename='images/' + product.image) }}', '', '{{ url_for('shop.product_detail', product_id=product.id) }}')"
+                            onclick="event.preventDefault(); window.openQuickView('{{ product.id }}', '{{ product.name }}', '{{ product.price }}', '{{ hero.src(600) if hero else url_for('static', filename='images/' + product.image) }}', '', '{{ url_for('shop.product_detail', product_id=product.id) }}')"
                             style="position:absolute; top:10px; right:10px; background:var(--surface); color:var(--text); border:1px solid var(--border); box-shadow:var(--shadow-sm); z-index:10;">
                         <i class="fa-regular fa-eye"></i>
                     </button>
@@ -104,13 +103,101 @@
                         <div class="flash-progress-fill" style="width:{{ [55,70,82,40,65,90]|random }}%;"></div>
                     </div>
                 </div>
-                <button class="btn btn-sm add-to-cart-btn" style="width:100%;"
-                    onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
-                    Add to Cart
-                </button>
+                <div style="display:flex; gap:.5rem; margin-top:.5rem;">
+                    {% if product.stock > 0 %}
+                        <button class="btn btn-sm add-to-cart-btn" style="flex:1; padding:.5rem .25rem; font-size:.7rem; text-align:center;"
+                            onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                            Add to Cart
+                        </button>
+                        <button class="btn btn-sm btn-accent order-now-btn" style="flex:1; background:var(--accent); color:#000; border:1px solid var(--accent); padding:.5rem .25rem; font-size:.7rem; text-align:center;"
+                            onclick="event.preventDefault();buyNow('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}')">
+                            Order Now
+                        </button>
+                    {% else %}
+                        <button class="btn btn-sm" style="flex:1; padding:.5rem .25rem; font-size:.7rem; text-align:center; background:var(--surface-2); color:var(--text-2); border:1px solid var(--border); cursor:not-allowed;" disabled>
+                            Out of Stock
+                        </button>
+                    {% endif %}
+                </div>
             </div>
         </div>
         {% endfor %}
+    </div>
+</section>
+
+<!-- ─── Featured Products ──────────────────────────── -->
+<section class="section" style="background:var(--surface);border-top:1px solid var(--border);">
+    <div class="section-header reveal">
+        <span class="section-label">Curated Picks</span>
+        <h2>Featured Arrivals</h2>
+    </div>
+    <div class="products-grid" id="product-grid">
+        {% for product in featured %}
+        <div class="product-card reveal">
+            <span class="product-badge badge-new">New</span>
+            <button class="wishlist-btn" data-id="{{ product.id }}" onclick="event.preventDefault();">
+                <i class="fa-regular fa-heart"></i>
+            </button>
+            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="display:block;">
+                <div class="product-image">
+                    {% set hero = product.hero_image %}
+                    {% if hero %}
+                    <div class="img-box" style="aspect-ratio:3/4;">
+                        <img class="blur-placeholder" src="{{ hero.blur_data_uri }}" alt="" aria-hidden="true">
+                        <picture>
+                            <source type="image/webp" srcset="{{ hero.srcset }}" sizes="(max-width:600px) 50vw, 25vw">
+                            <img src="{{ hero.src(600) }}" alt="{{ hero.alt_text }}" loading="lazy" class="blur-up" onload="this.classList.add('loaded')">
+                        </picture>
+                    </div>
+                    {% else %}
+                    <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" loading="lazy">
+                    {% endif %}
+                    {% if product.stock <= 0 %}
+                    <div style="position:absolute; top:10px; left:10px; background:rgba(232,65,24,0.9); color:#fff; font-size:.62rem; font-weight:700; text-transform:uppercase; padding:.3rem .6rem; border-radius:4px; z-index:10; letter-spacing:.05em;">
+                        Out of Stock
+                    </div>
+                    {% endif %}
+                    <div class="product-quick">
+                        {% if product.stock > 0 %}
+                            <button class="add-to-cart-btn"
+                                onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                                Add to Cart
+                            </button>
+                            <button class="order-now-btn" style="background:var(--accent); color:#000;"
+                                onclick="event.preventDefault();buyNow('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}')">
+                                Order Now
+                            </button>
+                        {% else %}
+                            <button style="background:transparent; color:#e84118; font-weight:600; cursor:default; border:none; letter-spacing:0.05em; padding:.5rem 1.1rem;" disabled>
+                                Out of Stock
+                            </button>
+                        {% endif %}
+                        <button class="quick-view-btn" onclick="event.preventDefault();window.location.href='{{ url_for('shop.product_detail', product_id=product.id) }}'">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </a>
+            <div class="product-info">
+                <h4 class="product-name">{{ product.name }}</h4>
+                {% if product.compare_at_price %}
+                    {% set p_price = product.price|float %}
+                    {% set p_compare = product.compare_at_price|float %}
+                    {% if p_compare > p_price %}
+                    <p class="product-price">
+                        <span style="color:var(--text-2);text-decoration:line-through;margin-right:8px;font-size:0.9em;">৳{{ product.compare_at_price }}</span>
+                        ৳{{ product.price }}
+                    </p>
+                    {% else %}
+                    <p class="product-price">৳{{ product.price }}</p>
+                    {% endif %}
+                {% else %}
+                <p class="product-price">৳{{ product.price }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        <div id="scroll-sentinel"></div>
     </div>
 </section>
 
@@ -142,67 +229,6 @@
             <p style="font-family:var(--font-h);font-size:1.5rem;color:var(--accent);letter-spacing:.1em;">Free</p>
             <p style="font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-2);">Shipping Over ৳2000</p>
         </div>
-    </div>
-</section>
-
-<!-- ─── Featured Products ──────────────────────────── -->
-<section class="section" style="background:var(--surface);border-top:1px solid var(--border);">
-    <div class="section-header reveal">
-        <span class="section-label">Curated Picks</span>
-        <h2>Featured Arrivals</h2>
-    </div>
-    <div class="products-grid" id="product-grid">
-        {% for product in featured %}
-        <div class="product-card reveal">
-            <span class="product-badge badge-new">New</span>
-            <button class="wishlist-btn" data-id="{{ product.id }}" onclick="event.preventDefault();">
-                <i class="fa-regular fa-heart"></i>
-            </button>
-            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="display:block;">
-                <div class="product-image">
-                    {% set hero = product.hero_image %}
-                    {% if hero %}
-                    <div class="img-box" style="aspect-ratio:3/4;">
-                        <img class="blur-placeholder" src="{{ hero.blur_data_uri }}" alt="" aria-hidden="true">
-                        <picture>
-                            <source type="image/webp" srcset="{{ hero.srcset }}" sizes="(max-width:600px) 50vw, 25vw">
-                            <img src="{{ hero.src(600) }}" alt="{{ hero.alt_text }}" loading="lazy" class="blur-up" onload="this.classList.add('loaded')">
-                        </picture>
-                    </div>
-                    {% else %}
-                    <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" loading="lazy">
-                    {% endif %}
-                    <div class="product-quick">
-                        <button class="add-to-cart-btn"
-                            onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
-                            Add to Cart
-                        </button>
-                        <button class="quick-view-btn" onclick="event.preventDefault();window.location.href='{{ url_for('shop.product_detail', product_id=product.id) }}'">
-                            <i class="fa-regular fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-            </a>
-            <div class="product-info">
-                <h4 class="product-name">{{ product.name }}</h4>
-                {% if product.compare_at_price %}
-                    {% set p_price = product.price|float %}
-                    {% set p_compare = product.compare_at_price|float %}
-                    {% if p_compare > p_price %}
-                    <p class="product-price">
-                        <span style="color:var(--text-2);text-decoration:line-through;margin-right:8px;font-size:0.9em;">৳{{ product.compare_at_price }}</span>
-                        ৳{{ product.price }}
-                    </p>
-                    {% else %}
-                    <p class="product-price">৳{{ product.price }}</p>
-                    {% endif %}
-                {% else %}
-                <p class="product-price">৳{{ product.price }}</p>
-                {% endif %}
-            </div>
-        </div>
-        {% endfor %}
-        <div id="scroll-sentinel"></div>
     </div>
 </section>
 

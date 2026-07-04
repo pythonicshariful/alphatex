@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Terms of Service | alphatex{% endblock %}
+
+{% block head %}
+<style>
+.static-hero {
+    position:relative; padding:7rem 2rem 5rem; text-align:center; overflow:hidden;
+    background:linear-gradient(135deg,var(--surface) 0%,var(--bg) 100%);
+    border-bottom:1px solid var(--border);
+}
+.static-hero::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse 80% 60% at 50% 0%,hsla(45,90%,55%,.12),transparent 70%);
+    pointer-events:none;
+}
+.static-hero .label {
+    display:inline-block; font-size:.7rem; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--accent); background:hsla(45,90%,55%,.12);
+    padding:.35rem .9rem; border-radius:2rem; margin-bottom:1.2rem;
+}
+.static-hero h1 {
+    font-family:var(--font-h); font-weight:300;
+    font-size:clamp(2.2rem,5vw,3.5rem); letter-spacing:.04em; margin-bottom:1rem;
+}
+.static-hero p { color:var(--text-secondary); max-width:520px; margin:0 auto; font-size:.95rem; line-height:1.7; }
+
+.legal-layout { display:grid; grid-template-columns:220px 1fr; gap:3rem; max-width:1000px; margin:0 auto; padding:5rem 2rem; }
+@media(max-width:768px){ .legal-layout { grid-template-columns:1fr; } }
+
+.legal-toc { position:sticky; top:5rem; height:fit-content; }
+.legal-toc h4 { font-size:.72rem; text-transform:uppercase; letter-spacing:.12em; color:var(--text-secondary); margin-bottom:1rem; }
+.toc-link {
+    display:block; padding:.45rem .8rem; border-radius:8px; font-size:.82rem; color:var(--text-secondary);
+    text-decoration:none; margin-bottom:.2rem; transition:all .2s ease; border-left:2px solid transparent;
+}
+.toc-link:hover { color:var(--accent); background:hsla(45,90%,55%,.08); border-left-color:var(--accent); }
+.toc-link.active { color:var(--accent); background:hsla(45,90%,55%,.1); border-left-color:var(--accent); font-weight:600; }
+@media(max-width:768px){ .legal-toc { display:none; } }
+
+.legal-content { max-width:680px; }
+.legal-section { margin-bottom:3rem; animation:fadeUp .6s ease both; scroll-margin-top:6rem; }
+.legal-section h2 {
+    font-family:var(--font-h); font-weight:400; font-size:1.4rem;
+    margin-bottom:1rem; display:flex; align-items:center; gap:.7rem;
+}
+.legal-section h2 i { color:var(--accent); font-size:.9rem; }
+.legal-section p { color:var(--text-secondary); font-size:.875rem; line-height:1.8; margin-bottom:1rem; }
+.legal-section ul { margin:.5rem 0 1rem 1rem; }
+.legal-section ul li { color:var(--text-secondary); font-size:.875rem; line-height:1.8; margin-bottom:.4rem; }
+.legal-section ul li::marker { color:var(--accent); }
+
+.effective-bar {
+    display:flex; align-items:center; gap:.8rem;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:.9rem 1.2rem; margin-bottom:3rem; font-size:.82rem; color:var(--text-secondary);
+}
+.effective-bar i { color:var(--accent); }
+.divider-line { border:none; border-top:1px solid var(--border); margin:2rem 0; }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="static-hero">
+    <div class="label">Legal</div>
+    <h1>Terms of Service</h1>
+    <p>By using alphatex, you agree to these terms. Please read them carefully before placing an order.</p>
+</div>
+
+<section style="background:var(--bg);">
+    <div class="legal-layout">
+        <nav class="legal-toc">
+            <h4>Contents</h4>
+            <a href="#acceptance" class="toc-link">Acceptance</a>
+            <a href="#account" class="toc-link">Accounts</a>
+            <a href="#orders" class="toc-link">Orders</a>
+            <a href="#pricing" class="toc-link">Pricing</a>
+            <a href="#ip" class="toc-link">Intellectual Property</a>
+            <a href="#prohibited" class="toc-link">Prohibited Use</a>
+            <a href="#liability" class="toc-link">Liability</a>
+            <a href="#changes" class="toc-link">Changes</a>
+            <a href="#governing" class="toc-link">Governing Law</a>
+        </nav>
+
+        <div class="legal-content">
+            <div class="effective-bar">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span><strong>Effective Date:</strong> 1 January 2026 &nbsp;·&nbsp; <strong>Last Updated:</strong> 1 July 2026</span>
+            </div>
+
+            <div class="legal-section" id="acceptance" style="animation-delay:.05s">
+                <h2><i class="fa-solid fa-handshake"></i> Acceptance of Terms</h2>
+                <p>By accessing or using the alphatex website (alphatex.com), you confirm that you are at least 18 years of age, have read and understood these Terms of Service, and agree to be bound by them. If you do not agree, please do not use our services.</p>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="account" style="animation-delay:.1s">
+                <h2><i class="fa-solid fa-user-lock"></i> User Accounts</h2>
+                <p>You may browse and purchase as a guest or with a registered account. If you register:</p>
+                <ul>
+                    <li>You are responsible for maintaining the confidentiality of your password.</li>
+                    <li>You agree to provide accurate and up-to-date information.</li>
+                    <li>You must notify us immediately of any unauthorised use of your account.</li>
+                    <li>We reserve the right to terminate accounts that violate these terms.</li>
+                </ul>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="orders" style="animation-delay:.15s">
+                <h2><i class="fa-solid fa-bag-shopping"></i> Orders & Fulfilment</h2>
+                <p>All orders are subject to availability and confirmation. By placing an order, you make an offer to purchase the item(s). We reserve the right to:</p>
+                <ul>
+                    <li>Accept or decline any order at our discretion.</li>
+                    <li>Cancel orders if a product becomes unavailable after purchase.</li>
+                    <li>Contact you for confirmation before processing large or unusual orders.</li>
+                </ul>
+                <p>An order is only confirmed once you receive a confirmation from our team via phone or email.</p>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="pricing" style="animation-delay:.2s">
+                <h2><i class="fa-solid fa-tag"></i> Pricing & Payment</h2>
+                <p>All prices are listed in Bangladeshi Taka (৳) and are inclusive of applicable taxes unless stated otherwise. Prices may change at any time without prior notice. We accept Cash on Delivery (COD) as the sole payment method currently. We reserve the right to correct pricing errors even after an order is placed.</p>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="ip" style="animation-delay:.25s">
+                <h2><i class="fa-solid fa-copyright"></i> Intellectual Property</h2>
+                <p>All content on this website — including text, photography, graphics, logos, and code — is the intellectual property of alphatex or its licensors. You may not reproduce, distribute, modify, or create derivative works without prior written permission from alphatex.</p>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="prohibited" style="animation-delay:.3s">
+                <h2><i class="fa-solid fa-ban"></i> Prohibited Use</h2>
+                <p>You agree not to:</p>
+                <ul>
+                    <li>Use the site for any unlawful or fraudulent purpose.</li>
+                    <li>Attempt to gain unauthorised access to our systems.</li>
+                    <li>Scrape, crawl, or copy content without permission.</li>
+                    <li>Place fraudulent orders or submit false information.</li>
+                    <li>Interfere with the operation of the website or its servers.</li>
+                </ul>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="liability" style="animation-delay:.35s">
+                <h2><i class="fa-solid fa-shield-halved"></i> Limitation of Liability</h2>
+                <p>To the maximum extent permitted by law, alphatex shall not be liable for any indirect, incidental, or consequential damages arising from the use or inability to use our services. Our total liability in any matter shall not exceed the amount paid for the order in question.</p>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="changes" style="animation-delay:.38s">
+                <h2><i class="fa-solid fa-rotate"></i> Changes to Terms</h2>
+                <p>We may update these Terms at any time. Continued use of our website after changes are posted constitutes your acceptance of the revised terms. We will highlight significant changes with a notice on the homepage.</p>
+            </div>
+            <hr class="divider-line">
+
+            <div class="legal-section" id="governing" style="animation-delay:.42s">
+                <h2><i class="fa-solid fa-scale-balanced"></i> Governing Law</h2>
+                <p>These Terms are governed by the laws of the People's Republic of Bangladesh. Any disputes arising shall be subject to the exclusive jurisdiction of the courts of Dhaka, Bangladesh.</p>
+                <p style="margin-top:1rem;">Questions? Contact us at <a href="{{ url_for('shop.contact') }}" style="color:var(--accent);">our support page</a>.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const tocLinks = document.querySelectorAll('.toc-link');
+const sections = document.querySelectorAll('.legal-section[id]');
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            tocLinks.forEach(l => l.classList.remove('active'));
+            const a = document.querySelector(`.toc-link[href="#${e.target.id}"]`);
+            if (a) a.classList.add('active');
+        }
+    });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+{% endblock %}

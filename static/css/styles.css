@@ -203,7 +203,18 @@ header.solid-header {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 2rem 1.5rem;
 }
-.product-card { position: relative; }
+.product-card {
+  position: relative;
+  transition: transform .4s var(--ease), box-shadow .4s var(--ease);
+  border-radius: var(--r);
+  overflow: hidden;
+  padding: .5rem;
+}
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  background: var(--surface-2);
+}
 .product-image {
   position: relative;
   overflow: hidden;

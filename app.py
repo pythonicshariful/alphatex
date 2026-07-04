@@ -1,10 +1,11 @@
-from flask import Flask
+from flask import Flask, render_template, jsonify, request
 from config import Config
 from extensions import db, login_manager, limiter, csrf, oauth
 from models import User
 from migrate import migrate_legacy_images
 import pyotp
 from werkzeug.security import generate_password_hash
+from bot_protection import check_request
 
 def create_app():
     app = Flask(__name__)
@@ -42,6 +43,14 @@ def create_app():
         return User.query.get(int(user_id))
 
     @app.before_request
+    def bot_shield():
+        """Bot protection — runs before every request."""
+        # Skip static files to avoid blocking CSS/JS/images
+        if request.path.startswith('/static/'):
+            return
+        return check_request()
+
+    @app.before_request
     def check_banned_status():
         from flask_login import current_user, logout_user
         from flask import flash, redirect, url_for
@@ -51,6 +60,24 @@ def create_app():
                 logout_user()
                 flash(f'Your account has been restricted: {reason}', 'error')
                 return redirect(url_for('auth.login'))
+
+    @app.errorhandler(403)
+    def forbidden(e):
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Forbidden'}), 403
+        return render_template('errors/403.html'), 403
+
+    @app.errorhandler(429)
+    def too_many_requests(e):
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Too many requests. Please slow down.'}), 429
+        return render_template('errors/429.html'), 429
+
+    @app.errorhandler(404)
+    def not_found(e):
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Not found'}), 404
+        return render_template('errors/404.html'), 404
 
     # Register blueprints
     from auth.routes import auth_bp
@@ -66,6 +93,61 @@ def create_app():
         db.create_all()
         seed_db()
         migrate_legacy_images(app)
+
+    @app.context_processor
+    def inject_settings():
+        from models import SiteSettings
+        try:
+            settings_map = {s.key: s.value for s in SiteSettings.query.all()}
+        except Exception:
+            settings_map = {}
+        return {'site_settings': settings_map}
+
+    @app.after_request
+    def optimize_response(response):
+        import gzip
+        import io
+        
+        # 1. Caching rules for static assets (images, CSS, JS, fonts)
+        if request.path.startswith('/static/'):
+            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+            # Only gzip compress textual static assets (skip compressed image formats)
+            if any(request.path.endswith(ext) for ext in ['.css', '.js', '.svg']):
+                response = gzip_response(response)
+        else:
+            # HTML pages and dynamic APIs: no-store but allow compression
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+            response = gzip_response(response)
+            
+        return response
+
+    def gzip_response(res):
+        import gzip
+        import io
+        accept_encoding = request.headers.get('Accept-Encoding', '')
+        if 'gzip' not in accept_encoding.lower():
+            return res
+        if res.status_code < 200 or res.status_code >= 300:
+            return res
+        if 'Content-Encoding' in res.headers:
+            return res
+        ctype = res.headers.get('Content-Type', '').lower()
+        if not any(t in ctype for t in ['text/html', 'text/css', 'application/javascript', 'application/json', 'image/svg+xml']):
+            return res
+        
+        res.direct_passthrough = False
+        data = res.get_data()
+        if len(data) < 500:
+            return res
+            
+        gzip_buffer = io.BytesIO()
+        with gzip.GzipFile(mode='wb', fileobj=gzip_buffer) as gzip_file:
+            gzip_file.write(data)
+            
+        res.set_data(gzip_buffer.getvalue())
+        res.headers['Content-Encoding'] = 'gzip'
+        res.headers['Content-Length'] = len(res.get_data())
+        return res
 
     return app
 

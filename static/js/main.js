@@ -67,22 +67,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const parallaxImages = document.querySelectorAll('.parallax-img');
     if (parallaxImages.length && !window.matchMedia('(pointer: coarse)').matches) {
         let ticking = false;
-        
+
+        const updateParallax = () => {
+            const viewportHeight = window.innerHeight;
+            const viewportCenter = viewportHeight / 2;
+
+            parallaxImages.forEach(img => {
+                const container = img.parentElement;
+                if (!container) return;
+
+                const rect = container.getBoundingClientRect();
+                
+                // Only animate if the container is visible in the viewport
+                if (rect.top < viewportHeight && rect.bottom > 0) {
+                    const containerCenter = rect.top + rect.height / 2;
+                    const diff = containerCenter - viewportCenter;
+                    
+                    // Normalize the distance from the center of the viewport
+                    const maxDistance = (viewportHeight + rect.height) / 2;
+                    const t = Math.max(-1, Math.min(1, diff / maxDistance));
+                    
+                    // We have 20% extra image height (height is 120%, top is -10%).
+                    // This means the safe translation range is within +/- 10% of the container's height.
+                    const maxTranslation = rect.height * 0.1;
+                    
+                    // Compute translation: shift opposite to scroll direction for parallax depth
+                    const yPos = -t * maxTranslation;
+                    
+                    img.style.setProperty('--parallax-y', `${yPos}px`);
+                }
+            });
+        };
+
         window.addEventListener('scroll', () => {
             if (!ticking) {
                 window.requestAnimationFrame(() => {
-                    const scrolled = window.pageYOffset;
-                    parallaxImages.forEach(img => {
-                        const speed = 0.4;
-                        const yPos = -(scrolled * speed);
-                        // Limit parallax translation to not break layout boundaries
-                        const limitedY = Math.max(-100, Math.min(100, yPos));
-                        img.style.transform = `translateY(${limitedY}px)`;
-                    });
+                    updateParallax();
                     ticking = false;
                 });
                 ticking = true;
             }
-        });
+        }, { passive: true });
+
+        window.addEventListener('resize', updateParallax);
+        updateParallax();
     }
 });

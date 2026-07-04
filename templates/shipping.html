@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Shipping & Returns | alphatex{% endblock %}
+
+{% block head %}
+<style>
+.static-hero {
+    position:relative; padding:7rem 2rem 5rem; text-align:center; overflow:hidden;
+    background:linear-gradient(135deg,var(--surface) 0%,var(--bg) 100%);
+    border-bottom:1px solid var(--border);
+}
+.static-hero::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse 80% 60% at 50% 0%,hsla(45,90%,55%,.12),transparent 70%);
+    pointer-events:none;
+}
+.static-hero .label {
+    display:inline-block; font-size:.7rem; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--accent); background:hsla(45,90%,55%,.12);
+    padding:.35rem .9rem; border-radius:2rem; margin-bottom:1.2rem;
+}
+.static-hero h1 {
+    font-family:var(--font-h); font-weight:300;
+    font-size:clamp(2.2rem,5vw,3.5rem); letter-spacing:.04em; margin-bottom:1rem;
+}
+.static-hero p { color:var(--text-secondary); max-width:520px; margin:0 auto; font-size:.95rem; line-height:1.7; }
+
+.sr-wrap { max-width: 960px; margin: 0 auto; padding: 5rem 2rem; }
+
+/* Step tracker */
+.steps-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 4rem;
+}
+@media(max-width:640px){ .steps-row { grid-template-columns: 1fr; } }
+.step-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 2rem 1.5rem; text-align: center;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+    animation: fadeUp .6s ease both;
+}
+.step-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 14px 36px rgba(0,0,0,.1); }
+.step-card:nth-child(1){ animation-delay:.05s }
+.step-card:nth-child(2){ animation-delay:.15s }
+.step-card:nth-child(3){ animation-delay:.25s }
+.step-num {
+    width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 1rem;
+    background: hsla(45,90%,55%,.12); display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; color: var(--accent);
+}
+.step-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: .5rem; }
+.step-card p { color: var(--text-secondary); font-size: .83rem; line-height: 1.65; }
+
+/* Rates table */
+.section-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 2.5rem; margin-bottom: 2rem; animation: fadeUp .6s ease both;
+}
+.section-card h2 {
+    font-family: var(--font-h); font-weight: 400; font-size: 1.4rem;
+    margin-bottom: .5rem; display: flex; align-items: center; gap: .8rem;
+}
+.section-card h2 i { color: var(--accent); font-size: 1rem; }
+.section-card p.sub { color: var(--text-secondary); font-size: .85rem; margin-bottom: 1.5rem; }
+.info-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.info-table th, .info-table td { padding: .9rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+.info-table th { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-secondary); background: var(--bg); }
+.info-table tr:last-child td { border-bottom: none; }
+.badge-free {
+    display: inline-block; padding: .25rem .7rem; border-radius: 2rem; font-size: .72rem; font-weight: 600;
+    background: hsla(120,60%,50%,.15); color: #4caf50; letter-spacing: .05em;
+}
+.badge-paid {
+    display: inline-block; padding: .25rem .7rem; border-radius: 2rem; font-size: .72rem; font-weight: 600;
+    background: hsla(45,90%,55%,.12); color: var(--accent); letter-spacing: .05em;
+}
+
+/* Return steps */
+.return-steps { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.2rem; }
+.rs-item {
+    display: flex; gap: 1.2rem; align-items: flex-start;
+    padding: 1rem 1.2rem; background: var(--bg); border-radius: 10px; border: 1px solid var(--border);
+}
+.rs-num {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    background: var(--accent); color: #000; font-weight: 700; font-size: .8rem;
+    display: flex; align-items: center; justify-content: center;
+}
+.rs-item h4 { font-size: .875rem; font-weight: 600; margin-bottom: .2rem; }
+.rs-item p { color: var(--text-secondary); font-size: .8rem; line-height: 1.5; }
+
+.policy-note {
+    background: hsla(45,90%,55%,.08); border: 1px solid hsla(45,90%,55%,.25);
+    border-radius: 10px; padding: 1rem 1.4rem; font-size: .83rem;
+    color: var(--text-secondary); line-height: 1.65; margin-top: 1.4rem;
+}
+.policy-note strong { color: var(--accent); }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="static-hero">
+    <div class="label">Delivery & Returns</div>
+    <h1>Shipping & Returns</h1>
+    <p>Fast, reliable delivery across Bangladesh — and a hassle-free return process if things don't work out.</p>
+</div>
+
+<section style="background:var(--bg);">
+    <div class="sr-wrap">
+
+        <!-- Steps -->
+        <div class="steps-row">
+            <div class="step-card">
+                <div class="step-num"><i class="fa-solid fa-cart-shopping"></i></div>
+                <h3>Place Your Order</h3>
+                <p>Order online at any time. Cash on Delivery — you pay only when it arrives.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num"><i class="fa-solid fa-box-open"></i></div>
+                <h3>We Pack & Dispatch</h3>
+                <p>Orders packed within 24 hrs and handed to our delivery partners same day.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num"><i class="fa-solid fa-house-circle-check"></i></div>
+                <h3>Delivered to Your Door</h3>
+                <p>Dhaka deliveries in 1–2 days. Rest of Bangladesh in 3–5 business days.</p>
+            </div>
+        </div>
+
+        <!-- Shipping Rates -->
+        <div class="section-card" style="animation-delay:.1s">
+            <h2><i class="fa-solid fa-truck-fast"></i> Delivery Rates</h2>
+            <p class="sub">We ship to all 8 divisions of Bangladesh via trusted courier partners.</p>
+            <table class="info-table">
+                <thead><tr><th>Zone</th><th>Minimum Order</th><th>Delivery Fee</th><th>ETA</th></tr></thead>
+                <tbody>
+                    <tr><td>Inside Dhaka</td><td>৳2,000+</td><td><span class="badge-free">Free</span></td><td>1–2 days</td></tr>
+                    <tr><td>Inside Dhaka</td><td>Below ৳2,000</td><td><span class="badge-paid">৳80</span></td><td>1–2 days</td></tr>
+                    <tr><td>Outside Dhaka</td><td>৳2,000+</td><td><span class="badge-free">Free</span></td><td>3–5 days</td></tr>
+                    <tr><td>Outside Dhaka</td><td>Below ৳2,000</td><td><span class="badge-paid">৳120</span></td><td>3–5 days</td></tr>
+                </tbody>
+            </table>
+            <div class="policy-note" style="margin-top:1.2rem;">
+                <strong>Note:</strong> Delivery times are estimates and may extend during sale events, national holidays, or adverse weather conditions.
+            </div>
+        </div>
+
+        <!-- Returns -->
+        <div class="section-card" style="animation-delay:.2s">
+            <h2><i class="fa-solid fa-rotate-left"></i> Return Policy</h2>
+            <p class="sub">We accept returns within <strong>7 days</strong> of delivery. Items must be unused and in original condition.</p>
+
+            <div class="return-steps">
+                <div class="rs-item">
+                    <div class="rs-num">1</div>
+                    <div>
+                        <h4>Contact Us First</h4>
+                        <p>Email or call us within 7 days of receiving your order with your order ID and reason for return.</p>
+                    </div>
+                </div>
+                <div class="rs-item">
+                    <div class="rs-num">2</div>
+                    <div>
+                        <h4>Pack the Item</h4>
+                        <p>Pack the item securely in its original packaging with tags attached. Include your order details inside.</p>
+                    </div>
+                </div>
+                <div class="rs-item">
+                    <div class="rs-num">3</div>
+                    <div>
+                        <h4>We Arrange Pickup</h4>
+                        <p>Our courier will collect the parcel from your address at no cost to you (inside Dhaka).</p>
+                    </div>
+                </div>
+                <div class="rs-item">
+                    <div class="rs-num">4</div>
+                    <div>
+                        <h4>Exchange or Refund</h4>
+                        <p>Once we inspect and approve the return, your exchange or store credit will be processed within 2–3 business days.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="policy-note">
+                <strong>Not eligible for return:</strong> Sale / discounted items, items without original tags, items showing signs of use or washing, underwear and socks (for hygiene reasons).
+            </div>
+        </div>
+
+        <!-- Contact CTA -->
+        <div style="text-align:center; padding:2rem 0 0;">
+            <p style="color:var(--text-secondary); font-size:.9rem; margin-bottom:1.2rem;">Questions about your shipment? We're here to help.</p>
+            <a href="{{ url_for('shop.contact') }}" class="btn" style="display:inline-block; padding:.9rem 2.4rem;">Contact Support</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

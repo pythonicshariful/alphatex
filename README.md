@@ -17,9 +17,11 @@
     *   Google Maps pins integration.
 *   **Order History & Tracking**: Overview of past order statuses (`Pending`, `Processing`, `Shipped`, `Delivered`, `Cancelled`), payment details, and tracking IDs.
 *   **Wishlist**: Save favorite items to a curated wishlist.
+*   **IP-Based Personalized Homepage**: Automatically tracks browsing patterns per client IP to prioritize category recommendations on the homepage (with random fallbacks).
+*   **Legal & Support Hubs**: Beautifully styled, animated pages including Contact Us (interactive AJAX form), searchable FAQ accordion, Shipping & Returns (visual flowchart), Size Guide (interactive CM/IN unit converter), and complete Privacy, Terms, and Cookie Policy pages.
 
 ### 🛒 Shopping Flow
-*   **Dynamic Cart Drawer**: Live slider cart showing subtotal, item counters, and free shipping progress bars.
+*   **Dynamic Cart Drawer**: Live slider cart showing subtotal, item counters, free shipping progress bars, and custom cross-sell recommendations.
 *   **Bespoke Checkout**: Responsive one-page checkout automatically selecting default delivery address, with options to choose other addresses or add a new address via AJAX without leaving checkout.
 *   **Rich Product Showcase**: Grid-based layouts, parallax images, search filters, and infinite scroll for categories.
 
@@ -32,6 +34,14 @@
 *   **Inventory & Categories**: Manage categories, slides, and products directly from the interface.
 *   **TOTP 2-Factor Authentication (2FA)**: High-security setup for admin users with manual keys and QR codes.
 *   **Brute-Force & Session Protection**: Account lockouts after failed login attempts and secure IP whitelisting.
+*   **Communications Center**: Review, update, and manage all Customer Contact Queries and Newsletter email subscriptions from the dashboard.
+*   **Data Export for ML**: Download client browsing log streams directly to CSV under settings to train recommendations ML models.
+*   **Security Threat Monitor**: View live suspicious IP logs, permanently block or unblock IPs, and monitor all active security layers.
+
+### 🚀 Speed & Protection Middlewares
+*   **Custom Gzip Compression**: Middleware compressing all text/JSON/CSS/JS payloads >500B on the fly, saving 70-80% bandwidth.
+*   **Aggressive Caching**: Sets Cache-Control public cache headers (1 year max-age) for static assets.
+*   **7-Layer Bot Shield**: Active filters for bad user-agents, CMS scanning probes (SQLi, LFI), rate limiters, honeypots, and custom animated error pages (403, 429, 404).
 
 ---
 

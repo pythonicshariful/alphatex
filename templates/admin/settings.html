@@ -15,6 +15,7 @@
         <button class="settings-tab active" data-tab="general">General</button>
         <button class="settings-tab" data-tab="seo">SEO</button>
         <button class="settings-tab" data-tab="maintenance">Maintenance</button>
+        <button class="settings-tab" data-tab="export">Data Export</button>
     </div>
 
     <div class="section-body" style="padding-top:0;">
@@ -30,6 +31,34 @@
                 <div class="form-group">
                     <label class="form-label">Support Email</label>
                     <input type="email" name="support_email" class="form-control" value="{{ settings.get('support_email', '') }}">
+                </div>
+
+                <div class="divider" style="margin:2rem 0 1rem;"></div>
+                <h3 style="margin-bottom:1rem; font-size:1rem; font-weight:600; color:var(--a-text);">Social Media Links</h3>
+                <div class="form-group">
+                    <label class="form-label">Instagram Link</label>
+                    <input type="url" name="social_instagram" class="form-control" value="{{ settings.get('social_instagram', '') }}" placeholder="https://instagram.com/yourprofile">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Facebook Link</label>
+                    <input type="url" name="social_facebook" class="form-control" value="{{ settings.get('social_facebook', '') }}" placeholder="https://facebook.com/yourpage">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Twitter / X Link</label>
+                    <input type="url" name="social_twitter" class="form-control" value="{{ settings.get('social_twitter', '') }}" placeholder="https://twitter.com/yourprofile">
+                </div>
+
+                <div class="divider" style="margin:2rem 0 1rem;"></div>
+                <h3 style="margin-bottom:1rem; font-size:1rem; font-weight:600; color:var(--a-text);">Inventory Settings</h3>
+                <div style="background:var(--a-surface2); border:1px solid var(--a-border); padding:1.2rem; border-radius:8px; display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+                    <div>
+                        <div style="font-weight:600; font-size:0.9rem;">Show Exact Stock Amount</div>
+                        <div class="text-sm text-muted" style="margin-top:2px;">Display the exact number of remaining items to users. When disabled, users will only see "In Stock" or "Out of Stock".</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="show_exact_stock" value="true" {% if settings.get('show_exact_stock') == 'true' %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
             </div>
 
@@ -60,6 +89,21 @@
                         <input type="checkbox" name="maintenance_mode" value="true" {% if settings.get('maintenance_mode') == 'true' %}checked{% endif %}>
                         <span class="toggle-slider"></span>
                     </label>
+                </div>
+            </div>
+
+            <!-- Data Export -->
+            <div class="settings-panel" data-panel="export">
+                <h3 style="margin-bottom:1rem; font-size:1rem; font-weight:600; color:var(--a-text);">Export Datasets for Machine Learning</h3>
+                <p class="text-muted" style="margin-bottom:1.5rem; font-size:0.85rem; line-height:1.5;">Download user browsing history (views log by IP and category) to train custom recommendation models.</p>
+                <div style="background:var(--a-surface2); border:1px solid var(--a-border); padding:1.2rem; border-radius:8px; display:flex; align-items:center; justify-content:space-between;">
+                    <div>
+                        <div style="font-weight:600; font-size:0.9rem; color:var(--a-text);">Browsing History Log (CSV)</div>
+                        <div class="text-sm text-muted" style="margin-top:4px;">Columns: id, ip_address, category_id, timestamp</div>
+                    </div>
+                    <a href="{{ url_for('admin.export_view_logs') }}" class="btn-a btn-a-primary">
+                        <i class="fa-solid fa-download"></i> Export CSV
+                    </a>
                 </div>
             </div>
 

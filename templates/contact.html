@@ -1,33 +1,299 @@
 {% extends "base.html" %}
-
 {% block title %}Contact Us | alphatex{% endblock %}
 
+{% block head %}
+<style>
+/* ── Page Hero ── */
+.static-hero {
+    position: relative;
+    padding: 7rem 2rem 5rem;
+    text-align: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+}
+.static-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, hsla(45,90%,55%,.12), transparent 70%);
+    pointer-events: none;
+}
+.static-hero .label {
+    display: inline-block;
+    font-size: .7rem; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent); background: hsla(45,90%,55%,.12);
+    padding: .35rem .9rem; border-radius: 2rem; margin-bottom: 1.2rem;
+}
+.static-hero h1 {
+    font-family: var(--font-h); font-weight: 300;
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    letter-spacing: .04em; margin-bottom: 1rem;
+}
+.static-hero p { color: var(--text-secondary); max-width: 520px; margin: 0 auto; font-size: .95rem; line-height: 1.7; }
+
+/* ── Grid Layout ── */
+.contact-wrap {
+    max-width: 1100px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4rem; padding: 5rem 2rem;
+}
+@media(max-width:768px){ .contact-wrap { grid-template-columns: 1fr; gap: 3rem; padding: 3rem 1.5rem; } }
+
+/* ── Info Side ── */
+.contact-info { display: flex; flex-direction: column; gap: 2rem; }
+.ci-card {
+    display: flex; align-items: flex-start; gap: 1.2rem;
+    padding: 1.4rem 1.6rem;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+    animation: fadeUp .6s ease both;
+}
+.ci-card:nth-child(1){ animation-delay:.1s }
+.ci-card:nth-child(2){ animation-delay:.2s }
+.ci-card:nth-child(3){ animation-delay:.3s }
+.ci-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.12); border-color: var(--accent); }
+.ci-icon {
+    width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0;
+    background: hsla(45,90%,55%,.12); display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; color: var(--accent);
+}
+.ci-card h4 { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; }
+.ci-card p { color: var(--text-secondary); font-size: .85rem; line-height: 1.5; }
+
+/* ── Form Side ── */
+.contact-form-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 2.5rem; animation: fadeUp .6s ease .15s both;
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+@media(max-width:500px){ .form-row { grid-template-columns: 1fr; } }
+.field-group { position: relative; margin-bottom: 1rem; }
+.field-group label {
+    display: block; font-size: .75rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--text-secondary); margin-bottom: .4rem;
+}
+.field-group input, .field-group select, .field-group textarea {
+    width: 100%; padding: .85rem 1rem; border-radius: 8px;
+    border: 1.5px solid var(--border); background: var(--bg); color: var(--text);
+    font-size: .9rem; font-family: inherit; outline: none;
+    transition: border-color .25s ease, box-shadow .25s ease;
+}
+.field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px hsla(45,90%,55%,.15);
+}
+.field-group textarea { resize: vertical; min-height: 130px; }
+
+.subject-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.chip {
+    padding: .4rem .9rem; border-radius: 2rem; font-size: .75rem; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary);
+    transition: all .2s ease; user-select: none;
+}
+.chip:hover, .chip.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+.submit-btn {
+    width: 100%; padding: 1rem; border-radius: 8px; border: none; cursor: pointer;
+    font-family: inherit; font-size: .9rem; font-weight: 600; letter-spacing: .05em;
+    background: var(--accent); color: #000;
+    transition: transform .25s ease, box-shadow .25s ease, opacity .25s ease;
+    position: relative; overflow: hidden;
+}
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px hsla(45,90%,55%,.4); }
+.submit-btn:active { transform: translateY(0); }
+.submit-btn::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,.25), transparent);
+    pointer-events: none;
+}
+
+/* ── Success State ── */
+.form-success {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 3rem 1rem; gap: 1rem;
+}
+.form-success .check-circle {
+    width: 70px; height: 70px; border-radius: 50%;
+    background: hsla(120,60%,50%,.15); display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; color: #4caf50;
+    animation: pop .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes pop { from { transform: scale(0) } to { transform: scale(1) } }
+@keyframes fadeUp {
+    from { opacity:0; transform: translateY(24px); }
+    to   { opacity:1; transform: translateY(0); }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="page-header">
-    <h1 class="reveal">Contact Us</h1>
-    <p class="reveal" style="color: var(--text-secondary);">Reach out to our concierge team for personalized assistance.</p>
+<!-- Hero -->
+<div class="static-hero">
+    <div class="label">Get in Touch</div>
+    <h1>Contact Us</h1>
+    <p>Our concierge team is here for you — from styling advice to order support, we respond within 24 hours.</p>
 </div>
 
-<section class="section" style="padding-top: 4rem;">
-    <div class="contact-container reveal">
-        <form>
-            <div style="display: flex; gap: 2rem; margin-bottom: 2rem;">
-                <input type="text" class="form-control" placeholder="First Name" required>
-                <input type="text" class="form-control" placeholder="Last Name" required>
+<section style="background:var(--bg);">
+    <div class="contact-wrap">
+        <!-- Info Cards -->
+        <div class="contact-info">
+            <div class="ci-card">
+                <div class="ci-icon"><i class="fa-solid fa-envelope"></i></div>
+                <div>
+                    <h4>Email Us</h4>
+                    <p>support@alphatex.com<br>We reply within 24 hours</p>
+                </div>
             </div>
-            <div class="form-group">
-                <input type="email" class="form-control" placeholder="Email Address" required>
+            <div class="ci-card">
+                <div class="ci-icon"><i class="fa-solid fa-phone"></i></div>
+                <div>
+                    <h4>Call Us</h4>
+                    <p>+880 1800-ALPHATEX<br>Sat–Thu, 10am – 7pm (BST)</p>
+                </div>
             </div>
-            <div class="form-group">
-                <input type="tel" class="form-control" placeholder="Phone Number">
+            <div class="ci-card">
+                <div class="ci-icon"><i class="fa-solid fa-location-dot"></i></div>
+                <div>
+                    <h4>Visit Us</h4>
+                    <p>alphatex Studio, Gulshan-2<br>Dhaka 1212, Bangladesh</p>
+                </div>
             </div>
-            <div class="form-group">
-                <textarea class="form-control" placeholder="Your Message" required></textarea>
+
+            <div style="padding: 1.4rem 1.6rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; animation: fadeUp .6s .4s both;">
+                <h4 style="font-size:.85rem; font-weight:600; margin-bottom:.8rem;">Business Hours</h4>
+                <div style="display:flex; flex-direction:column; gap:.5rem;">
+                    <div style="display:flex; justify-content:space-between; font-size:.85rem;">
+                        <span style="color:var(--text-secondary);">Sat – Thu</span>
+                        <span>10:00 AM – 7:00 PM</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:.85rem;">
+                        <span style="color:var(--text-secondary);">Friday</span>
+                        <span>Closed</span>
+                    </div>
+                </div>
             </div>
-            <div style="text-align: center; margin-top: 3rem;">
-                <button type="submit" class="btn">Send Message</button>
+        </div>
+
+        <!-- Form -->
+        <div class="contact-form-card">
+            <h3 style="font-family:var(--font-h); font-weight:400; font-size:1.4rem; margin-bottom:.3rem;">Send a Message</h3>
+            <p style="color:var(--text-secondary); font-size:.85rem; margin-bottom:1.8rem;">Fill out the form and we'll be in touch shortly.</p>
+
+            <div class="subject-chips" id="chips">
+                <span class="chip active" data-val="General Enquiry">General Enquiry</span>
+                <span class="chip" data-val="Order Issue">Order Issue</span>
+                <span class="chip" data-val="Returns & Exchange">Returns</span>
+                <span class="chip" data-val="Styling Advice">Styling</span>
+                <span class="chip" data-val="Other">Other</span>
             </div>
-        </form>
+
+            <form id="contact-form" onsubmit="submitContact(event)">
+                <div class="form-row">
+                    <div class="field-group">
+                        <label>First Name</label>
+                        <input type="text" id="cf-fname" placeholder="Rahim" required>
+                    </div>
+                    <div class="field-group">
+                        <label>Last Name</label>
+                        <input type="text" id="cf-lname" placeholder="Uddin">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label>Email Address</label>
+                    <input type="email" id="cf-email" placeholder="you@example.com" required>
+                </div>
+                <div class="field-group">
+                    <label>Phone (Optional)</label>
+                    <input type="tel" id="cf-phone" placeholder="+880 17XXXXXXXX">
+                </div>
+                <div class="field-group">
+                    <label>Message</label>
+                    <textarea id="cf-msg" placeholder="Tell us how we can help…" required></textarea>
+                </div>
+
+                <!-- Honeypot: hidden from humans, bots fill it in -->
+                <div style="position:absolute;left:-9999px;top:-9999px;opacity:0;pointer-events:none;" aria-hidden="true">
+                    <input type="text" name="website_url" tabindex="-1" autocomplete="off" value="">
+                </div>
+
+                <!-- Cloudflare Turnstile -->
+                <div class="cf-turnstile" data-sitekey="{{ config.TURNSTILE_SITE_KEY or '1x00000000000000000000AA' }}" style="margin-bottom:1rem;"></div>
+
+                <button type="submit" class="submit-btn"><i class="fa-solid fa-paper-plane" style="margin-right:.5rem;"></i>Send Message</button>
+            </form>
+
+            <div class="form-success" id="form-success">
+                <div class="check-circle"><i class="fa-solid fa-check"></i></div>
+                <h3 style="font-family:var(--font-h); font-weight:400;">Message Sent!</h3>
+                <p style="color:var(--text-secondary); font-size:.9rem;">Thank you for reaching out. Our team will reply within 24 hours.</p>
+            </div>
+        </div>
     </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Subject chips
+document.querySelectorAll('#chips .chip').forEach(c => {
+    c.addEventListener('click', () => {
+        document.querySelectorAll('#chips .chip').forEach(x => x.classList.remove('active'));
+        c.classList.add('active');
+    });
+});
+
+async function submitContact(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('.submit-btn');
+    const oldText = btn.innerHTML;
+    btn.textContent = 'Sending…';
+    btn.disabled = true;
+
+    const fname = document.getElementById('cf-fname').value.trim();
+    const lname = document.getElementById('cf-lname').value.trim();
+    const email = document.getElementById('cf-email').value.trim();
+    const phone = document.getElementById('cf-phone').value.trim();
+    const msg = document.getElementById('cf-msg').value.trim();
+    const activeChip = document.querySelector('#chips .chip.active');
+    const subject = activeChip ? activeChip.getAttribute('data-val') : 'General Enquiry';
+    const honeypot = e.target.querySelector('input[name="website_url"]').value;
+    const turnstileToken = e.target.querySelector('[name="cf-turnstile-response"]')?.value || '';
+
+    const payload = {
+        name: `${fname} ${lname}`.trim(),
+        email: email,
+        phone: phone,
+        subject: subject,
+        message: msg,
+        website_url: honeypot,
+        'cf-turnstile-response': turnstileToken
+    };
+
+    try {
+        const res = await fetch('{{ url_for("shop.contact") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('contact-form').style.display = 'none';
+            const s = document.getElementById('form-success');
+            s.style.display = 'flex';
+        } else {
+            alert(data.error || 'Something went wrong. Please try again.');
+            btn.innerHTML = oldText;
+            btn.disabled = false;
+        }
+    } catch (err) {
+        alert('Failed to connect to the server.');
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+    }
+}
+</script>
 {% endblock %}

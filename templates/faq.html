@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}FAQ | alphatex{% endblock %}
+
+{% block head %}
+<style>
+.static-hero {
+    position: relative; padding: 7rem 2rem 5rem; text-align: center; overflow: hidden;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+}
+.static-hero::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse 80% 60% at 50% 0%, hsla(45,90%,55%,.12), transparent 70%);
+    pointer-events:none;
+}
+.static-hero .label {
+    display:inline-block; font-size:.7rem; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--accent); background:hsla(45,90%,55%,.12);
+    padding:.35rem .9rem; border-radius:2rem; margin-bottom:1.2rem;
+}
+.static-hero h1 {
+    font-family:var(--font-h); font-weight:300;
+    font-size:clamp(2.2rem,5vw,3.5rem); letter-spacing:.04em; margin-bottom:1rem;
+}
+.static-hero p { color:var(--text-secondary); max-width:520px; margin:0 auto; font-size:.95rem; line-height:1.7; }
+
+.faq-wrap { max-width: 780px; margin: 0 auto; padding: 5rem 2rem; }
+
+/* Category Tabs */
+.faq-cats {
+    display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 3rem;
+    justify-content: center;
+}
+.faq-cat-btn {
+    padding: .5rem 1.2rem; border-radius: 2rem; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text-secondary); font-size: .8rem;
+    cursor: pointer; font-family: inherit; transition: all .2s ease;
+}
+.faq-cat-btn:hover { border-color: var(--accent); color: var(--accent); }
+.faq-cat-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+
+/* FAQ Item */
+.faq-group { margin-bottom: 2.5rem; }
+.faq-group-title {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .14em;
+    color: var(--accent); margin-bottom: 1rem; font-weight: 600;
+}
+.faq-item {
+    border: 1px solid var(--border); border-radius: 12px; margin-bottom: .75rem;
+    overflow: hidden; background: var(--surface);
+    transition: border-color .25s ease, box-shadow .25s ease;
+    animation: fadeUp .5s ease both;
+}
+.faq-item:hover { border-color: var(--accent); box-shadow: 0 6px 24px rgba(0,0,0,.08); }
+.faq-question {
+    width: 100%; padding: 1.2rem 1.4rem; text-align: left; border: none; background: none;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    font-family: inherit; font-size: .9rem; font-weight: 600; color: var(--text);
+    cursor: pointer;
+}
+.faq-icon {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    background: hsla(45,90%,55%,.12); display: flex; align-items: center; justify-content: center;
+    color: var(--accent); font-size: .8rem;
+    transition: transform .3s ease, background .3s ease;
+}
+.faq-item.open .faq-icon { transform: rotate(45deg); background: var(--accent); color: #000; }
+.faq-answer {
+    max-height: 0; overflow: hidden;
+    transition: max-height .4s cubic-bezier(.4,0,.2,1), padding .3s ease;
+    padding: 0 1.4rem;
+}
+.faq-item.open .faq-answer { max-height: 400px; padding: 0 1.4rem 1.3rem; }
+.faq-answer p { color: var(--text-secondary); font-size: .875rem; line-height: 1.75; }
+
+/* Search */
+.faq-search-wrap { position: relative; margin-bottom: 2.5rem; }
+.faq-search-wrap i {
+    position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+    color: var(--text-secondary); font-size: .9rem;
+}
+.faq-search {
+    width: 100%; padding: .9rem 1rem .9rem 2.8rem;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    background: var(--bg); color: var(--text); font-size: .9rem; font-family: inherit; outline: none;
+    transition: border-color .25s ease, box-shadow .25s ease;
+}
+.faq-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px hsla(45,90%,55%,.15); }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="static-hero">
+    <div class="label">Help Center</div>
+    <h1>Frequently Asked Questions</h1>
+    <p>Everything you need to know about shopping with alphatex. Can't find the answer? <a href="{{ url_for('shop.contact') }}" style="color:var(--accent);">Contact us</a>.</p>
+</div>
+
+<section style="background:var(--bg);">
+    <div class="faq-wrap">
+        <div class="faq-search-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input class="faq-search" type="text" placeholder="Search questions…" id="faq-search" oninput="filterFAQ(this.value)">
+        </div>
+
+        <div class="faq-cats">
+            <button class="faq-cat-btn active" onclick="filterCat(this,'all')">All</button>
+            <button class="faq-cat-btn" onclick="filterCat(this,'orders')">Orders</button>
+            <button class="faq-cat-btn" onclick="filterCat(this,'shipping')">Shipping</button>
+            <button class="faq-cat-btn" onclick="filterCat(this,'returns')">Returns</button>
+            <button class="faq-cat-btn" onclick="filterCat(this,'products')">Products</button>
+            <button class="faq-cat-btn" onclick="filterCat(this,'payment')">Payment</button>
+        </div>
+
+        <div id="faq-container">
+            <!-- Orders -->
+            <div class="faq-group" data-cat="orders">
+                <div class="faq-group-title">Orders</div>
+                <div class="faq-item" data-q="how do i place an order">
+                    <button class="faq-question" onclick="toggleFaq(this)">How do I place an order?<div class="faq-icon"><i class="fa-solid fa-plus"></i></div></button>
+                    <div class="faq-answer"><p>Browse any product and click "Order Now" or add it to your cart and proceed to checkout. You can checkout as a guest (no account needed) by providing your name, phone, and address. Payment is Cash on Delivery.</p></div>
+                </div>
+                <div class="faq-item" data-q="can i cancel or modify my order">
+                    <button class="faq-question" onclick="toggleFaq(this)">Can I cancel or modify my order?<div class="faq-icon"><i class="fa-solid fa-plus"></i></div></button>
+                    <div class="faq-answer"><p>Orders can be cancelled or modified within 1 hour of placement. Please contact us immediately via phone or email. After the order is dispatched, cancellations are no longer possible.</p></div>
+                </div>
+                <div class="faq-item" data-q="how do i track my order">
+                    <button class="faq-question" onclick="toggleFaq(this)">How do I track my order?<div class="faq-icon"><i class="fa-solid fa-plus"></i></div></button>
+                    <div class="faq-answer"><p>Once your order is confirmed, our team will contact you via phone to arrange delivery. Registered users can also track order status from their account dashboard.</p></div>
+                </div>
+            </div>
+
+            <!-- Shipping -->
+            <div class="faq-group" data-cat="shipping">
+                <div class="faq-group-title">Shipping</div>
+                <div class="faq-item" data-q="what areas do you deliver to">
+                    <button class="faq-question" onclick="toggleFaq(this)">What areas do you deliver to?<div class="faq-icon"><i class="fa-solid fa-plus"></i></div></button>
+                    <div class="faq-answer"><p>We currently deliver across all divisions in Bangladesh — Dhaka, Chattogram, Sylhet, Rajshahi, Khulna, Barishal, Mymensingh, and Rangpur.</p></div>
+                </div>
+                <div class="faq-item" data-q="how long does delivery take">
+                    <button class="faq-question" onclick="toggleFaq(this)">How long does delivery take?<div class="faq-icon"><i class="fa-solid fa-plus"></i></div></button>
+                    <div class="faq-answer"><p>Inside Dhaka: 1–2 business days. Outside Dhaka: 3–5 business days. During sale periods, delivery may take slightly longer.</p></div>
+                </div>
+                <div class="faq-item" data-q="is shipping free">
+                    <button class="faq-question" onclick="toggleFaq(this)">Is shipping free?<div class="faq-icon"><i class="fa-solid fa-plus"></i></div></button>
+                    <div class="faq-answer"><p>Yes! Orders over ৳2000 qualify for free shipping. Orders below that threshold have a flat ৳80 delivery charge for Dhaka and ৳120 outside Dhaka.</p></div>
+                </div>
+            </div>
+
+            <!-- Returns -->
+            <div class="faq-group" data-cat="returns">
+                <div class="faq-group-title">Returns & Exchanges</div>
+                <div class="faq-item" data-q="what is your return policy">
+                    <button class="faq-question" onclick="toggleFaq(this)">What is your return policy?<div class="faq-icon"><i class="fa-solid fa-plus"></i></div></button>
+                    <div class="faq-answer"><p>We accept returns within 7 days of delivery. Items must be unworn, unwashed, and in original packaging with tags attached. Sale items are final and non-returnable.</p></div>
+                </div>
+                <div class="faq-item" data-q="how do i exchange an item for a different size">
+                    <button class="faq-question" onclick="toggleFaq(this)">How do I exchange for a different size?<div class="faq-icon"><i class="fa-solid fa-plus"></i></div></button>
+                    <div class="faq-answer"><p>Contact our support team via email or phone with your order details and the size you need. We'll arrange a pickup and send the replacement within 3–5 days, subject to stock availability.</p></div>
+                </div>
+            </div>
+
+            <!-- Products -->
+            <div class="faq-group" data-cat="products">
+                <div class="faq-group-title">Products</div>
+                <div class="faq-item" data-q="how do i find my correct size">
+                    <button class="faq-question" onclick="toggleFaq(this)">How do I find my correct size?<div class="faq-icon"><i class="fa-solid fa-plus"></i></div></button>
+                    <div class="faq-answer"><p>Check our detailed <a href="{{ url_for('shop.size_guide') }}" style="color:var(--accent);">Size Guide</a> which includes measurements for all categories. When in doubt, size up or reach out to our team for personalised advice.</p></div>
+                </div>
+                <div class="faq-item" data-q="are the colours accurate">
+                    <button class="faq-question" onclick="toggleFaq(this)">Are the colours accurate in photos?<div class="faq-icon"><i class="fa-solid fa-plus"></i></div></button>
+                    <div class="faq-answer"><p>We strive for accuracy, but slight variations may occur due to monitor calibration and lighting conditions during the photoshoot. If you're unsure, feel free to ask us for additional photos.</p></div>
+                </div>
+            </div>
+
+            <!-- Payment -->
+            <div class="faq-group" data-cat="payment">
+                <div class="faq-group-title">Payment</div>
+                <div class="faq-item" data-q="what payment methods are accepted">
+                    <button class="faq-question" onclick="toggleFaq(this)">What payment methods are accepted?<div class="faq-icon"><i class="fa-solid fa-plus"></i></div></button>
+                    <div class="faq-answer"><p>Currently we accept Cash on Delivery (COD) only. Online payment options (bKash, Nagad, card) are coming soon.</p></div>
+                </div>
+                <div class="faq-item" data-q="do i pay upfront or on delivery">
+                    <button class="faq-question" onclick="toggleFaq(this)">Do I pay upfront or on delivery?<div class="faq-icon"><i class="fa-solid fa-plus"></i></div></button>
+                    <div class="faq-answer"><p>You pay only when your order arrives at your door. No advance payment is required.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align:center; padding: 3rem 0 0; border-top: 1px solid var(--border); margin-top: 1rem;">
+            <p style="color:var(--text-secondary); font-size:.9rem; margin-bottom:1.2rem;">Still have questions?</p>
+            <a href="{{ url_for('shop.contact') }}" class="btn" style="display:inline-block; padding:.9rem 2.4rem;">Contact Our Team</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+}
+
+function filterCat(btn, cat) {
+    document.querySelectorAll('.faq-cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.faq-group').forEach(g => {
+        g.style.display = (cat === 'all' || g.dataset.cat === cat) ? '' : 'none';
+    });
+}
+
+function filterFAQ(q) {
+    const lq = q.toLowerCase();
+    document.querySelectorAll('.faq-item').forEach(item => {
+        const txt = item.dataset.q || '';
+        const ans = item.querySelector('.faq-answer')?.textContent.toLowerCase() || '';
+        item.style.display = (txt.includes(lq) || ans.includes(lq) || !lq) ? '' : 'none';
+    });
+    document.querySelectorAll('.faq-group').forEach(g => {
+        const visible = [...g.querySelectorAll('.faq-item')].some(i => i.style.display !== 'none');
+        g.style.display = visible ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

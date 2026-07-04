@@ -12,6 +12,7 @@ from utils.images import process_product_image
 from functools import wraps
 from extensions import db, limiter
 from models import AdminUser, AdminLoginLog, ADMIN_ROLES, Category, Product, User, CarouselSlide, ProductImage, Offer
+from bot_protection import block_ip, unblock_ip, get_blocked_ips, get_suspicious_ips
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -316,9 +317,10 @@ def add_product(admin):
         offer_id = request.form.get('offer_id') or None
         is_featured = bool(request.form.get('is_featured'))
         description = request.form.get('description', '')
+        stock = int(request.form.get('stock', 0))
         
         p = Product(name=name, price=price, compare_at_price=compare_at_price, image='product_1.jpg',
-                    category_id=category_id, offer_id=offer_id, is_featured=is_featured, description=description)
+                    category_id=category_id, offer_id=offer_id, is_featured=is_featured, description=description, stock=stock)
         db.session.add(p)
         db.session.commit()
 
@@ -386,6 +388,7 @@ def edit_product(admin, pid):
         p.offer_id = request.form.get('offer_id') or None
         p.is_featured = bool(request.form.get('is_featured'))
         p.description = request.form.get('description', '')
+        p.stock = int(request.form.get('stock', 0))
         
         # Handle 7 image slots upload
         for slot in range(1, 8):
@@ -883,7 +886,9 @@ def settings(admin):
     from models import SiteSettings
     if request.method == 'POST':
         keys_to_save = ['site_name', 'support_email', 'maintenance_mode',
-                        'meta_title', 'meta_description', 'meta_keywords']
+                        'meta_title', 'meta_description', 'meta_keywords',
+                        'social_instagram', 'social_facebook', 'social_twitter',
+                        'show_exact_stock']
         for key in keys_to_save:
             val = request.form.get(key, '')
             setting = SiteSettings.query.filter_by(key=key).first()
@@ -896,6 +901,60 @@ def settings(admin):
 
     settings_map = {s.key: s.value for s in SiteSettings.query.all()}
     return render_template('admin/settings.html', admin=admin, settings=settings_map)
+
+
+@admin_bp.route('/export-view-logs')
+@require_admin('settings')
+def export_view_logs(admin):
+    import csv
+    from io import StringIO
+    from flask import Response
+    from models import ProductViewLog
+    
+    logs = ProductViewLog.query.order_by(ProductViewLog.timestamp.desc()).all()
+    
+    def generate():
+        data = StringIO()
+        writer = csv.writer(data)
+        writer.writerow(['id', 'ip_address', 'category_id', 'timestamp'])
+        yield data.getvalue()
+        data.seek(0)
+        data.truncate(0)
+        
+        for l in logs:
+            writer.writerow([l.id, l.ip_address, l.category_id, l.timestamp.strftime('%Y-%m-%d %H:%M:%S')])
+            yield data.getvalue()
+            data.seek(0)
+            data.truncate(0)
+            
+    response = Response(generate(), mimetype='text/csv')
+    response.headers.set('Content-Disposition', 'attachment', filename='user_browsing_history.csv')
+    return response
+
+
+# ── Bot Protection / Threat Monitor ─────────────────────────────
+
+@admin_bp.route('/threat-monitor', methods=['GET', 'POST'])
+@require_admin('settings')
+def threat_monitor(admin):
+    if request.method == 'POST':
+        action = request.form.get('action')
+        ip = request.form.get('ip', '').strip()
+        if not ip:
+            flash('No IP provided.', 'error')
+            return redirect(url_for('admin.threat_monitor'))
+        if action == 'block':
+            block_ip(ip)
+            flash(f'IP {ip} has been blocked.', 'success')
+        elif action == 'unblock':
+            unblock_ip(ip)
+            flash(f'IP {ip} has been unblocked.', 'success')
+        return redirect(url_for('admin.threat_monitor'))
+
+    suspicious = get_suspicious_ips()
+    blocked = get_blocked_ips()
+    return render_template('admin/security.html', admin=admin,
+                           suspicious=suspicious, blocked=blocked)
 
 
 # ── Admin Team Management ────────────────────────────────
@@ -973,4 +1032,53 @@ def bulk_order_action(admin):
         db.session.commit()
         flash(f'{len(ids)} orders marked as {new_status}.', 'success')
     return redirect(url_for('admin.orders'))
+
+
+# ── Communications Management ──────────────────────────
+
+@admin_bp.route('/contacts', methods=['GET'])
+@require_admin('settings')
+def contacts(admin):
+    from models import ContactMessage
+    messages = ContactMessage.query.order_by(ContactMessage.created_at.desc()).all()
+    return render_template('admin/contacts.html', admin=admin, messages=messages)
+
+@admin_bp.route('/contacts/<int:mid>/status', methods=['POST'])
+@require_admin('settings')
+def contact_status(admin, mid):
+    from models import ContactMessage
+    msg = ContactMessage.query.get_or_404(mid)
+    new_status = request.form.get('status', 'unread')
+    msg.status = new_status
+    db.session.commit()
+    flash('Message status updated.', 'success')
+    return redirect(url_for('admin.contacts'))
+
+@admin_bp.route('/contacts/<int:mid>/delete', methods=['POST'])
+@require_admin('settings')
+def contact_delete(admin, mid):
+    from models import ContactMessage
+    msg = ContactMessage.query.get_or_404(mid)
+    db.session.delete(msg)
+    db.session.commit()
+    flash('Message deleted.', 'success')
+    return redirect(url_for('admin.contacts'))
+
+@admin_bp.route('/subscribers', methods=['GET'])
+@require_admin('settings')
+def subscribers(admin):
+    from models import NewsletterSubscriber
+    subs = NewsletterSubscriber.query.order_by(NewsletterSubscriber.subscribed_at.desc()).all()
+    return render_template('admin/subscribers.html', admin=admin, subscribers=subs)
+
+@admin_bp.route('/subscribers/<int:sid>/delete', methods=['POST'])
+@require_admin('settings')
+def subscriber_delete(admin, sid):
+    from models import NewsletterSubscriber
+    sub = NewsletterSubscriber.query.get_or_404(sid)
+    db.session.delete(sub)
+    db.session.commit()
+    flash('Subscriber removed.', 'success')
+    return redirect(url_for('admin.subscribers'))
+
 

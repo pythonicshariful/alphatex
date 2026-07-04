@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block title %}Size Guide | alphatex{% endblock %}
+
+{% block head %}
+<style>
+.static-hero {
+    position:relative; padding:7rem 2rem 5rem; text-align:center; overflow:hidden;
+    background:linear-gradient(135deg,var(--surface) 0%,var(--bg) 100%);
+    border-bottom:1px solid var(--border);
+}
+.static-hero::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse 80% 60% at 50% 0%,hsla(45,90%,55%,.12),transparent 70%);
+    pointer-events:none;
+}
+.static-hero .label {
+    display:inline-block; font-size:.7rem; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--accent); background:hsla(45,90%,55%,.12);
+    padding:.35rem .9rem; border-radius:2rem; margin-bottom:1.2rem;
+}
+.static-hero h1 {
+    font-family:var(--font-h); font-weight:300;
+    font-size:clamp(2.2rem,5vw,3.5rem); letter-spacing:.04em; margin-bottom:1rem;
+}
+.static-hero p { color:var(--text-secondary); max-width:520px; margin:0 auto; font-size:.95rem; line-height:1.7; }
+
+.sg-wrap { max-width: 980px; margin: 0 auto; padding: 5rem 2rem; }
+
+/* Tab switcher */
+.sg-tabs {
+    display: flex; gap: .5rem; border-bottom: 2px solid var(--border);
+    margin-bottom: 2.5rem;
+}
+.sg-tab {
+    padding: .7rem 1.4rem; border: none; background: none; cursor: pointer;
+    font-family: inherit; font-size: .875rem; font-weight: 600; color: var(--text-secondary);
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: color .25s ease, border-color .25s ease;
+}
+.sg-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.sg-panel { display: none; animation: fadeUp .4s ease; }
+.sg-panel.active { display: block; }
+
+/* How to measure */
+.measure-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.2rem; margin-bottom: 3rem;
+}
+.measure-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.4rem; display: flex; gap: 1rem; align-items: flex-start;
+}
+.measure-icon {
+    width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+    background: hsla(45,90%,55%,.12); display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; color: var(--accent);
+}
+.measure-card h4 { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; }
+.measure-card p { color: var(--text-secondary); font-size: .78rem; line-height: 1.55; }
+
+/* Size table */
+.size-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+.size-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.size-table th {
+    background: var(--bg); padding: .9rem 1.1rem; font-size: .7rem;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--text-secondary);
+    border-bottom: 1px solid var(--border); text-align: center;
+}
+.size-table th:first-child { text-align: left; }
+.size-table td {
+    padding: .85rem 1.1rem; border-bottom: 1px solid var(--border);
+    text-align: center; transition: background .2s ease;
+}
+.size-table td:first-child { font-weight: 700; text-align: left; color: var(--accent); }
+.size-table tr:last-child td { border-bottom: none; }
+.size-table tbody tr:hover td { background: var(--surface); }
+
+.tip-box {
+    background: hsla(45,90%,55%,.08); border: 1px solid hsla(45,90%,55%,.3);
+    border-radius: 10px; padding: 1.1rem 1.4rem; margin-top: 1.5rem;
+    font-size: .83rem; line-height: 1.65; color: var(--text-secondary);
+}
+.tip-box strong { color: var(--accent); }
+
+.unit-toggle {
+    display: flex; align-items: center; gap: .6rem; margin-bottom: 1.5rem; font-size: .82rem;
+}
+.unit-toggle span { color: var(--text-secondary); }
+.toggle-pill {
+    display: flex; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 2rem; overflow: hidden; font-size: .78rem;
+}
+.toggle-pill button {
+    padding: .35rem .9rem; border: none; background: none; cursor: pointer;
+    font-family: inherit; color: var(--text-secondary); transition: all .2s ease;
+}
+.toggle-pill button.active { background: var(--accent); color: #000; font-weight: 600; }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="static-hero">
+    <div class="label">Fit Perfectly</div>
+    <h1>Size Guide</h1>
+    <p>Find your perfect fit with our comprehensive size charts for men, women, and accessories.</p>
+</div>
+
+<section style="background:var(--bg);">
+    <div class="sg-wrap">
+
+        <!-- How to measure -->
+        <h3 style="font-size:1rem; font-weight:600; margin-bottom:1.2rem; letter-spacing:.04em;">How to Measure</h3>
+        <div class="measure-grid">
+            <div class="measure-card">
+                <div class="measure-icon"><i class="fa-solid fa-ruler-horizontal"></i></div>
+                <div><h4>Chest</h4><p>Measure around the fullest part of your chest, under your arms and across your shoulder blades.</p></div>
+            </div>
+            <div class="measure-card">
+                <div class="measure-icon"><i class="fa-solid fa-circle-dot"></i></div>
+                <div><h4>Waist</h4><p>Measure around your natural waistline — the narrowest part of your torso.</p></div>
+            </div>
+            <div class="measure-card">
+                <div class="measure-icon"><i class="fa-solid fa-arrows-left-right"></i></div>
+                <div><h4>Hip</h4><p>Measure around the widest part of your hips and seat.</p></div>
+            </div>
+            <div class="measure-card">
+                <div class="measure-icon"><i class="fa-solid fa-arrows-up-down"></i></div>
+                <div><h4>Inseam</h4><p>Measure from your crotch to the bottom of your ankle along the inside of your leg.</p></div>
+            </div>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="sg-tabs">
+            <button class="sg-tab active" onclick="sgTab(this,'men')">Men</button>
+            <button class="sg-tab" onclick="sgTab(this,'women')">Women</button>
+            <button class="sg-tab" onclick="sgTab(this,'kids')">Kids</button>
+        </div>
+
+        <!-- Men -->
+        <div class="sg-panel active" id="sg-men">
+            <div class="unit-toggle">
+                <span>Unit:</span>
+                <div class="toggle-pill">
+                    <button class="active" id="men-cm" onclick="setUnit('men','cm')">CM</button>
+                    <button id="men-in" onclick="setUnit('men','in')">IN</button>
+                </div>
+            </div>
+            <div class="size-table-wrap">
+                <table class="size-table" id="men-table">
+                    <thead>
+                        <tr><th>Size</th><th>Chest (cm)</th><th>Waist (cm)</th><th>Hip (cm)</th><th>Shoulder (cm)</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>XS</td><td>82–86</td><td>68–72</td><td>86–90</td><td>42</td></tr>
+                        <tr><td>S</td><td>87–91</td><td>73–77</td><td>91–95</td><td>44</td></tr>
+                        <tr><td>M</td><td>92–97</td><td>78–83</td><td>96–101</td><td>46</td></tr>
+                        <tr><td>L</td><td>98–103</td><td>84–89</td><td>102–107</td><td>48</td></tr>
+                        <tr><td>XL</td><td>104–109</td><td>90–95</td><td>108–113</td><td>50</td></tr>
+                        <tr><td>2XL</td><td>110–116</td><td>96–102</td><td>114–120</td><td>52</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tip-box"><strong>Tip:</strong> If you're between sizes, size up for a more relaxed fit or size down for a trimmer silhouette. Our clothes are designed for a contemporary slim-regular fit.</div>
+        </div>
+
+        <!-- Women -->
+        <div class="sg-panel" id="sg-women">
+            <div class="size-table-wrap">
+                <table class="size-table">
+                    <thead>
+                        <tr><th>Size</th><th>Bust (cm)</th><th>Waist (cm)</th><th>Hip (cm)</th><th>BD Size</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>XS</td><td>80–84</td><td>62–66</td><td>86–90</td><td>36</td></tr>
+                        <tr><td>S</td><td>85–89</td><td>67–71</td><td>91–95</td><td>38</td></tr>
+                        <tr><td>M</td><td>90–94</td><td>72–76</td><td>96–100</td><td>40</td></tr>
+                        <tr><td>L</td><td>95–100</td><td>77–82</td><td>101–106</td><td>42</td></tr>
+                        <tr><td>XL</td><td>101–107</td><td>83–89</td><td>107–113</td><td>44</td></tr>
+                        <tr><td>2XL</td><td>108–115</td><td>90–97</td><td>114–121</td><td>46</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tip-box"><strong>Tip:</strong> Our women's pieces are tailored to a semi-fitted silhouette. If you prefer a looser drape, we recommend going one size up.</div>
+        </div>
+
+        <!-- Kids -->
+        <div class="sg-panel" id="sg-kids">
+            <div class="size-table-wrap">
+                <table class="size-table">
+                    <thead>
+                        <tr><th>Size</th><th>Age</th><th>Height (cm)</th><th>Chest (cm)</th><th>Waist (cm)</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>2Y</td><td>2 yrs</td><td>86–92</td><td>52–54</td><td>49–51</td></tr>
+                        <tr><td>4Y</td><td>4 yrs</td><td>98–104</td><td>56–58</td><td>52–54</td></tr>
+                        <tr><td>6Y</td><td>6 yrs</td><td>110–116</td><td>60–62</td><td>55–57</td></tr>
+                        <tr><td>8Y</td><td>8 yrs</td><td>122–128</td><td>64–67</td><td>58–61</td></tr>
+                        <tr><td>10Y</td><td>10 yrs</td><td>134–140</td><td>68–72</td><td>62–66</td></tr>
+                        <tr><td>12Y</td><td>12 yrs</td><td>146–152</td><td>74–78</td><td>67–71</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tip-box"><strong>Tip:</strong> Kids grow fast — we recommend checking height and chest measurements rather than going purely by age.</div>
+        </div>
+
+        <div style="text-align:center; padding: 3rem 0 0; margin-top:1rem; border-top:1px solid var(--border);">
+            <p style="color:var(--text-secondary); font-size:.85rem; margin-bottom:1.2rem;">Not sure about your size? Our team is happy to help.</p>
+            <a href="{{ url_for('shop.contact') }}" class="btn" style="display:inline-block; padding:.9rem 2.4rem;">Ask for Styling Advice</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function sgTab(btn, id) {
+    document.querySelectorAll('.sg-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.sg-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sg-' + id).classList.add('active');
+}
+
+// CM/IN toggle for men (demo)
+const menData = {
+    cm: [
+        ['XS','82–86','68–72','86–90','42'],
+        ['S','87–91','73–77','91–95','44'],
+        ['M','92–97','78–83','96–101','46'],
+        ['L','98–103','84–89','102–107','48'],
+        ['XL','104–109','90–95','108–113','50'],
+        ['2XL','110–116','96–102','114–120','52'],
+    ],
+    in: [
+        ['XS','32–34"','27–28"','34–35"','16.5"'],
+        ['S','34–36"','29–30"','36–37"','17.5"'],
+        ['M','36–38"','31–33"','38–40"','18"'],
+        ['L','39–41"','33–35"','40–42"','19"'],
+        ['XL','41–43"','35–37"','42–44"','20"'],
+        ['2XL','43–46"','38–40"','45–47"','20.5"'],
+    ]
+};
+function setUnit(cat, unit) {
+    document.querySelectorAll(`#${cat}-cm, #${cat}-in`).forEach(b => b.classList.remove('active'));
+    document.getElementById(`${cat}-${unit}`).classList.add('active');
+    const headers = unit === 'cm'
+        ? ['Size','Chest (cm)','Waist (cm)','Hip (cm)','Shoulder (cm)']
+        : ['Size','Chest (in)','Waist (in)','Hip (in)','Shoulder (in)'];
+    const table = document.getElementById(`${cat}-table`);
+    const head = table.querySelector('thead tr');
+    head.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
+    const body = table.querySelector('tbody');
+    body.innerHTML = menData[unit].map(r => `<tr>${r.map((c,i) => `<td>${c}</td>`).join('')}</tr>`).join('');
+}
+</script>
+{% endblock %}

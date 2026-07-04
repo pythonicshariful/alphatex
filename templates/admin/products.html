@@ -26,7 +26,8 @@
                     <th data-col="1" data-dir="asc">Name <span class="sort-icon"></span></th>
                     <th data-col="2">Category <span class="sort-icon"></span></th>
                     <th data-col="3">Price <span class="sort-icon"></span></th>
-                    <th data-col="4">Featured <span class="sort-icon"></span></th>
+                    <th data-col="4">Stock <span class="sort-icon"></span></th>
+                    <th data-col="5">Featured <span class="sort-icon"></span></th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -42,6 +43,13 @@
                     </td>
                     <td><span class="badge badge-neutral">{{ p.category.name if p.category else 'None' }}</span></td>
                     <td style="font-weight:500;">৳{{ p.price }}</td>
+                    <td style="font-weight:500;">
+                        {% if p.stock > 0 %}
+                            {{ p.stock }}
+                        {% else %}
+                            <span class="badge badge-danger">Out of Stock</span>
+                        {% endif %}
+                    </td>
                     <td class="text-sm">
                         {% if p.is_featured %}
                             <span class="badge badge-success">Yes</span>

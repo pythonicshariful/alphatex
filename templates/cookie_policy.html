@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block title %}Cookie Policy | alphatex{% endblock %}
+
+{% block head %}
+<style>
+.static-hero {
+    position:relative; padding:7rem 2rem 5rem; text-align:center; overflow:hidden;
+    background:linear-gradient(135deg,var(--surface) 0%,var(--bg) 100%);
+    border-bottom:1px solid var(--border);
+}
+.static-hero::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse 80% 60% at 50% 0%,hsla(45,90%,55%,.12),transparent 70%);
+    pointer-events:none;
+}
+.static-hero .label {
+    display:inline-block; font-size:.7rem; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--accent); background:hsla(45,90%,55%,.12);
+    padding:.35rem .9rem; border-radius:2rem; margin-bottom:1.2rem;
+}
+.static-hero h1 {
+    font-family:var(--font-h); font-weight:300;
+    font-size:clamp(2.2rem,5vw,3.5rem); letter-spacing:.04em; margin-bottom:1rem;
+}
+.static-hero p { color:var(--text-secondary); max-width:520px; margin:0 auto; font-size:.95rem; line-height:1.7; }
+
+.cp-wrap { max-width: 780px; margin: 0 auto; padding: 5rem 2rem; }
+
+.effective-bar {
+    display:flex; align-items:center; gap:.8rem;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:.9rem 1.2rem; margin-bottom:3rem; font-size:.82rem; color:var(--text-secondary);
+}
+.effective-bar i { color:var(--accent); }
+
+/* Cookie type cards */
+.cookie-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.2rem; margin-bottom:3rem; }
+.cookie-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.6rem;
+    transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+    animation:fadeUp .6s ease both;
+}
+.cookie-card:nth-child(1){ animation-delay:.05s }
+.cookie-card:nth-child(2){ animation-delay:.12s }
+.cookie-card:nth-child(3){ animation-delay:.19s }
+.cookie-card:nth-child(4){ animation-delay:.26s }
+.cookie-card:hover { transform:translateY(-4px); border-color:var(--accent); box-shadow:0 12px 32px rgba(0,0,0,.1); }
+.cookie-card-icon {
+    width:46px; height:46px; border-radius:12px; margin-bottom:1rem;
+    background:hsla(45,90%,55%,.12); display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem; color:var(--accent);
+}
+.cookie-card h3 { font-size:.9rem; font-weight:600; margin-bottom:.5rem; }
+.cookie-card p { color:var(--text-secondary); font-size:.8rem; line-height:1.6; margin-bottom:.8rem; }
+.cookie-badge {
+    display:inline-block; padding:.2rem .65rem; border-radius:2rem; font-size:.68rem; font-weight:700; letter-spacing:.06em;
+}
+.badge-required { background:hsla(120,60%,50%,.15); color:#4caf50; }
+.badge-optional { background:hsla(210,80%,55%,.15); color:#2196f3; }
+
+/* Preferences panel */
+.cookie-prefs {
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:2rem; margin-bottom:2.5rem; animation:fadeUp .6s .3s ease both;
+}
+.cookie-prefs h2 { font-family:var(--font-h); font-weight:400; font-size:1.3rem; margin-bottom:.5rem; }
+.cookie-prefs p { color:var(--text-secondary); font-size:.83rem; margin-bottom:1.5rem; line-height:1.6; }
+.pref-row {
+    display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    padding:1rem 0; border-bottom:1px solid var(--border);
+}
+.pref-row:last-of-type { border-bottom:none; }
+.pref-row h4 { font-size:.875rem; font-weight:600; margin-bottom:.2rem; }
+.pref-row p { color:var(--text-secondary); font-size:.78rem; margin:0; }
+.toggle-switch { position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0; }
+.toggle-switch input { opacity:0; width:0; height:0; }
+.toggle-slider {
+    position:absolute; cursor:pointer; inset:0; background:var(--border);
+    border-radius:12px; transition:.3s;
+}
+.toggle-slider:before {
+    content:''; position:absolute; width:18px; height:18px; left:3px; top:3px;
+    background:#fff; border-radius:50%; transition:.3s;
+}
+input:checked + .toggle-slider { background:var(--accent); }
+input:checked + .toggle-slider:before { transform:translateX(20px); }
+.save-prefs-btn {
+    display:inline-block; margin-top:1.2rem; padding:.75rem 1.8rem; border-radius:8px; border:none;
+    background:var(--accent); color:#000; font-family:inherit; font-size:.85rem; font-weight:600;
+    cursor:pointer; transition:transform .25s ease, box-shadow .25s ease;
+}
+.save-prefs-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px hsla(45,90%,55%,.35); }
+
+.legal-section { margin-bottom:2.5rem; animation:fadeUp .6s ease both; }
+.legal-section h2 {
+    font-family:var(--font-h); font-weight:400; font-size:1.3rem;
+    margin-bottom:.8rem; display:flex; align-items:center; gap:.7rem;
+}
+.legal-section h2 i { color:var(--accent); font-size:.9rem; }
+.legal-section p { color:var(--text-secondary); font-size:.875rem; line-height:1.8; margin-bottom:.8rem; }
+.legal-section ul { margin:.5rem 0 1rem 1rem; }
+.legal-section ul li { color:var(--text-secondary); font-size:.875rem; line-height:1.8; margin-bottom:.4rem; }
+.legal-section ul li::marker { color:var(--accent); }
+
+.divider-line { border:none; border-top:1px solid var(--border); margin:2rem 0; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="static-hero">
+    <div class="label">Legal</div>
+    <h1>Cookie Policy</h1>
+    <p>We use cookies to make alphatex work beautifully. Here's what we use and why — and how you can control them.</p>
+</div>
+
+<section style="background:var(--bg);">
+    <div class="cp-wrap">
+        <div class="effective-bar">
+            <i class="fa-solid fa-calendar-check"></i>
+            <span><strong>Effective Date:</strong> 1 January 2026 &nbsp;·&nbsp; <strong>Last Updated:</strong> 1 July 2026</span>
+        </div>
+
+        <!-- Cookie Type Cards -->
+        <h2 style="font-family:var(--font-h); font-weight:400; font-size:1.3rem; margin-bottom:1.2rem;">Types of Cookies We Use</h2>
+        <div class="cookie-cards">
+            <div class="cookie-card">
+                <div class="cookie-card-icon"><i class="fa-solid fa-gear"></i></div>
+                <h3>Essential</h3>
+                <p>Required for core functions like login sessions, shopping cart, and secure checkout. Cannot be disabled.</p>
+                <span class="cookie-badge badge-required">Required</span>
+            </div>
+            <div class="cookie-card">
+                <div class="cookie-card-icon"><i class="fa-solid fa-chart-simple"></i></div>
+                <h3>Analytics</h3>
+                <p>Anonymous data about how you navigate the site, which pages are popular, and where visitors come from.</p>
+                <span class="cookie-badge badge-optional">Optional</span>
+            </div>
+            <div class="cookie-card">
+                <div class="cookie-card-icon"><i class="fa-solid fa-star"></i></div>
+                <h3>Personalisation</h3>
+                <p>Remembers your browsing preferences to show you more relevant product recommendations on the homepage.</p>
+                <span class="cookie-badge badge-optional">Optional</span>
+            </div>
+            <div class="cookie-card">
+                <div class="cookie-card-icon"><i class="fa-solid fa-moon"></i></div>
+                <h3>Preferences</h3>
+                <p>Saves your UI preferences such as dark/light mode so you don't have to set them again on every visit.</p>
+                <span class="cookie-badge badge-required">Required</span>
+            </div>
+        </div>
+
+        <!-- Cookie Preferences -->
+        <div class="cookie-prefs" id="prefs-panel">
+            <h2>Manage Your Preferences</h2>
+            <p>You can control optional cookies below. Essential cookies are always active as they are necessary for the site to function.</p>
+
+            <div class="pref-row">
+                <div><h4>Essential Cookies</h4><p>Login sessions, cart, CSRF protection.</p></div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked disabled>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="pref-row">
+                <div><h4>Analytics Cookies</h4><p>Anonymous traffic and page view statistics.</p></div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="pref-analytics" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="pref-row">
+                <div><h4>Personalisation Cookies</h4><p>Product recommendations based on browsing history.</p></div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="pref-personal" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="pref-row">
+                <div><h4>Preference Cookies</h4><p>Theme and UI settings.</p></div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked disabled>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <button class="save-prefs-btn" onclick="savePrefs()"><i class="fa-solid fa-check" style="margin-right:.4rem;"></i>Save Preferences</button>
+        </div>
+
+        <div class="legal-section" style="animation-delay:.35s">
+            <h2><i class="fa-solid fa-question-circle"></i> What are Cookies?</h2>
+            <p>Cookies are small text files placed on your device by websites you visit. They are widely used to make websites work, improve efficiency, and provide information to site owners. Cookies do not contain executable code and cannot carry viruses.</p>
+        </div>
+        <hr class="divider-line">
+
+        <div class="legal-section" style="animation-delay:.4s">
+            <h2><i class="fa-solid fa-ban"></i> How to Disable Cookies</h2>
+            <p>In addition to the preferences above, you can control cookies in your browser settings:</p>
+            <ul>
+                <li><strong>Chrome:</strong> Settings → Privacy and Security → Cookies</li>
+                <li><strong>Firefox:</strong> Settings → Privacy & Security → Cookies and Site Data</li>
+                <li><strong>Safari:</strong> Preferences → Privacy → Block All Cookies</li>
+                <li><strong>Edge:</strong> Settings → Cookies and Site Permissions</li>
+            </ul>
+            <p>Note: Disabling essential cookies may prevent some features from working correctly.</p>
+        </div>
+        <hr class="divider-line">
+
+        <div class="legal-section" style="animation-delay:.45s">
+            <h2><i class="fa-solid fa-rotate"></i> Policy Updates</h2>
+            <p>We may update this Cookie Policy as our use of cookies changes. Any significant changes will be announced on our homepage. Continued use of our site after changes are posted constitutes acceptance.</p>
+            <p>Questions? <a href="{{ url_for('shop.contact') }}" style="color:var(--accent);">Contact our team</a>.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function savePrefs() {
+    const analytics = document.getElementById('pref-analytics').checked;
+    const personal = document.getElementById('pref-personal').checked;
+    localStorage.setItem('cookie_analytics', analytics);
+    localStorage.setItem('cookie_personal', personal);
+    const btn = document.querySelector('.save-prefs-btn');
+    btn.innerHTML = '<i class="fa-solid fa-check" style="margin-right:.4rem;"></i>Saved!';
+    btn.style.background = '#4caf50';
+    setTimeout(() => {
+        btn.innerHTML = '<i class="fa-solid fa-check" style="margin-right:.4rem;"></i>Save Preferences';
+        btn.style.background = '';
+    }, 2500);
+}
+
+// Restore saved prefs
+window.addEventListener('DOMContentLoaded', () => {
+    const analytics = localStorage.getItem('cookie_analytics');
+    const personal = localStorage.getItem('cookie_personal');
+    if (analytics !== null) document.getElementById('pref-analytics').checked = analytics === 'true';
+    if (personal !== null) document.getElementById('pref-personal').checked = personal === 'true';
+});
+</script>
+{% endblock %}

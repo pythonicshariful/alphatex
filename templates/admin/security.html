@@ -1,143 +1,211 @@
-{% extends "admin/base.html" %}
-{% block title %}Security Center | alphatex Admin{% endblock %}
-{% block breadcrumb %}<span>/</span> <span>System</span> <span>/</span> <span>Security Center</span>{% endblock %}
+{% extends "admin.html" %}
+{% block title %}Security Monitor | Admin{% endblock %}
+{% block admin_content %}
 
-{% block content %}
-<div class="admin-page-header">
+<style>
+.threat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2.5rem; }
+@media(max-width:900px){ .threat-grid { grid-template-columns: 1fr 1fr; } }
+@media(max-width:560px){ .threat-grid { grid-template-columns: 1fr; } }
+
+.stat-card {
+    background: var(--a-surface2); border: 1px solid var(--a-border); border-radius: 12px;
+    padding: 1.5rem; display: flex; align-items: center; gap: 1.2rem;
+    animation: fadeUp .5s ease both;
+}
+.stat-card:nth-child(1){ animation-delay:.05s } .stat-card:nth-child(2){ animation-delay:.1s } .stat-card:nth-child(3){ animation-delay:.15s }
+.stat-icon {
+    width: 50px; height: 50px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+}
+.stat-icon.orange { background: hsla(30,90%,55%,.15); color: #f97316; }
+.stat-icon.red    { background: hsla(0,85%,55%,.15);  color: #ef4444; }
+.stat-icon.green  { background: hsla(120,60%,50%,.15); color: #4caf50; }
+.stat-num { font-size: 1.9rem; font-weight: 700; line-height: 1; }
+.stat-label { font-size: .78rem; color: var(--a-muted); margin-top: .2rem; }
+
+.section-card {
+    background: var(--a-surface2); border: 1px solid var(--a-border); border-radius: 14px;
+    padding: 2rem; margin-bottom: 2rem; animation: fadeUp .6s .2s ease both;
+}
+.section-card h2 {
+    font-size: 1rem; font-weight: 600; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .7rem; color: var(--a-text);
+}
+.section-card h2 i { color: var(--a-accent); }
+
+.ip-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.ip-table th {
+    text-align: left; padding: .7rem 1rem; font-size: .7rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--a-muted); border-bottom: 1px solid var(--a-border);
+    background: var(--a-surface);
+}
+.ip-table td { padding: .8rem 1rem; border-bottom: 1px solid var(--a-border); vertical-align: middle; }
+.ip-table tr:last-child td { border-bottom: none; }
+.ip-table tbody tr:hover td { background: var(--a-surface); }
+
+.badge-warn { display:inline-block; padding:.2rem .7rem; border-radius:2rem; font-size:.7rem; font-weight:700; background:hsla(30,90%,55%,.15); color:#f97316; }
+.badge-block { display:inline-block; padding:.2rem .7rem; border-radius:2rem; font-size:.7rem; font-weight:700; background:hsla(0,85%,55%,.15); color:#ef4444; }
+
+.ip-action-form { display: inline; }
+.btn-sm-action {
+    padding: .3rem .8rem; border-radius: 6px; border: 1px solid var(--a-border);
+    font-family: inherit; font-size: .75rem; cursor: pointer;
+    background: var(--a-surface); color: var(--a-text); transition: all .2s ease;
+}
+.btn-sm-action.danger { border-color: #ef4444; color: #ef4444; }
+.btn-sm-action.danger:hover { background: #ef4444; color: #fff; }
+.btn-sm-action.success { border-color: #4caf50; color: #4caf50; }
+.btn-sm-action.success:hover { background: #4caf50; color: #fff; }
+
+.manual-block { display: flex; gap: .7rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--a-border); }
+.manual-block input {
+    flex: 1; padding: .65rem 1rem; border-radius: 8px;
+    border: 1px solid var(--a-border); background: var(--a-bg); color: var(--a-text);
+    font-family: inherit; font-size: .85rem; outline: none;
+}
+.manual-block input:focus { border-color: var(--a-accent); }
+.manual-block button {
+    padding: .65rem 1.2rem; border-radius: 8px; border: none; cursor: pointer;
+    font-family: inherit; font-size: .83rem; font-weight: 600;
+    background: #ef4444; color: #fff;
+}
+
+.protection-layers { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+.layer-card {
+    background: var(--a-surface); border: 1px solid var(--a-border); border-radius: 10px;
+    padding: 1.1rem 1.3rem; display: flex; align-items: center; gap: .9rem;
+}
+.layer-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dot-green { background: #4caf50; box-shadow: 0 0 6px #4caf50; }
+.layer-card h4 { font-size: .82rem; font-weight: 600; margin-bottom: .15rem; }
+.layer-card p { font-size: .74rem; color: var(--a-muted); }
+
+.empty-state { text-align:center; padding: 2.5rem; color: var(--a-muted); font-size: .85rem; }
+.empty-state i { font-size: 2rem; margin-bottom: .8rem; display: block; opacity: .4; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+</style>
+
+<div class="section-header">
     <div>
-        <h1>Security Center</h1>
-        <p>Manage IP rules, monitor failed logins, and handle locked accounts.</p>
+        <span class="section-label">Protection</span>
+        <h1 class="section-title">Security Monitor</h1>
     </div>
 </div>
 
-<div class="chart-grid">
-    <!-- IP Rules -->
-    <div class="admin-section" style="margin-bottom:0;">
-        <div class="admin-section-header">
-            <h2>IP Whitelist & Blacklist</h2>
-            <button class="btn-a btn-a-sm btn-a-primary" onclick="openModal('add-ip-modal')"><i class="fa-solid fa-plus"></i> Add Rule</button>
-        </div>
-        <div style="overflow-x:auto;">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>IP Address</th>
-                        <th>Type</th>
-                        <th>Note</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for rule in ip_rules %}
-                    <tr>
-                        <td style="font-family:monospace;font-size:1rem;">{{ rule.ip_address }}</td>
-                        <td>
-                            <span class="ip-tag ip-{{ rule.rule_type }}">{{ rule.rule_type | upper }}</span>
-                        </td>
-                        <td class="text-muted text-sm">{{ rule.note or '—' }}</td>
-                        <td>
-                            <form method="POST" action="{{ url_for('admin.delete_ip_rule', rid=rule.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button class="btn-a btn-a-sm btn-a-outline" onclick="return confirm('Remove this IP rule?')"><i class="fa-solid fa-trash"></i></button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr><td colspan="4" class="empty-state" style="padding:1.5rem;"><p>No IP rules configured.</p></td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<!-- Stats Row -->
+<div class="threat-grid">
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div>
+            <div class="stat-num">{{ suspicious|length }}</div>
+            <div class="stat-label">Suspicious IPs (last 5 min)</div>
         </div>
     </div>
+    <div class="stat-card">
+        <div class="stat-icon red"><i class="fa-solid fa-ban"></i></div>
+        <div>
+            <div class="stat-num">{{ blocked|length }}</div>
+            <div class="stat-label">Permanently Blocked IPs</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-shield-check"></i></div>
+        <div>
+            <div class="stat-num">7</div>
+            <div class="stat-label">Protection Layers Active</div>
+        </div>
+    </div>
+</div>
 
-    <div>
-        <!-- Locked Accounts -->
-        <div class="admin-section">
-            <div class="admin-section-header">
-                <h2><i class="fa-solid fa-lock text-danger"></i> Locked Admins</h2>
-            </div>
-            <div class="section-body" style="padding:0;">
-                {% if locked_admins %}
-                <ul style="list-style:none;padding:0;margin:0;">
-                    {% for a in locked_admins %}
-                    <li style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid var(--a-border);">
-                        <div>
-                            <div style="font-weight:500;">{{ a.username }}</div>
-                            <div class="text-sm text-danger">Failed attempts: {{ a.failed_attempts }}</div>
-                        </div>
-                        <form method="POST" action="{{ url_for('admin.unlock_admin', aid=a.id) }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button class="btn-a btn-a-sm btn-a-outline">Unlock</button>
-                        </form>
-                    </li>
-                    {% endfor %}
-                </ul>
+<!-- Active Protection Layers -->
+<div class="section-card" style="animation-delay:.1s">
+    <h2><i class="fa-solid fa-layer-group"></i> Active Protection Layers</h2>
+    <div class="protection-layers">
+        <div class="layer-card"><div class="layer-dot dot-green"></div><div><h4>User-Agent Filtering</h4><p>Blocks known scanner UAs</p></div></div>
+        <div class="layer-card"><div class="layer-dot dot-green"></div><div><h4>Path Scan Detection</h4><p>Blocks LFI / SQLi probes</p></div></div>
+        <div class="layer-card"><div class="layer-dot dot-green"></div><div><h4>Auto Temp-Block</h4><p>20+ probes triggers 10 min ban</p></div></div>
+        <div class="layer-card"><div class="layer-dot dot-green"></div><div><h4>Rate Limiting</h4><p>Per-IP request throttling</p></div></div>
+        <div class="layer-card"><div class="layer-dot dot-green"></div><div><h4>CSRF Protection</h4><p>All POST forms validated</p></div></div>
+        <div class="layer-card"><div class="layer-dot dot-green"></div><div><h4>Honeypot Fields</h4><p>Invisible bot-trap fields</p></div></div>
+        <div class="layer-card"><div class="layer-dot dot-green"></div><div><h4>Cloudflare Turnstile</h4><p>On auth and contact forms</p></div></div>
+    </div>
+</div>
+
+<!-- Suspicious IPs -->
+<div class="section-card">
+    <h2><i class="fa-solid fa-triangle-exclamation"></i> Suspicious IPs</h2>
+    {% if suspicious %}
+    <table class="ip-table">
+        <thead><tr><th>IP Address</th><th>Failed Probes (5 min)</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for ip, count in suspicious.items() %}
+        <tr>
+            <td><code>{{ ip }}</code></td>
+            <td><span class="badge-warn">{{ count }} attempts</span></td>
+            <td>{% if ip in blocked %}<span class="badge-block">Blocked</span>{% else %}<span style="color:var(--a-muted);font-size:.78rem;">Active</span>{% endif %}</td>
+            <td>
+                {% if ip not in blocked %}
+                <form class="ip-action-form" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="block">
+                    <input type="hidden" name="ip" value="{{ ip }}">
+                    <button type="submit" class="btn-sm-action danger">Block IP</button>
+                </form>
                 {% else %}
-                <div class="empty-state" style="padding:1.5rem;"><p>No accounts currently locked.</p></div>
+                <form class="ip-action-form" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="unblock">
+                    <input type="hidden" name="ip" value="{{ ip }}">
+                    <button type="submit" class="btn-sm-action success">Unblock</button>
+                </form>
                 {% endif %}
-            </div>
-        </div>
-
-        <!-- Recent Failures -->
-        <div class="admin-section">
-            <div class="admin-section-header">
-                <h2><i class="fa-solid fa-triangle-exclamation text-warn"></i> Recent Login Failures</h2>
-            </div>
-            <div class="section-body" style="padding:0; max-height: 250px; overflow-y: auto;">
-                <table class="admin-table">
-                    <tbody>
-                        {% for fail in recent_fails %}
-                        <tr>
-                            <td>
-                                <div style="font-weight:500;">{{ fail.username_attempt }}</div>
-                                <div class="text-sm text-muted">{{ fail.ip_address }}</div>
-                            </td>
-                            <td>
-                                <span class="badge badge-danger">{{ fail.status }}</span>
-                            </td>
-                            <td class="text-sm text-muted text-right">{{ fail.timestamp.strftime('%b %d, %H:%M') }}</td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="3" class="empty-state" style="padding:1.5rem;"><p>No recent failures.</p></td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><i class="fa-solid fa-shield-check"></i>No suspicious activity detected in the current window.</div>
+    {% endif %}
 </div>
 
-<!-- Add IP Modal -->
-<div class="modal-overlay" id="add-ip-modal">
-    <div class="modal-box">
-        <form method="POST" action="{{ url_for('admin.security') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="modal-header">
-                <h3>Add IP Rule</h3>
-                <button type="button" class="modal-close" onclick="closeModal('add-ip-modal')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">IP Address</label>
-                    <input type="text" name="ip_address" class="form-control" required placeholder="e.g. 192.168.1.100">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Rule Type</label>
-                    <select name="rule_type" class="form-control" required>
-                        <option value="blacklist">Blacklist (Block Access)</option>
-                        <option value="whitelist">Whitelist (Always Allow)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Note (Optional)</label>
-                    <input type="text" name="note" class="form-control" placeholder="e.g. Malicious crawler">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-a btn-a-outline" onclick="closeModal('add-ip-modal')">Cancel</button>
-                <button type="submit" class="btn-a btn-a-primary">Save Rule</button>
-            </div>
-        </form>
-    </div>
+<!-- Blocked IPs -->
+<div class="section-card">
+    <h2><i class="fa-solid fa-ban"></i> Permanently Blocked IPs</h2>
+    {% if blocked %}
+    <table class="ip-table">
+        <thead><tr><th>IP Address</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for ip in blocked %}
+        <tr>
+            <td><code>{{ ip }}</code></td>
+            <td><span class="badge-block">Permanently Blocked</span></td>
+            <td>
+                <form class="ip-action-form" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="unblock">
+                    <input type="hidden" name="ip" value="{{ ip }}">
+                    <button type="submit" class="btn-sm-action success">Unblock</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><i class="fa-solid fa-lock-open"></i>No IPs are permanently blocked.</div>
+    {% endif %}
+
+    <!-- Manual Block -->
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="block">
+        <div class="manual-block">
+            <input type="text" name="ip" placeholder="Enter IP to block manually (e.g. 192.168.1.1)" required>
+            <button type="submit"><i class="fa-solid fa-ban"></i> Block IP</button>
+        </div>
+    </form>
 </div>
+
 {% endblock %}
