@@ -9,6 +9,7 @@ from functools import wraps
 import os
 from werkzeug.utils import secure_filename
 from utils.images import process_product_image
+from utils.seo import apply_seo_fields
 from functools import wraps
 from extensions import db, limiter
 from models import AdminUser, AdminLoginLog, ADMIN_ROLES, Category, Product, User, CarouselSlide, ProductImage, Offer
@@ -366,6 +367,8 @@ def add_product(admin):
             )
             db.session.add(pv)
             
+        # ── Auto-generate SEO fields ─────────────────────────────────────────
+        apply_seo_fields(p, force=True)
         db.session.commit()
         flash(f'Product "{name}" added successfully.', 'success')
         return redirect(url_for('admin.products'))
@@ -440,6 +443,8 @@ def edit_product(admin, pid):
             )
             db.session.add(pv)
             
+        # ── Regenerate SEO fields on edit (force=False keeps admin overrides) ─
+        apply_seo_fields(p, force=False)
         db.session.commit()
         flash('Product updated successfully.', 'success')
         return redirect(url_for('admin.products'))

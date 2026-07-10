@@ -6,7 +6,51 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'shop.db')
+
+    # ── Database ─────────────────────────────────────────────────────────────
+    # Option A (recommended for Supabase): set individual components so that
+    # special characters in the password (@ # % etc.) never break the URL.
+    #
+    #   DB_HOST     = db.wupyyvkkzmlmyueczahn.supabase.co
+    #   DB_PORT     = 5432
+    #   DB_NAME     = postgres
+    #   DB_USER     = postgres
+    #   DB_PASSWORD = <your raw password, no URL-encoding needed>
+    #
+    # Option B: set DATABASE_URL directly (password must be URL-encoded if it
+    # contains special chars — replace @ with %40, # with %23, etc.)
+    #
+    @classmethod
+    def _build_db_uri(cls):
+        from urllib.parse import quote_plus
+        from sqlalchemy.engine import URL
+
+        # ── Option A: individual env vars (handles any password safely) ──────
+        db_host = os.environ.get('DB_HOST')
+        if db_host:
+            return URL.create(
+                drivername='postgresql+psycopg2',
+                username=os.environ.get('DB_USER', 'postgres'),
+                password=os.environ.get('DB_PASSWORD', ''),
+                host=db_host,
+                port=int(os.environ.get('DB_PORT', 5432)),
+                database=os.environ.get('DB_NAME', 'postgres'),
+            )
+
+        # ── Option B: raw DATABASE_URL string ────────────────────────────────
+        raw = os.environ.get('DATABASE_URL', '')
+        if raw:
+            # Fix Heroku/Supabase "postgres://" → "postgresql://"
+            if raw.startswith('postgres://'):
+                raw = raw.replace('postgres://', 'postgresql://', 1)
+            return raw
+
+        # ── Fallback: local SQLite ────────────────────────────────────────────
+        return 'sqlite:///' + os.path.join(basedir, 'shop.db')
+
+    SQLALCHEMY_DATABASE_URI = _build_db_uri.__func__(None)
+    # ─────────────────────────────────────────────────────────────────────────
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = True
     SESSION_COOKIE_HTTPONLY = True

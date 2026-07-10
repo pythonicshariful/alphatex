@@ -124,8 +124,17 @@ class Product(db.Model):
     is_featured = db.Column(db.Boolean, default=False)
     description = db.Column(db.Text, nullable=True)
     stock = db.Column(db.Integer, default=0, nullable=False)
+
+    # ── SEO fields (auto-generated on save) ─────────────────────────────────
+    slug = db.Column(db.String(220), unique=True, nullable=True, index=True)
+    meta_title = db.Column(db.String(70), nullable=True)
+    meta_description = db.Column(db.String(160), nullable=True)
+    meta_keywords = db.Column(db.String(250), nullable=True)
+    # ────────────────────────────────────────────────────────────────────────
+
     images = db.relationship('ProductImage', backref='product', lazy=True,
                              order_by='ProductImage.slot', cascade='all, delete-orphan')
+
 
     @property
     def hero_image(self):
