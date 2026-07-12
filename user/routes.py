@@ -45,7 +45,7 @@ def dashboard():
     # Profile completion percentage
     steps = [
         bool(current_user.full_name),
-        bool(current_user.phone),
+        bool(current_user.email),
         bool(current_user.avatar),
         bool(current_user.date_of_birth),
         bool(addr_count),
@@ -102,7 +102,7 @@ def profile():
             current_user.alt_phone = norm
 
         # Mark profile complete if key fields are filled
-        if current_user.full_name and current_user.phone:
+        if current_user.full_name and current_user.email:
             current_user.profile_complete = True
 
         db.session.commit()

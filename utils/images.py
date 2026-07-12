@@ -149,7 +149,7 @@ def migrate_legacy_image(product, static_root: str) -> bool:
     pi = ProductImage(**fields)
     db.session.add(pi)
     db.session.commit()
-    print(f'[Migration] Product {product.id} "{product.name}" → hero WebP created.')
+    print(f'[Migration] Product {product.id} "{product.name}" -> hero WebP created.')
     return True
 
 

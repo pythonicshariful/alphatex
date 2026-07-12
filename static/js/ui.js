@@ -262,8 +262,9 @@ function initCartDrawer() {
 // ADD TO CART
 // ══════════════════════════════════════════════════════
 function addToCart(id, name, price, image, btn) {
+    const formattedPrice = `৳${price}`;
     const existing = cart.find(i => i.id === id);
-    if (existing) { existing.qty++; } else { cart.push({ id, name, price, image, qty: 1 }); }
+    if (existing) { existing.qty++; } else { cart.push({ id, name, price: formattedPrice, image, qty: 1 }); }
     saveCart(); updateBadge(); renderCart();
     showToast(`<strong>${name}</strong> added to cart.`, 'cart');
 
@@ -298,9 +299,10 @@ function addToCart(id, name, price, image, btn) {
 window.addToCart = addToCart;
 
 function buyNow(id, name, price, image) {
+    const formattedPrice = `৳${price}`;
     const existing = cart.find(i => i.id === id);
     if (!existing) {
-        cart.push({ id, name, price, image, qty: 1 });
+        cart.push({ id, name, price: formattedPrice, image, qty: 1 });
         saveCart();
         updateBadge();
     }
@@ -374,42 +376,56 @@ function initInfiniteScroll() {
             data.products.forEach(p => {
                 const div = document.createElement('div');
                 div.className = 'product-card reveal';
+                div.dataset.category = p.category_id;
                 const imgHtml = p.hero ? `
-                    <div class="img-box" style="aspect-ratio:3/4;">
+                    <div class="img-box" style="aspect-ratio:4/5;">
                         <img class="blur-placeholder" src="${p.hero.blur}" alt="" aria-hidden="true">
                         <picture>
                             <source type="image/webp" srcset="${p.hero.srcset}" sizes="(max-width:600px) 50vw, 25vw">
                             <img src="${p.hero.src_600}" alt="${p.hero.alt}" loading="lazy" class="blur-up" onload="this.classList.add('loaded')">
                         </picture>
-                    </div>` : `<img src="/static/images/${p.image}" alt="${p.name}" loading="lazy">`;
+                    </div>` : `<img src="/static/images/${p.image}" alt="${p.name}" loading="lazy" style="aspect-ratio:4/5;">`;
 
                 const oosBadge = p.stock <= 0 ? `
-                    <div style="position:absolute; top:10px; left:10px; background:rgba(232,65,24,0.9); color:#fff; font-size:.62rem; font-weight:700; text-transform:uppercase; padding:.3rem .6rem; border-radius:4px; z-index:10; letter-spacing:.05em;">
+                    <div class="oos-badge">
                         Out of Stock
                     </div>` : '';
                 const quickActionsHtml = p.stock > 0 ? `
-                                <button class="add-to-cart-btn" onclick="event.preventDefault();addToCart('${p.id}','${p.name}','${p.price}','${p.image}',this)">Add to Cart</button>
-                                <button class="order-now-btn" style="background:var(--accent); color:#000;" onclick="event.preventDefault();buyNow('${p.id}','${p.name}','${p.price}','${p.image}')">Order Now</button>`
+                                <button class="add-to-cart-btn" onclick="event.preventDefault();addToCart('${p.id}','${p.name}','${p.price}','${p.image}',this)">
+                                    <i class="fa-solid fa-cart-shopping"></i>
+                                    Add to Cart
+                                </button>`
                             : `
-                                <button style="background:transparent; color:#e84118; font-weight:600; cursor:default; border:none; letter-spacing:0.05em; padding:.5rem 1.1rem;" disabled>Out of Stock</button>`;
+                                <button class="out-of-stock-btn" disabled>
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                    Out of Stock
+                                </button>`;
 
                 div.innerHTML = `
+                    <button class="wishlist-btn" data-id="${p.id}">
+                        <i class="fa-regular fa-heart"></i>
+                    </button>
                     <a href="/product/${p.id}" style="display:block;">
                         <div class="product-image">
                             ${imgHtml}
                             ${oosBadge}
                             <div class="product-quick">
                                 ${quickActionsHtml}
-                                <button class="quick-view-btn" onclick="event.preventDefault();window.location.href='/product/${p.id}'"><i class="fa-regular fa-eye"></i></button>
                             </div>
-                            <button class="wishlist-btn" data-id="${p.id}" onclick="event.preventDefault();"><i class="fa-regular fa-heart"></i></button>
                         </div>
                     </a>
                     <div class="product-info">
                         <h4 class="product-name">${p.name}</h4>
                         ${p.compare_at_price && parseFloat(p.compare_at_price) > parseFloat(p.price) 
-                            ? `<p class="product-price"><span style="color:var(--text-2);text-decoration:line-through;margin-right:8px;font-size:0.9em;">৳${p.compare_at_price}</span>৳${p.price}</p>`
-                            : `<p class="product-price">৳${p.price}</p>`}
+                            ? `<p class="product-price">
+                                <span class="price-old">৳${p.compare_at_price}</span>
+                                <span class="price-new">৳${p.price}</span>
+                               </p>`
+                            : `<p class="product-price"><span class="price-new">৳${p.price}</span></p>`}
+                        <a href="/product/${p.id}" class="view-details-btn">
+                            View Details
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
                     </div>`;
                 grid.insertBefore(div, sentinel);
                 requestAnimationFrame(() => div.classList.add('active'));
@@ -449,7 +465,7 @@ function initQuickView() {
     // Add logic here later to open modal and populate data
     window.openQuickView = function(id, name, price, img, desc, link) {
         qs('#qv-title').textContent = name;
-        qs('#qv-price').textContent = price;
+        qs('#qv-price').textContent = `৳${price}`;
         qs('#qv-desc').textContent = desc || "Experience the pinnacle of luxury. Hand-crafted and strictly limited edition.";
         qs('#qv-img').src = img;
         qs('#qv-link').href = link;

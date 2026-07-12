@@ -94,8 +94,10 @@
             <div class="flash-info">
                 <div class="flash-name">{{ product.name }}</div>
                 <div class="flash-prices">
-                    <span class="flash-price-new">{{ product.price }}</span>
-                    <span class="flash-price-old">+20%</span>
+                    <span class="flash-price-new">৳{{ product.price }}</span>
+                    {% if product.compare_at_price %}
+                    <span class="flash-price-old">৳{{ product.compare_at_price }}</span>
+                    {% endif %}
                 </div>
                 <div class="flash-progress-wrap">
                     <div class="flash-progress-label"><span>Claimed</span><span>{{ [55,70,82,40,65,90]|random }}%</span></div>
@@ -133,27 +135,34 @@
     </div>
     <div class="products-grid" id="product-grid">
         {% for product in featured %}
-        <div class="product-card reveal">
+        <div class="product-card reveal" data-category="{{ product.category_id }}">
+            {% if loop.index <= 2 %}
             <span class="product-badge badge-new">New</span>
-            <button class="wishlist-btn" data-id="{{ product.id }}" onclick="event.preventDefault();">
+            {% endif %}
+            <button class="wishlist-btn" data-id="{{ product.id }}">
                 <i class="fa-regular fa-heart"></i>
             </button>
             <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="display:block;">
                 <div class="product-image">
                     {% set hero = product.hero_image %}
                     {% if hero %}
-                    <div class="img-box" style="aspect-ratio:3/4;">
+                    <div class="img-box" style="aspect-ratio:4/5;">
                         <img class="blur-placeholder" src="{{ hero.blur_data_uri }}" alt="" aria-hidden="true">
                         <picture>
                             <source type="image/webp" srcset="{{ hero.srcset }}" sizes="(max-width:600px) 50vw, 25vw">
-                            <img src="{{ hero.src(600) }}" alt="{{ hero.alt_text }}" loading="lazy" class="blur-up" onload="this.classList.add('loaded')">
+                            <img src="{{ hero.src(600) }}"
+                                 alt="{{ hero.alt_text }}"
+                                 width="600" height="750"
+                                 loading="lazy"
+                                 class="blur-up"
+                                 onload="this.classList.add('loaded')">
                         </picture>
                     </div>
                     {% else %}
-                    <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" loading="lazy">
+                    <img src="/static/images/{{ product.image }}" alt="{{ product.name }}" loading="lazy" width="600" height="750" style="aspect-ratio:4/5;">
                     {% endif %}
                     {% if product.stock <= 0 %}
-                    <div style="position:absolute; top:10px; left:10px; background:rgba(232,65,24,0.9); color:#fff; font-size:.62rem; font-weight:700; text-transform:uppercase; padding:.3rem .6rem; border-radius:4px; z-index:10; letter-spacing:.05em;">
+                    <div class="oos-badge">
                         Out of Stock
                     </div>
                     {% endif %}
@@ -161,20 +170,15 @@
                         {% if product.stock > 0 %}
                             <button class="add-to-cart-btn"
                                 onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                                <i class="fa-solid fa-cart-shopping"></i>
                                 Add to Cart
                             </button>
-                            <button class="order-now-btn" style="background:var(--accent); color:#000;"
-                                onclick="event.preventDefault();buyNow('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}')">
-                                Order Now
-                            </button>
                         {% else %}
-                            <button style="background:transparent; color:#e84118; font-weight:600; cursor:default; border:none; letter-spacing:0.05em; padding:.5rem 1.1rem;" disabled>
+                            <button class="out-of-stock-btn" disabled>
+                                <i class="fa-solid fa-circle-xmark"></i>
                                 Out of Stock
                             </button>
                         {% endif %}
-                        <button class="quick-view-btn" onclick="event.preventDefault();window.location.href='{{ url_for('shop.product_detail', product_id=product.id) }}'">
-                            <i class="fa-regular fa-eye"></i>
-                        </button>
                     </div>
                 </div>
             </a>
@@ -185,15 +189,19 @@
                     {% set p_compare = product.compare_at_price|float %}
                     {% if p_compare > p_price %}
                     <p class="product-price">
-                        <span style="color:var(--text-2);text-decoration:line-through;margin-right:8px;font-size:0.9em;">৳{{ product.compare_at_price }}</span>
-                        ৳{{ product.price }}
+                        <span class="price-old">৳{{ product.compare_at_price }}</span>
+                        <span class="price-new">৳{{ product.price }}</span>
                     </p>
                     {% else %}
-                    <p class="product-price">৳{{ product.price }}</p>
+                    <p class="product-price"><span class="price-new">৳{{ product.price }}</span></p>
                     {% endif %}
                 {% else %}
-                <p class="product-price">৳{{ product.price }}</p>
+                <p class="product-price"><span class="price-new">৳{{ product.price }}</span></p>
                 {% endif %}
+                <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="view-details-btn">
+                    View Details
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
             </div>
         </div>
         {% endfor %}

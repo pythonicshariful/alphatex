@@ -6,22 +6,17 @@
     <div class="auth-card reveal">
         <div class="auth-logo"><a href="/" style="display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;"><img src="/static/images/logo.webp" alt="alphatex" style="height:32px;width:auto;"><span style="font-family:Century Gothic,sans-serif;font-size:1.2rem;font-weight:700;letter-spacing:.12em;color:var(--accent);">alphatex</span></a></div>
         <h1 class="auth-title">Create Account</h1>
-        <p class="auth-subtitle">Step 1 of 3 — Enter your mobile number</p>
+        <p class="auth-subtitle">Step 1 of 3 — Enter your email address</p>
 
         <form action="{{ url_for('auth.register_send_otp') }}" method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
-                <label>Mobile Number</label>
-                <div class="phone-input-wrapper">
-                    <span class="phone-prefix">+88</span>
-                    <input type="text" name="phone" class="form-control phone-input"
-                           placeholder="01XXXXXXXXX" required
-                           maxlength="11" pattern="0[1-9]\d{9}"
-                           title="Enter 11 digits starting with 0 (e.g. 01711123456)">
-                </div>
+                <label>Email Address</label>
+                <input type="email" name="email" class="form-control"
+                       placeholder="you@example.com" required>
             </div>
             <p style="color:var(--text-secondary);font-size:.8rem;margin-bottom:1.5rem;">
-                We'll send a 6-digit OTP. Enter your 11-digit number starting with 0.
+                We'll send a 6-digit OTP to your email address.
             </p>
             <div class="cf-turnstile" data-sitekey="{{ config.TURNSTILE_SITE_KEY or '1x00000000000000000000AA' }}" style="margin-bottom: 1rem;"></div>
             <button type="submit" class="btn" style="width:100%;">Send OTP <i class="fa-solid fa-arrow-right"></i></button>

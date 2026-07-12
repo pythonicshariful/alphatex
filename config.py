@@ -16,10 +16,11 @@ class Config:
     # Admin session is shorter (handled per-route)
     ADMIN_SESSION_TIMEOUT = 30 * 60  # 30 minutes
 
-    # Twilio SMS
-    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
-    TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
+    # SMTP Settings
+    SMTP_SERVER = os.environ.get('SMTP_SERVER') or 'alphatex.bd'
+    SMTP_PORT = int(os.environ.get('SMTP_PORT') or 465)
+    SMTP_USERNAME = os.environ.get('SMTP_USERNAME') or 'no-reply@alphatex.bd'
+    SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD') or 'Hacktanha@24'
 
     # Admin brute force
     ADMIN_MAX_FAILED_ATTEMPTS = 5

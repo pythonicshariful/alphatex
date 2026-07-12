@@ -69,7 +69,7 @@ class User(UserMixin, db.Model):
 class OTPRecord(db.Model):
     __tablename__ = 'otp_record'
     id = db.Column(db.Integer, primary_key=True)
-    phone = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(150), nullable=False)
     otp_hash = db.Column(db.String(256), nullable=False)
     purpose = db.Column(db.String(20), nullable=False)  # 'register', 'login', 'reset'
     expires_at = db.Column(db.DateTime, nullable=False)

@@ -90,6 +90,14 @@ def create_app():
     app.register_blueprint(user_bp)
 
     with app.app_context():
+        # Drop old otp_record table if exists to migrate to email column schema
+        try:
+            db.session.execute(db.text("DROP TABLE IF EXISTS otp_record"))
+            db.session.commit()
+        except Exception as e:
+            app.logger.error(f"Failed to drop otp_record: {e}")
+            db.session.rollback()
+
         db.create_all()
         seed_db()
         migrate_legacy_images(app)
@@ -162,12 +170,18 @@ def seed_db():
         ]
         db.session.add_all(cats)
         prods = [
-            Product(name='Signature Platinum Thobe', price='$450.00', image='product_1.jpg', category_id='men', is_featured=True),
-            Product(name='Luxury Silk Abaya', price='$620.00', image='product_2.jpg', category_id='women', is_featured=True),
-            Product(name='Classic Leather Wallet', price='$150.00', image='product_3.jpg', category_id='accessories', is_featured=True),
-            Product(name='Sahara Linen Panjabi', price='$280.00', image='product_4.jpg', category_id='men', is_featured=True),
-            Product(name='Premium Co-Ord Set', price='$400.00', image='product_5.jpg', category_id='women', is_featured=False),
-            Product(name='Oud Fragrance Collection', price='$320.00', image='product_6.jpg', category_id='accessories', is_featured=False),
+            Product(name='Signature Platinum Thobe', price='4500', image='product_1.jpg', category_id='men', is_featured=True),
+            Product(name='Luxury Silk Abaya', price='6200', image='product_2.jpg', category_id='women', is_featured=True),
+            Product(name='Classic Leather Wallet', price='1500', image='product_3.jpg', category_id='accessories', is_featured=True),
+            Product(name='Sahara Linen Panjabi', price='2800', image='product_4.jpg', category_id='men', is_featured=True),
+            Product(name='Premium Co-Ord Set', price='4000', image='product_5.jpg', category_id='women', is_featured=False),
+            Product(name='Oud Fragrance Collection', price='3200', image='product_6.jpg', category_id='accessories', is_featured=False),
+            Product(name='Embroidered Kurta Set', price='3500', image='product_1.jpg', category_id='men', is_featured=False, compare_at_price='4200'),
+            Product(name='Designer Hijab Collection', price='1800', image='product_2.jpg', category_id='women', is_featured=True),
+            Product(name='Premium Leather Belt', price='1200', image='product_3.jpg', category_id='accessories', is_featured=False),
+            Product(name='Classic White Panjabi', price='2200', image='product_4.jpg', category_id='men', is_featured=False),
+            Product(name='Elegant Maxi Dress', price='3800', image='product_5.jpg', category_id='women', is_featured=True, compare_at_price='4500'),
+            Product(name='Premium Watch', price='5500', image='product_6.jpg', category_id='accessories', is_featured=True),
         ]
         db.session.add_all(prods)
         db.session.commit()

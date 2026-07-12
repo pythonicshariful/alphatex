@@ -8,6 +8,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import db, limiter
 from models import User, OTPRecord
+from utils.mail import send_otp_email
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -54,30 +55,12 @@ def generate_otp():
 def hash_otp(otp):
     return hashlib.sha256(otp.encode()).hexdigest()
 
-def send_otp_sms(phone, otp):
-    """Tries Twilio; falls back to console mock."""
-    from flask import current_app
-    sid = current_app.config.get('TWILIO_ACCOUNT_SID')
-    token = current_app.config.get('TWILIO_AUTH_TOKEN')
-    from_number = current_app.config.get('TWILIO_PHONE_NUMBER')
-    if sid and token and from_number:
-        try:
-            from twilio.rest import Client
-            client = Client(sid, token)
-            client.messages.create(body=f'Your ILLIYEEN OTP is: {otp}', from_=from_number, to=phone)
-            return True
-        except Exception as e:
-            current_app.logger.error(f'Twilio error: {e}')
-    # Console mock
-    print(f'\n[OTP MOCK] Phone: {phone} -> OTP: {otp}\n', flush=True)
-    return True
-
-def create_otp_record(phone, purpose):
-    # Invalidate old OTPs for same phone+purpose
-    OTPRecord.query.filter_by(phone=phone, purpose=purpose, used=False).update({'used': True})
+def create_otp_record(email, purpose):
+    # Invalidate old OTPs for same email+purpose
+    OTPRecord.query.filter_by(email=email, purpose=purpose, used=False).update({'used': True})
     otp = generate_otp()
     record = OTPRecord(
-        phone=phone,
+        email=email,
         otp_hash=hash_otp(otp),
         purpose=purpose,
         expires_at=datetime.utcnow() + timedelta(minutes=10)
@@ -86,9 +69,9 @@ def create_otp_record(phone, purpose):
     db.session.commit()
     return otp
 
-def verify_otp_record(phone, otp, purpose):
+def verify_otp_record(email, otp, purpose):
     record = OTPRecord.query.filter_by(
-        phone=phone, purpose=purpose, used=False
+        email=email, purpose=purpose, used=False
     ).order_by(OTPRecord.created_at.desc()).first()
     if not record:
         return False, 'No OTP found. Please request a new one.'
@@ -114,82 +97,75 @@ def register():
 
 
 @auth_bp.route('/register/send-otp', methods=['POST'])
-@limiter.limit('3/hour', key_func=lambda: request.form.get('phone', ''))
+@auth_bp.route('/register/send-otp', methods=['POST'])
+@limiter.limit('3/hour', key_func=lambda: request.form.get('email', ''))
 def register_send_otp():
     cf_token = request.form.get('cf-turnstile-response')
     if not verify_turnstile(cf_token):
         flash('Security check failed. Please try again.', 'error')
         return redirect(url_for('auth.register'))
         
-    raw = request.form.get('phone', '').strip()
-    # Prepend +88 if user typed just the local part (starting with 0)
-    phone = '+88' + raw if not raw.startswith('+') else raw
-    if not BD_PHONE_RE.match(phone):
-        flash('Please enter a valid Bangladeshi mobile number (e.g. +8801XXXXXXXXX).', 'error')
+    email = request.form.get('email', '').strip().lower()
+    if not email or not re.match(r'[^@]+@[^@]+\.[^@]+', email):
+        flash('Please enter a valid email address.', 'error')
         return redirect(url_for('auth.register'))
-    existing = User.query.filter_by(phone=phone).first()
+    existing = User.query.filter_by(email=email).first()
     if existing and existing.is_verified:
-        flash('This number is already registered. Please log in.', 'error')
+        flash('This email is already registered. Please log in.', 'error')
         return redirect(url_for('auth.login'))
-    otp = create_otp_record(phone, 'register')
-    send_otp_sms(phone, otp)
-    session['reg_phone'] = phone
-    flash('OTP sent to your mobile number!', 'success')
+    otp = create_otp_record(email, 'register')
+    send_otp_email(email, otp)
+    session['reg_email'] = email
+    flash('OTP sent to your email address!', 'success')
     return redirect(url_for('auth.register_verify'))
 
 
 @auth_bp.route('/register/verify', methods=['GET', 'POST'])
 def register_verify():
-    phone = session.get('reg_phone')
-    if not phone:
+    email = session.get('reg_email')
+    if not email:
         return redirect(url_for('auth.register'))
     if request.method == 'POST':
         otp = request.form.get('otp', '').strip()
-        ok, msg = verify_otp_record(phone, otp, 'register')
+        ok, msg = verify_otp_record(email, otp, 'register')
         if not ok:
             flash(msg, 'error')
-            return render_template('auth/otp_verify.html', phone=phone, purpose='register')
-        session['reg_phone_verified'] = phone
+            return render_template('auth/otp_verify.html', email=email, purpose='register')
+        session['reg_email_verified'] = email
         return redirect(url_for('auth.register_set_password'))
-    return render_template('auth/otp_verify.html', phone=phone, purpose='register')
+    return render_template('auth/otp_verify.html', email=email, purpose='register')
 
 
 @auth_bp.route('/register/set-password', methods=['GET', 'POST'])
 def register_set_password():
-    phone = session.get('reg_phone_verified')
-    if not phone:
+    email = session.get('reg_email_verified')
+    if not email:
         return redirect(url_for('auth.register'))
     if request.method == 'POST':
         password = request.form.get('password', '')
         if len(password) < 6:
             flash('Password must be at least 6 characters.', 'error')
-            return render_template('auth/set_password.html', phone=phone)
-        user = User.query.filter_by(phone=phone).first()
+            return render_template('auth/set_password.html', email=email)
+        user = User.query.filter_by(email=email).first()
         if not user:
-            user = User(phone=phone)
+            base_username = email.split('@')[0]
+            username = base_username
+            counter = 1
+            while User.query.filter_by(username=username).first():
+                username = f"{base_username}{counter}"
+                counter += 1
+            user = User(email=email, username=username)
         user.set_password(password)
         user.is_verified = True
         db.session.add(user)
         db.session.commit()
         login_user(user, remember=True)
         log_user_login(user)
-        session.pop('reg_phone', None)
-        session.pop('reg_phone_verified', None)
-        flash('Welcome to ILLIYEEN! Your account has been created.', 'success')
-        return redirect(url_for('auth.add_email'))
-    return render_template('auth/set_password.html', phone=phone)
-
-
-@auth_bp.route('/register/add-email', methods=['GET', 'POST'])
-@login_required
-def add_email():
-    if request.method == 'POST':
-        email = request.form.get('email', '').strip()
-        if email:
-            current_user.email = email
-            db.session.commit()
+        session.pop('reg_email', None)
+        session.pop('reg_email_verified', None)
+        flash('Welcome to alphatex! Your account has been created.', 'success')
         return redirect(url_for('shop.index'))
-    return render_template('auth/add_email.html')
+    return render_template('auth/set_password.html', email=email)
 
 
 # -------------------------------------------------------
@@ -226,46 +202,45 @@ def login_password():
 
 
 @auth_bp.route('/login/send-otp', methods=['POST'])
-@limiter.limit('3/hour', key_func=lambda: request.form.get('phone', ''))
+@limiter.limit('3/hour', key_func=lambda: request.form.get('email', ''))
 def login_send_otp():
     cf_token = request.form.get('cf-turnstile-response')
     if not verify_turnstile(cf_token):
         flash('Security check failed. Please try again.', 'error')
         return redirect(url_for('auth.login'))
         
-    raw = request.form.get('phone', '').strip()
-    phone = '+88' + raw if not raw.startswith('+') else raw
-    if not BD_PHONE_RE.match(phone):
-        flash('Please enter a valid Bangladeshi mobile number.', 'error')
+    email = request.form.get('email', '').strip().lower()
+    if not email:
+        flash('Please enter a valid email address.', 'error')
         return redirect(url_for('auth.login'))
-    user = User.query.filter_by(phone=phone, is_verified=True).first()
+    user = User.query.filter_by(email=email, is_verified=True).first()
     if not user:
-        flash('No verified account found with this number. Please register first.', 'error')
+        flash('No verified account found with this email. Please register first.', 'error')
         return redirect(url_for('auth.login'))
-    otp = create_otp_record(phone, 'login')
-    send_otp_sms(phone, otp)
-    session['login_phone'] = phone
+    otp = create_otp_record(email, 'login')
+    send_otp_email(email, otp)
+    session['login_email'] = email
     return redirect(url_for('auth.login_verify'))
 
 
 @auth_bp.route('/login/verify', methods=['GET', 'POST'])
 def login_verify():
-    phone = session.get('login_phone')
-    if not phone:
+    email = session.get('login_email')
+    if not email:
         return redirect(url_for('auth.login'))
     if request.method == 'POST':
         otp = request.form.get('otp', '').strip()
         remember = bool(request.form.get('remember'))
-        ok, msg = verify_otp_record(phone, otp, 'login')
+        ok, msg = verify_otp_record(email, otp, 'login')
         if not ok:
             flash(msg, 'error')
-            return render_template('auth/otp_verify.html', phone=phone, purpose='login', remember=remember)
-        user = User.query.filter_by(phone=phone).first()
+            return render_template('auth/otp_verify.html', email=email, purpose='login', remember=remember)
+        user = User.query.filter_by(email=email).first()
         login_user(user, remember=remember)
         log_user_login(user)
-        session.pop('login_phone', None)
+        session.pop('login_email', None)
         return redirect(url_for('shop.index'))
-    return render_template('auth/otp_verify.html', phone=phone, purpose='login')
+    return render_template('auth/otp_verify.html', email=email, purpose='login')
 
 
 # -------------------------------------------------------
@@ -275,52 +250,51 @@ def login_verify():
 @auth_bp.route('/reset-password', methods=['GET', 'POST'])
 def reset_request():
     if request.method == 'POST':
-        raw = request.form.get('phone', '').strip()
-        phone = '+88' + raw if not raw.startswith('+') else raw
-        user = User.query.filter_by(phone=phone, is_verified=True).first()
+        email = request.form.get('email', '').strip().lower()
+        user = User.query.filter_by(email=email, is_verified=True).first()
         if user:
-            otp = create_otp_record(phone, 'reset')
-            send_otp_sms(phone, otp)
-            session['reset_phone'] = phone
+            otp = create_otp_record(email, 'reset')
+            send_otp_email(email, otp)
+            session['reset_email'] = email
             return redirect(url_for('auth.reset_verify'))
-        flash('No account found with that number.', 'error')
+        flash('No account found with that email address.', 'error')
     return render_template('auth/reset_request.html')
 
 
 @auth_bp.route('/reset-password/verify', methods=['GET', 'POST'])
 def reset_verify():
-    phone = session.get('reset_phone')
-    if not phone:
+    email = session.get('reset_email')
+    if not email:
         return redirect(url_for('auth.reset_request'))
     if request.method == 'POST':
         otp = request.form.get('otp', '').strip()
-        ok, msg = verify_otp_record(phone, otp, 'reset')
+        ok, msg = verify_otp_record(email, otp, 'reset')
         if not ok:
             flash(msg, 'error')
-            return render_template('auth/otp_verify.html', phone=phone, purpose='reset')
-        session['reset_phone_verified'] = phone
+            return render_template('auth/otp_verify.html', email=email, purpose='reset')
+        session['reset_email_verified'] = email
         return redirect(url_for('auth.reset_set_password'))
-    return render_template('auth/otp_verify.html', phone=phone, purpose='reset')
+    return render_template('auth/otp_verify.html', email=email, purpose='reset')
 
 
 @auth_bp.route('/reset-password/set', methods=['GET', 'POST'])
 def reset_set_password():
-    phone = session.get('reset_phone_verified')
-    if not phone:
+    email = session.get('reset_email_verified')
+    if not email:
         return redirect(url_for('auth.reset_request'))
     if request.method == 'POST':
         password = request.form.get('password', '')
         if len(password) < 6:
             flash('Password must be at least 6 characters.', 'error')
-            return render_template('auth/set_password.html', phone=phone, mode='reset')
-        user = User.query.filter_by(phone=phone).first()
+            return render_template('auth/set_password.html', email=email, mode='reset')
+        user = User.query.filter_by(email=email).first()
         user.set_password(password)
         db.session.commit()
-        session.pop('reset_phone', None)
-        session.pop('reset_phone_verified', None)
+        session.pop('reset_email', None)
+        session.pop('reset_email_verified', None)
         flash('Password updated! Please log in.', 'success')
         return redirect(url_for('auth.login'))
-    return render_template('auth/set_password.html', phone=phone, mode='reset')
+    return render_template('auth/set_password.html', email=email, mode='reset')
 
 
 # -------------------------------------------------------
