@@ -565,3 +565,100 @@ def robots_txt():
         f"Sitemap: {base_url}/sitemap.xml\n"
     )
     return Response(content, mimetype='text/plain')
+
+
+@shop_bp.route('/api/ai/chat', methods=['POST'])
+@limiter.limit('30/minute')
+def api_ai_chat():
+    import os, requests
+    from models import Product
+    
+    # Retrieve Gemini API Key from environment
+    gemini_key = os.environ.get('GEMINI_API_KEY')
+    if not gemini_key:
+        return jsonify({'error': 'AI chat is currently unavailable.'}), 503
+        
+    data = request.get_json() or {}
+    user_message = data.get('message', '').strip()
+    history = data.get('history', [])
+    
+    if not user_message:
+        return jsonify({'error': 'Message is required.'}), 400
+        
+    # Retrieve product catalog to build RAG context
+    try:
+        products = Product.query.all()
+        catalog_lines = []
+        for p in products:
+            cat_name = p.category.name if p.category else 'Unknown'
+            status = 'In Stock' if p.stock > 0 else 'Out of Stock'
+            catalog_lines.append(
+                f"- Name: {p.name}\n"
+                f"  Price: {p.price} BDT\n"
+                f"  Category: {cat_name}\n"
+                f"  Status: {status} (Stock: {p.stock})\n"
+                f"  Description: {p.description or 'Premium exclusive item'}\n"
+                f"  Link: /product/{p.id}"
+            )
+        catalog_context = "\n".join(catalog_lines)
+    except Exception as e:
+        catalog_context = "No products found."
+        
+    system_instruction = (
+        "You are Alphatex AI Concierge, a luxury customer service assistant for Alphatex, "
+        "a high-end, premium clothing boutique. Your voice must be sophisticated, helpful, polite, and welcoming (concierge tone).\n\n"
+        "Here is our live product catalog:\n"
+        f"{catalog_context}\n\n"
+        "Guidelines:\n"
+        "1. Recommend specific products from our catalog that match the user's needs. Highlight their price in BDT and suggest visiting their link.\n"
+        "2. Keep responses brief, structured with bullet points or paragraphs, and easy to read. Do not write extremely long paragraphs.\n"
+        "3. If a product is Out of Stock, politely let them know and suggest an alternative that is In Stock.\n"
+        "4. For general inquiries (shipping, returns, size guide, contact), suggest checking the links at the bottom of the page.\n"
+        "5. If the user asks about WhatsApp or Messenger, note that they can chat directly with sales representatives by clicking the respective floating buttons on the screen.\n"
+        "6. Do not speculate or make up products that are not in the catalog. Only discuss real products listed above."
+    )
+    
+    # Format messages for Gemini API
+    contents = []
+    for h in history:
+        role = 'user' if h.get('role') == 'user' else 'model'
+        contents.append({
+            'role': role,
+            'parts': [{'text': h.get('text', '')}]
+        })
+        
+    # Append current message
+    contents.append({
+        'role': 'user',
+        'parts': [{'text': user_message}]
+    })
+    
+    # Request payload
+    payload = {
+        'contents': contents,
+        'systemInstruction': {
+            'parts': [{'text': system_instruction}]
+        },
+        'generationConfig': {
+            'temperature': 0.4,
+            'topK': 40,
+            'topP': 0.95,
+            'maxOutputTokens': 1024
+        }
+    }
+    
+    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+    
+    try:
+        res = requests.post(api_url, json=payload, headers={'Content-Type': 'application/json'}, timeout=10)
+        if res.status_code == 200:
+            res_data = res.json()
+            candidates = res_data.get('candidates', [])
+            if candidates:
+                bot_text = candidates[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+                return jsonify({'reply': bot_text})
+            return jsonify({'error': 'No response candidate received.'}), 500
+        else:
+            return jsonify({'error': f"Gemini API returned status code {res.status_code}."}), 500
+    except Exception as e:
+        return jsonify({'error': f"Failed to connect to AI server: {str(e)}"}), 500

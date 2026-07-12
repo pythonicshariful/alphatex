@@ -71,6 +71,12 @@
             <a href="{{ url_for('admin.carousel') }}" class="admin-nav-item {% if request.endpoint == 'admin.carousel' %}active{% endif %}">
                 <i class="fa-solid fa-images"></i><span class="sidebar-label">Carousel</span>
             </a>
+            <a href="{{ url_for('admin.partners') }}" class="admin-nav-item {% if request.endpoint == 'admin.partners' %}active{% endif %}">
+                <i class="fa-solid fa-handshake"></i><span class="sidebar-label">Partners</span>
+            </a>
+            <a href="{{ url_for('admin.testimonials') }}" class="admin-nav-item {% if request.endpoint == 'admin.testimonials' %}active{% endif %}">
+                <i class="fa-solid fa-comment-dots"></i><span class="sidebar-label">Testimonials</span>
+            </a>
             {% endif %}
             {% endif %}
 

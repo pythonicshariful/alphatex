@@ -604,6 +604,124 @@ def delete_carousel(admin, sid):
     return redirect(url_for('admin.carousel'))
 
 
+@admin_bp.route('/partners', methods=['GET', 'POST'])
+@require_admin('settings')
+def partners(admin):
+    from models import Partner
+    if request.method == 'POST':
+        file = request.files.get('image')
+        name = request.form.get('name', '').strip()
+        link = request.form.get('link', '').strip()
+        try:
+            order = int(request.form.get('order', 0))
+        except (TypeError, ValueError):
+            order = 0
+        
+        if not name:
+            flash('Partner name is required.', 'error')
+            return redirect(url_for('admin.partners'))
+            
+        if file and file.filename:
+            from werkzeug.utils import secure_filename
+            import os
+            from flask import current_app
+            from utils.images import optimize_and_save_image
+            filename = secure_filename(file.filename)
+            filename_base = os.path.splitext(filename)[0]
+            # Save inside static/images/partners
+            upload_dir = os.path.join(current_app.root_path, 'static', 'images', 'partners')
+            saved_filename = optimize_and_save_image(file, upload_dir, filename_base, max_width=400)
+            
+            partner = Partner(
+                name=name,
+                image=f"partners/{saved_filename}",
+                link=link or None,
+                order=order
+            )
+            db.session.add(partner)
+            db.session.commit()
+            flash('Partner added.', 'success')
+        else:
+            flash('Partner logo image is required.', 'error')
+        return redirect(url_for('admin.partners'))
+        
+    partners_list = Partner.query.order_by(Partner.order).all()
+    return render_template('admin/partners.html', admin=admin, partners=partners_list)
+
+
+@admin_bp.route('/partners/delete/<int:pid>', methods=['POST'])
+@require_admin('settings')
+def delete_partner(admin, pid):
+    from models import Partner
+    p = Partner.query.get_or_404(pid)
+    db.session.delete(p)
+    db.session.commit()
+    flash('Partner deleted.', 'success')
+    return redirect(url_for('admin.partners'))
+
+
+@admin_bp.route('/testimonials', methods=['GET', 'POST'])
+@require_admin('settings')
+def testimonials(admin):
+    from models import Testimonial
+    if request.method == 'POST':
+        file = request.files.get('image')
+        name = request.form.get('name', '').strip()
+        content = request.form.get('content', '').strip()
+        try:
+            rating = int(request.form.get('rating', 5))
+        except (TypeError, ValueError):
+            rating = 5
+        try:
+            order = int(request.form.get('order', 0))
+        except (TypeError, ValueError):
+            order = 0
+            
+        if not name or not content:
+            flash('Customer Name and Review Content are required.', 'error')
+            return redirect(url_for('admin.testimonials'))
+            
+        # Default image
+        saved_filename = 'avatar_default.webp'
+        
+        if file and file.filename:
+            from werkzeug.utils import secure_filename
+            import os
+            from flask import current_app
+            from utils.images import optimize_and_save_image
+            filename = secure_filename(file.filename)
+            filename_base = os.path.splitext(filename)[0]
+            upload_dir = os.path.join(current_app.root_path, 'static', 'images', 'testimonials')
+            # optimize and convert to WebP
+            saved_filename = f"testimonials/{optimize_and_save_image(file, upload_dir, filename_base, max_width=300)}"
+            
+        t = Testimonial(
+            name=name,
+            content=content,
+            image=saved_filename,
+            rating=rating,
+            order=order
+        )
+        db.session.add(t)
+        db.session.commit()
+        flash('Testimonial added.', 'success')
+        return redirect(url_for('admin.testimonials'))
+        
+    testimonials_list = Testimonial.query.order_by(Testimonial.order).all()
+    return render_template('admin/testimonials.html', admin=admin, testimonials=testimonials_list)
+
+
+@admin_bp.route('/testimonials/delete/<int:tid>', methods=['POST'])
+@require_admin('settings')
+def delete_testimonial(admin, tid):
+    from models import Testimonial
+    t = Testimonial.query.get_or_404(tid)
+    db.session.delete(t)
+    db.session.commit()
+    flash('Testimonial deleted.', 'success')
+    return redirect(url_for('admin.testimonials'))
+
+
 
 @admin_bp.route('/login-history')
 @require_admin('logs')
@@ -893,6 +1011,7 @@ def settings(admin):
         keys_to_save = ['site_name', 'support_email', 'maintenance_mode',
                         'meta_title', 'meta_description', 'meta_keywords',
                         'social_instagram', 'social_facebook', 'social_twitter',
+                        'social_whatsapp', 'social_messenger',
                         'show_exact_stock']
         for key in keys_to_save:
             val = request.form.get(key, '')

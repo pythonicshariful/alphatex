@@ -104,12 +104,24 @@ def create_app():
 
     @app.context_processor
     def inject_settings():
-        from models import SiteSettings
+        from models import SiteSettings, Partner, Testimonial
         try:
             settings_map = {s.key: s.value for s in SiteSettings.query.all()}
         except Exception:
             settings_map = {}
-        return {'site_settings': settings_map}
+        try:
+            partners = Partner.query.filter_by(is_active=True).order_by(Partner.order).all()
+        except Exception:
+            partners = []
+        try:
+            testimonials = Testimonial.query.filter_by(is_active=True).order_by(Testimonial.order).all()
+        except Exception:
+            testimonials = []
+        return {
+            'site_settings': settings_map,
+            'active_partners': partners,
+            'active_testimonials': testimonials
+        }
 
     @app.after_request
     def optimize_response(response):
@@ -160,13 +172,58 @@ def create_app():
     return app
 
 def seed_db():
-    from models import Category, Product, AdminUser, User
+    from models import Category, Product, AdminUser, User, Partner, Testimonial
+
+    if not Partner.query.first():
+        partners = [
+            Partner(name='Shwapno', image='partners/shwapno.webp', order=1),
+            Partner(name='Unimart', image='partners/unimart.webp', order=2),
+            Partner(name='Agora', image='partners/agora.webp', order=3),
+            Partner(name='Meena Bazar', image='partners/meenabazar.webp', order=4),
+            Partner(name='Khulshi Mart', image='partners/khulshimart.webp', order=5),
+            Partner(name='Apon Family Mart', image='partners/aponfamilymart.webp', order=6),
+            Partner(name='Lavender', image='partners/lavender.webp', order=7),
+            Partner(name='The Basket', image='partners/thebasket.webp', order=8),
+            Partner(name='Food Panda', image='partners/foodpanda.webp', order=9),
+            Partner(name='Pathao', image='partners/pathao.webp', order=10),
+        ]
+        db.session.add_all(partners)
+        db.session.commit()
+        print('[Seed] Sales partners data seeded.')
+
+    if not Testimonial.query.first():
+        testimonials = [
+            Testimonial(
+                name='Zubair Rahman',
+                content='The fabric quality of the Sahara Linen Panjabi is absolutely incredible. It feels soft and fits perfectly. Truly premium luxury fashion.',
+                image='avatar_default.webp',
+                rating=5,
+                order=1
+            ),
+            Testimonial(
+                name='Farhana Chowdhury',
+                content='I ordered the Signature Platinum Thobe for my husband. The stitching details and the fall of the fabric are top-notch. Highly recommend!',
+                image='avatar_default.webp',
+                rating=5,
+                order=2
+            ),
+            Testimonial(
+                name='Adnan Sami',
+                content='Excellent customer service! I needed to exchange sizes, and their styling concierge team resolved it within 24 hours. The new fit is perfect.',
+                image='avatar_default.webp',
+                rating=5,
+                order=3
+            )
+        ]
+        db.session.add_all(testimonials)
+        db.session.commit()
+        print('[Seed] Testimonials data seeded.')
 
     if not Category.query.first():
         cats = [
-            Category(id='men', name='Menswear', image='men_category.jpg'),
-            Category(id='women', name='Womenswear', image='women_category.jpg'),
-            Category(id='accessories', name='Accessories', image='accessories_category.jpg'),
+            Category(id='men', name='Menswear', image='men_category.webp'),
+            Category(id='women', name='Womenswear', image='women_category.webp'),
+            Category(id='accessories', name='Accessories', image='accessories_category.webp'),
         ]
         db.session.add_all(cats)
         prods = [

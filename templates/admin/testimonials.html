@@ -1,0 +1,112 @@
+{% extends "admin/base.html" %}
+{% block title %}Testimonials | alphatex Admin{% endblock %}
+{% block breadcrumb %}<span>/</span> <span>Catalogue</span> <span>/</span> <span>Testimonials</span>{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <div>
+        <h1>Testimonials</h1>
+        <p>Manage the "What Our Customers Say" sliding marquee section shown on the home page.</p>
+    </div>
+</div>
+
+<div class="chart-grid">
+    <div class="admin-section" style="margin-bottom:0;">
+        <div class="admin-section-header">
+            <h2>Current Testimonials</h2>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Avatar</th>
+                        <th>Name</th>
+                        <th>Rating</th>
+                        <th>Review</th>
+                        <th>Order</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in testimonials %}
+                    <tr>
+                        <td>
+                            <img src="{{ url_for('static', filename='images/' + (item.image or 'avatar_default.webp')) }}" 
+                                 style="width:48px;height:48px;border-radius:50%;border:1px solid var(--a-border);object-fit:cover;">
+                        </td>
+                        <td style="font-weight:600;font-size:0.95rem;white-space:nowrap;">{{ item.name }}</td>
+                        <td>
+                            <span style="color:var(--accent);white-space:nowrap;">
+                                {% for star in range(item.rating) %}
+                                <i class="fa-solid fa-star" style="font-size:0.8rem;"></i>
+                                {% endfor %}
+                            </span>
+                        </td>
+                        <td style="font-size:0.85rem;color:var(--text-muted);min-width:200px;max-width:350px;">
+                            {{ item.content }}
+                        </td>
+                        <td style="font-weight:600;font-size:1.1rem;">{{ item.order }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.delete_testimonial', tid=item.id) }}"
+                                  onsubmit="return confirm('Delete this testimonial?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-a btn-a-sm btn-a-outline text-danger"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="empty-state"><p>No testimonials added.</p></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div>
+        <div class="admin-section">
+            <div class="admin-section-header">
+                <h2>Add Testimonial</h2>
+            </div>
+            <div class="section-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="form-group">
+                        <label class="form-label">Customer Name *</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Zubair Rahman" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Upload Profile Picture (Optional)</label>
+                        <input type="file" name="image" class="form-control" accept="image/*">
+                        <small class="text-muted" style="display:block; margin-top:4px;">Will be automatically optimized and converted to WebP format.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Rating *</label>
+                        <select name="rating" class="form-control" required style="width:100%;height:38px;padding:6px 12px;background:var(--a-surface);border:1px solid var(--a-border);border-radius:6px;color:var(--a-text);">
+                            <option value="5" selected>⭐⭐⭐⭐⭐ (5 Stars)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+                            <option value="3">⭐⭐⭐ (3 Stars)</option>
+                            <option value="2">⭐⭐ (2 Stars)</option>
+                            <option value="1">⭐ (1 Star)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Sort Order (Optional)</label>
+                        <input type="number" name="order" class="form-control" value="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Review Content *</label>
+                        <textarea name="content" class="form-control" rows="4" placeholder="Customer review message here..." required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn-a btn-a-primary" style="width:100%;justify-content:center;">Add Testimonial</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -47,6 +47,14 @@
                     <label class="form-label">Twitter / X Link</label>
                     <input type="url" name="social_twitter" class="form-control" value="{{ settings.get('social_twitter', '') }}" placeholder="https://twitter.com/yourprofile">
                 </div>
+                <div class="form-group">
+                    <label class="form-label">WhatsApp Number / Link</label>
+                    <input type="text" name="social_whatsapp" class="form-control" value="{{ settings.get('social_whatsapp', '') }}" placeholder="e.g. 8801700000000 or https://wa.me/8801700000000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Messenger Username / Link</label>
+                    <input type="text" name="social_messenger" class="form-control" value="{{ settings.get('social_messenger', '') }}" placeholder="e.g. yourusername or https://m.me/yourusername">
+                </div>
 
                 <div class="divider" style="margin:2rem 0 1rem;"></div>
                 <h3 style="margin-bottom:1rem; font-size:1rem; font-weight:600; color:var(--a-text);">Inventory Settings</h3>

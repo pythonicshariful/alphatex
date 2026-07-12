@@ -113,17 +113,17 @@
         <h4>You might also like</h4>
         <div class="upsell-track" id="upsell-track">
             <div class="upsell-card">
-                <img src="{{ url_for('static', filename='images/product_1.jpg') }}" alt="Thobe">
+                <img src="{{ url_for('static', filename='images/product_1.webp') }}" alt="Thobe">
                 <div class="upsell-name">Platinum Thobe</div>
                 <div class="upsell-price">৳450</div>
             </div>
             <div class="upsell-card">
-                <img src="{{ url_for('static', filename='images/product_2.jpg') }}" alt="Abaya">
+                <img src="{{ url_for('static', filename='images/product_2.webp') }}" alt="Abaya">
                 <div class="upsell-name">Silk Abaya</div>
                 <div class="upsell-price">৳620</div>
             </div>
             <div class="upsell-card">
-                <img src="{{ url_for('static', filename='images/product_3.jpg') }}" alt="Wallet">
+                <img src="{{ url_for('static', filename='images/product_3.webp') }}" alt="Wallet">
                 <div class="upsell-name">Leather Wallet</div>
                 <div class="upsell-price">৳150</div>
             </div>
@@ -164,6 +164,50 @@
             </form>
         </div>
     </div>
+
+    <!-- ─── Our Sales Partners ─────────────────────── -->
+    {% if active_partners %}
+    <div class="footer-partners">
+        <h4 class="partners-title">Our Sales Partners</h4>
+        
+        <div class="partners-marquee-container">
+            <!-- Row 1: Scrolling Left to Right -->
+            <div class="marquee-row scroll-left-to-right">
+                <div class="marquee-track">
+                    {% for item in active_partners %}
+                    <div class="partner-card" onclick="{% if item.link %}window.open('{{ item.link }}', '_blank'){% endif %}">
+                        <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{ item.name }}" loading="lazy" width="200" height="133">
+                    </div>
+                    {% endfor %}
+                    <!-- Duplicate for infinite loop -->
+                    {% for item in active_partners %}
+                    <div class="partner-card" onclick="{% if item.link %}window.open('{{ item.link }}', '_blank'){% endif %}">
+                        <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{ item.name }}" loading="lazy" width="200" height="133">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Row 2: Scrolling Right to Left -->
+            <div class="marquee-row scroll-right-to-left">
+                <div class="marquee-track">
+                    {% for item in active_partners | reverse %}
+                    <div class="partner-card" onclick="{% if item.link %}window.open('{{ item.link }}', '_blank'){% endif %}">
+                        <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{ item.name }}" loading="lazy" width="200" height="133">
+                    </div>
+                    {% endfor %}
+                    <!-- Duplicate for infinite loop -->
+                    {% for item in active_partners | reverse %}
+                    <div class="partner-card" onclick="{% if item.link %}window.open('{{ item.link }}', '_blank'){% endif %}">
+                        <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{ item.name }}" loading="lazy" width="200" height="133">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="footer-grid">
         <div class="footer-brand">
             <div style="display:inline-flex;align-items:center;gap:.5rem;margin-bottom:1rem;">
@@ -331,6 +375,317 @@ async function subscribeEmail(e) {
     }
 }
 </script>
+<!-- ─── Floating Chat Widget ───────────────────────── -->
+<div class="floating-chat-container">
+    <!-- WhatsApp Chat -->
+    {% set wa_val = site_settings.get('social_whatsapp', '8801700000000') %}
+    {% set wa_url = wa_val if wa_val.startswith('http') else 'https://wa.me/' ~ wa_val %}
+    <a href="{{ wa_url }}" target="_blank" class="floating-chat-btn whatsapp" aria-label="Chat on WhatsApp">
+        <i class="fa-brands fa-whatsapp"></i>
+        <span class="chat-tooltip">Chat on WhatsApp</span>
+    </a>
+    <!-- Messenger Chat -->
+    {% set msgr_val = site_settings.get('social_messenger', 'alphatex') %}
+    {% set msgr_url = msgr_val if msgr_val.startswith('http') else 'https://m.me/' ~ msgr_val %}
+    <a href="{{ msgr_url }}" target="_blank" class="floating-chat-btn messenger" aria-label="Chat on Messenger">
+        <i class="fa-brands fa-facebook-messenger"></i>
+        <span class="chat-tooltip">Chat on Messenger</span>
+    </a>
+    <!-- Alphatex AI Chat Button -->
+    <button class="floating-chat-btn ai-chat" id="ai-chat-trigger" aria-label="Chat with Alphatex AI" style="display:flex; align-items:center; justify-content:center; padding:0; background: var(--surface);">
+        <img src="{{ url_for('static', filename='images/logo.webp') }}" alt="AI" style="width:26px; height:26px; object-fit:contain;">
+        <span class="chat-tooltip">Show Chat with Alphatex Ai</span>
+    </button>
+</div>
+<div class="ai-chat-window" id="ai-chat-window">
+    <!-- Header -->
+    <div class="ai-chat-header premium-chat-header">
+        <span class="chat-title">Talk to Bot</span>
+        <button class="ai-chat-close" id="ai-chat-close" aria-label="Close Chat">
+            <i class="fa-solid fa-minus"></i>
+        </button>
+    </div>
+    
+    <!-- Messages Body -->
+    <div class="ai-chat-messages premium-chat-messages" id="ai-chat-messages">
+        <!-- Initial Bot Greeting -->
+        <div class="ai-msg-row bot">
+            <div class="ai-msg-avatar">
+                <img src="{{ url_for('static', filename='images/logo.webp') }}" alt="Bot Logo">
+            </div>
+            <div class="ai-msg-content">
+                <div class="ai-msg-bubble">
+                    Hello! Welcome to <strong>Alphatex</strong>. How can I help you today?
+                </div>
+                <!-- Initial Action Buttons -->
+                <div class="ai-msg-actions" id="initial-actions">
+                    <button class="ai-action-btn" data-action="message">Message</button>
+                    <button class="ai-action-btn" data-action="faq">FAQ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Input Form -->
+    <form class="ai-chat-input-area premium-chat-input" id="ai-chat-form">
+        <input type="text" id="ai-chat-input" placeholder="Type your message..." autocomplete="off" required>
+        <button type="submit" class="ai-chat-send-btn" aria-label="Send Message">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </form>
+</div>
+
+<script>
+(function() {
+    const trigger = document.getElementById('ai-chat-trigger');
+    const windowEl = document.getElementById('ai-chat-window');
+    const closeBtn = document.getElementById('ai-chat-close');
+    const chatForm = document.getElementById('ai-chat-form');
+    const chatInput = document.getElementById('ai-chat-input');
+    const messagesContainer = document.getElementById('ai-chat-messages');
+    
+    console.log("AI Chat Script Initialized. Trigger:", trigger, "Window:", windowEl);
+    
+    let chatHistory = [];
+    
+    // Toggle Window
+    trigger.addEventListener('click', () => {
+        windowEl.classList.toggle('active');
+    });
+    
+    closeBtn.addEventListener('click', () => {
+        windowEl.classList.remove('active');
+    });
+    
+    // Event delegation for action buttons in messages
+    messagesContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('.ai-action-btn');
+        if (!btn) return;
+        
+        const action = btn.getAttribute('data-action');
+        
+        // Hide the action buttons container to prevent double clicks
+        const actionContainer = btn.parentElement;
+        if (actionContainer) {
+            actionContainer.style.display = 'none';
+        }
+        
+        if (action === 'message') {
+            chatForm.style.display = 'flex';
+            appendUserMessage("Message");
+            setTimeout(() => {
+                appendBotMessage("Please type your question below, and I will assist you with product details or other information.");
+                chatInput.focus();
+            }, 300);
+        } else if (action === 'faq') {
+            appendUserMessage("FAQ");
+            setTimeout(() => {
+                showFaqMenu();
+            }, 300);
+        } else if (action === 'faq_delivery') {
+            appendUserMessage("What is your delivery charge and time?");
+            setTimeout(() => {
+                appendBotMessage(
+                    "Within Dhaka: **80 BDT** (2-3 business days).\nOutside Dhaka: **150 BDT** (3-5 business days).\n\nAll deliveries are handled securely by our trusted logistics partners.",
+                    [
+                        { text: "More FAQ", action: "faq" },
+                        { text: "Write Message", action: "message" }
+                    ]
+                );
+            }, 300);
+        } else if (action === 'faq_cod') {
+            appendUserMessage("Do you offer cash on delivery (COD)?");
+            setTimeout(() => {
+                appendBotMessage(
+                    "Yes, we offer **Cash on Delivery (COD)** nationwide across Bangladesh. You can check the package contents upon delivery before paying the courier.",
+                    [
+                        { text: "More FAQ", action: "faq" },
+                        { text: "Write Message", action: "message" }
+                    ]
+                );
+            }, 300);
+        } else if (action === 'faq_return') {
+            appendUserMessage("What is your return & exchange policy?");
+            setTimeout(() => {
+                appendBotMessage(
+                    "We offer exchange options within **7 days** of delivery. The item must be unused, unwashed, and have all original tags intact. Delivery charges apply for exchange pickup.",
+                    [
+                        { text: "More FAQ", action: "faq" },
+                        { text: "Write Message", action: "message" }
+                    ]
+                );
+            }, 300);
+        } else if (action === 'back_menu') {
+            appendUserMessage("Back to Menu");
+            setTimeout(() => {
+                showMainMenu();
+            }, 300);
+        }
+    });
+    
+    function showMainMenu() {
+        appendBotMessage(
+            "Hello! Welcome to **Alphatex**. How can I help you today?",
+            [
+                { text: "Message", action: "message" },
+                { text: "FAQ", action: "faq" }
+            ]
+        );
+    }
+    
+    function showFaqMenu() {
+        appendBotMessage(
+            "Here are some frequently asked questions. Click one to see the answer:",
+            [
+                { text: "Delivery charge & time", action: "faq_delivery" },
+                { text: "Cash on delivery (COD)", action: "faq_cod" },
+                { text: "Return & exchange policy", action: "faq_return" },
+                { text: "Back to Menu", action: "back_menu" }
+            ]
+        );
+    }
+    
+    // Form Submit
+    chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const msg = chatInput.value.trim();
+        if (!msg) return;
+        chatInput.value = '';
+        sendUserMessage(msg);
+    });
+    
+    async function sendUserMessage(text) {
+        appendUserMessage(text);
+        
+        // Append loader
+        const loaderId = appendLoader();
+        
+        try {
+            const res = await fetch('/api/ai/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    message: text,
+                    history: chatHistory
+                })
+            });
+            const data = await res.json();
+            
+            // Remove loader
+            removeMessage(loaderId);
+            
+            if (res.ok) {
+                appendBotMessage(data.reply);
+                chatHistory.push({ role: 'user', text: text });
+                chatHistory.push({ role: 'model', text: data.reply });
+            } else {
+                appendBotMessage(data.error || 'Sorry, I encountered an issue processing your request.');
+            }
+        } catch (err) {
+            removeMessage(loaderId);
+            appendBotMessage('Network error. Please check your connection.');
+        }
+    }
+    
+    function appendUserMessage(text) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'ai-msg-row user';
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'ai-msg-bubble';
+        bubble.textContent = text;
+        
+        msgDiv.appendChild(bubble);
+        messagesContainer.appendChild(msgDiv);
+        scrollToBottom();
+    }
+    
+    function appendBotMessage(htmlContent, actionButtons = []) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'ai-msg-row bot';
+        
+        // Avatar
+        const avatar = document.createElement('div');
+        avatar.className = 'ai-msg-avatar';
+        avatar.innerHTML = `<img src="/static/images/logo.webp" alt="Bot Logo">`;
+        msgDiv.appendChild(avatar);
+        
+        // Content container
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'ai-msg-content';
+        
+        // Bubble
+        const bubble = document.createElement('div');
+        bubble.className = 'ai-msg-bubble';
+        
+        // Simple markdown-like formatting for bold ** and lists / line breaks
+        let formatted = htmlContent
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n/g, '<br>');
+        bubble.innerHTML = formatted;
+        contentDiv.appendChild(bubble);
+        
+        // Action buttons
+        if (actionButtons.length > 0) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'ai-msg-actions';
+            actionsDiv.style.marginTop = '10px';
+            actionsDiv.style.display = 'flex';
+            actionsDiv.style.flexWrap = 'wrap';
+            actionsDiv.style.gap = '8px';
+            
+            actionButtons.forEach(btn => {
+                const actionBtn = document.createElement('button');
+                actionBtn.className = 'ai-action-btn';
+                actionBtn.setAttribute('data-action', btn.action);
+                actionBtn.textContent = btn.text;
+                actionsDiv.appendChild(actionBtn);
+            });
+            contentDiv.appendChild(actionsDiv);
+        }
+        
+        msgDiv.appendChild(contentDiv);
+        messagesContainer.appendChild(msgDiv);
+        scrollToBottom();
+    }
+    
+    function appendLoader() {
+        const loaderId = 'loader-' + Date.now();
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'ai-msg-row bot';
+        msgDiv.id = loaderId;
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'ai-msg-avatar';
+        avatar.innerHTML = `<img src="/static/images/logo.webp" alt="Bot Logo">`;
+        msgDiv.appendChild(avatar);
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'ai-msg-bubble';
+        bubble.innerHTML = '<div class="ai-typing-loader"><span></span><span></span><span></span></div>';
+        
+        msgDiv.appendChild(bubble);
+        messagesContainer.appendChild(msgDiv);
+        scrollToBottom();
+        
+        return loaderId;
+    }
+    
+    function removeMessage(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+    
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+})();
+</script>
+
 {% block scripts %}{% endblock %}
 </body>
 </html>

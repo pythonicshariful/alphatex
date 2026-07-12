@@ -240,4 +240,38 @@
     </div>
 </section>
 
+<!-- ─── Testimonials Section ──────────────────────── -->
+{% if active_testimonials %}
+<section class="section" style="background:var(--surface); border-top:1px solid var(--border); overflow:hidden; padding-bottom: 4rem;">
+    <div class="section-header reveal">
+        <span class="section-label">Testimonials</span>
+        <h2>What Our Customers Say</h2>
+        <p style="margin-top:0.5rem; font-size:1.1rem; font-family:var(--font-h); color:var(--text-2);">Join thousands of satisfied customers who trust us</p>
+    </div>
+    
+    <div class="testimonials-marquee-container reveal">
+        <div class="testimonials-marquee-track">
+            {% for repeat in range(4) %}
+                {% for item in active_testimonials %}
+                <div class="testimonial-marquee-card">
+                    <div class="test-user-header">
+                        <img src="{{ url_for('static', filename='images/' + (item.image or 'avatar_default.webp')) }}" alt="{{ item.name }}" class="test-user-img" loading="lazy">
+                        <div>
+                            <h4 class="test-user-name">{{ item.name }}</h4>
+                            <div class="test-stars">
+                                {% for star in range(item.rating) %}
+                                <i class="fa-solid fa-star"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <p class="test-text">"{{ item.content }}"</p>
+                </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
 {% endblock %}

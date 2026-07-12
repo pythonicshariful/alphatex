@@ -63,7 +63,7 @@ class User(UserMixin, db.Model):
         """Returns a URL for the user's avatar, or a placeholder."""
         if self.avatar:
             return f'/static/images/avatars/{self.avatar}'
-        return '/static/images/avatar_default.png'
+        return '/static/images/avatar_default.webp'
 
 
 class OTPRecord(db.Model):
@@ -91,6 +91,29 @@ class CarouselSlide(db.Model):
     button_link = db.Column(db.String(250), nullable=True)
     order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
+
+
+class Partner(db.Model):
+    __tablename__ = 'partner'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    image = db.Column(db.String(200), nullable=False)
+    link = db.Column(db.String(250), nullable=True)
+    order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Testimonial(db.Model):
+    __tablename__ = 'testimonial'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    image = db.Column(db.String(200), nullable=True)
+    rating = db.Column(db.Integer, default=5)
+    order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class Category(db.Model):
