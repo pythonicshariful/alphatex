@@ -153,6 +153,7 @@ def migrate_legacy_image(product, static_root: str) -> bool:
     return True
 
 
+
 def optimize_and_save_image(file_storage, dest_dir, filename_base, max_width=None, quality=82) -> str:
     """
     Reads an uploaded file (like a FileStorage object), converts it to WebP format,

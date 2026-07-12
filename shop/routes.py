@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, jsonify, url_for, redirect
+import json
+from flask import Blueprint, render_template, request, jsonify, url_for, redirect, Response
 from flask_login import login_required, current_user
 from extensions import db, limiter
 from models import Category, Product, CarouselSlide, IMAGE_SLOT_LABELS, Offer
@@ -116,10 +117,66 @@ def product_detail(product_id):
                 sizes_seen.add(v.size)
                 unique_sizes.append(v.size)
                 
+    # ── Build absolute OG image URL ────────────────────────────────────
+    base_url = request.url_root.rstrip('/')
+    hero = product.hero_image
+    if hero:
+        og_image = base_url + hero.src(1200)
+    elif product.image:
+        og_image = base_url + '/static/images/' + product.image
+    else:
+        og_image = base_url + '/static/images/logo.webp'
+
+    # ── Ensure SEO fields exist (back-fill on first view if missing) ───────
+    if not product.meta_title or not product.slug:
+        from utils.seo import apply_seo_fields
+        apply_seo_fields(product, force=False)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    # ── JSON-LD structured data (Product schema) ────────────────────────
+    raw_price = product.price.replace('$', '').replace('৳', '').replace(',', '').strip()
+    try:
+        price_num = float(raw_price)
+    except ValueError:
+        price_num = 0.0
+
+    availability = 'https://schema.org/InStock' if product.stock > 0 else 'https://schema.org/OutOfStock'
+
+    jsonld = {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": product.name,
+        "description": product.meta_description or '',
+        "image": og_image,
+        "url": base_url + url_for('shop.product_detail', product_id=product.id),
+        "brand": {
+            "@type": "Brand",
+            "name": "Alphatex"
+        },
+        "category": product.category.name if product.category else '',
+        "offers": {
+            "@type": "Offer",
+            "priceCurrency": "BDT",
+            "price": f"{price_num:.2f}",
+            "availability": availability,
+            "url": base_url + url_for('shop.product_detail', product_id=product.id),
+            "seller": {
+                "@type": "Organization",
+                "name": "Alphatex"
+            }
+        }
+    }
+    product_jsonld = json.dumps(jsonld, ensure_ascii=False)
+
     return render_template('product.html', product=product, related=related,
                            slot_labels=IMAGE_SLOT_LABELS,
                            unique_colors=unique_colors,
-                           unique_sizes=unique_sizes)
+                           unique_sizes=unique_sizes,
+                           og_image=og_image,
+                           product_jsonld=product_jsonld)
 
 @shop_bp.route('/contact', methods=['GET', 'POST'])
 @limiter.limit('10/minute')
@@ -453,3 +510,58 @@ def guest_order_success(order_id):
         if not current_user.is_authenticated or current_user.id != order.user_id:
             abort(403)
     return render_template('checkout_success.html', order=order)
+
+
+# ── SEO: Sitemap ────────────────────────────────────────────────────────────
+
+@shop_bp.route('/sitemap.xml')
+def sitemap():
+    """Generate an XML sitemap for all public product pages."""
+    base_url = request.url_root.rstrip('/')
+    products = Product.query.all()
+
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+
+    # Homepage
+    lines.append(f'  <url><loc>{base_url}/</loc><priority>1.0</priority></url>')
+
+    # Category pages
+    for cat in Category.query.all():
+        lines.append(
+            f'  <url>'
+            f'<loc>{base_url}/category/{cat.id}</loc>'
+            f'<priority>0.7</priority>'
+            f'</url>'
+        )
+
+    # Product pages
+    for p in products:
+        loc = f'{base_url}/product/{p.id}'
+        lines.append(
+            f'  <url>'
+            f'<loc>{loc}</loc>'
+            f'<priority>0.8</priority>'
+            f'<changefreq>weekly</changefreq>'
+            f'</url>'
+        )
+
+    lines.append('</urlset>')
+    xml = '\n'.join(lines)
+    return Response(xml, mimetype='application/xml')
+
+
+# ── SEO: Robots.txt ─────────────────────────────────────────────────────────
+
+@shop_bp.route('/robots.txt')
+def robots_txt():
+    """Serve a robots.txt that allows all bots and points to the sitemap."""
+    base_url = request.url_root.rstrip('/')
+    content = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /admin/\n"
+        "Disallow: /checkout/\n"
+        f"Sitemap: {base_url}/sitemap.xml\n"
+    )
+    return Response(content, mimetype='text/plain')

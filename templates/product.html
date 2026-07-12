@@ -1,14 +1,49 @@
 {% extends "base.html" %}
-{% block title %}{{ product.name }} | alphatex{% endblock %}
+
+{# ── SEO computed values ──────────────────────────────────────────────────── #}
+{% set seo_title       = product.meta_title       or (product.name ~ ' | Alphatex') %}
+{% set seo_description = product.meta_description or ('Shop ' ~ product.name ~ ' at Alphatex — premium luxury fashion.') %}
+{% set seo_keywords    = product.meta_keywords    or (product.name ~ ', Alphatex, luxury fashion') %}
+{% set canonical_url   = request.url_root.rstrip('/') ~ '/product/' ~ product.id %}
+
+{% block title %}{{ seo_title }}{% endblock %}
 {% block header_class %}solid-header{% endblock %}
 
 {% block head %}
+{# ── Primary SEO ── #}
+<meta name="description" content="{{ seo_description }}">
+<meta name="keywords"    content="{{ seo_keywords }}">
+<link rel="canonical"    href="{{ canonical_url }}">
+
+{# ── Open Graph (social sharing: Facebook, WhatsApp, LinkedIn) ── #}
+<meta property="og:type"        content="product">
+<meta property="og:title"       content="{{ seo_title }}">
+<meta property="og:description" content="{{ seo_description }}">
+<meta property="og:url"         content="{{ canonical_url }}">
+<meta property="og:image"       content="{{ og_image }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="1200">
+<meta property="og:site_name"   content="Alphatex">
+<meta property="og:locale"      content="en_US">
+<meta property="product:price:amount"   content="{{ product.price | replace('৳','') | replace('$','') | trim }}">
+<meta property="product:price:currency" content="BDT">
+
+{# ── Twitter Card ── #}
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:title"       content="{{ seo_title }}">
+<meta name="twitter:description" content="{{ seo_description }}">
+<meta name="twitter:image"       content="{{ og_image }}">
+
+{# ── JSON-LD Structured Data (Google Rich Results: product price, availability) ── #}
+<script type="application/ld+json">{{ product_jsonld | safe }}</script>
+
 <style>
 /* ── Product page overrides (scoped) ── */
 .pdp-wrap { display:grid; grid-template-columns:1fr 1fr; gap:4rem; padding:7rem 5% 5rem; max-width:1400px; margin:0 auto; }
 @media(max-width:900px){ .pdp-wrap{ grid-template-columns:1fr; gap:2rem; padding:5rem 4% 3rem; } }
 </style>
 {% endblock %}
+
 
 {% block content %}
 <div class="pdp-wrap">
