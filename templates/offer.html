@@ -27,7 +27,7 @@
             <button class="wishlist-btn" data-id="{{ product.id }}">
                 <i class="fa-regular fa-heart"></i>
             </button>
-            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="display:block;">
+            <a href="{{ url_for('shop.product_detail', slug=product.slug) }}" style="display:block;">
                 <div class="product-image">
                     {% set hero = product.hero_image %}
                     {% if hero %}
@@ -66,7 +66,7 @@
                                 Out of Stock
                             </button>
                         {% endif %}
-                        <button class="quick-view-btn qv-trigger" onclick="event.preventDefault(); window.openQuickView('{{ product.id }}', '{{ product.name|replace('\'', '\\\'') }}', '{{ product.price }}', '{{ hero.src(600) if hero else url_for('static', filename='images/' + product.image) }}', '', '{{ url_for('shop.product_detail', product_id=product.id) }}')">
+                        <button class="quick-view-btn qv-trigger" onclick="event.preventDefault(); window.openQuickView('{{ product.id }}', '{{ product.name|replace('\'', '\\\'') }}', '{{ product.price }}', '{{ hero.src(600) if hero else url_for('static', filename='images/' + product.image) }}', '', '{{ url_for('shop.product_detail', slug=product.slug) }}')">
                             <i class="fa-regular fa-eye"></i>
                         </button>
                     </div>

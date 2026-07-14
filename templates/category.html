@@ -12,83 +12,79 @@
     <div class="products-grid" id="product-grid" data-category="{{ category.id }}">
         {% for product in products %}
         <div class="product-card reveal" data-category="{{ category.id }}">
-            {% if loop.index <= 2 %}
-            <span class="product-badge badge-new">New</span>
-            {% endif %}
-            <button class="wishlist-btn" data-id="{{ product.id }}">
-                <i class="fa-regular fa-heart"></i>
-            </button>
-            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="display:block;">
-                <div class="product-image">
-                    {% set hero = product.hero_image %}
-                    {% if hero %}
-                    <div class="img-box" style="aspect-ratio:4/5;">
-                        <img class="blur-placeholder" src="{{ hero.blur_data_uri }}" alt="" aria-hidden="true">
-                        <picture>
-                            <source type="image/webp" srcset="{{ hero.srcset }}" sizes="(max-width:600px) 50vw, 25vw">
-                            <img src="{{ hero.src(600) }}"
-                                 alt="{{ hero.alt_text }}"
-                                 width="600" height="750"
-                                 loading="lazy"
-                                 class="blur-up"
-                                 onload="this.classList.add('loaded')">
-                        </picture>
-                    </div>
-                    {% else %}
-                    <img src="/static/images/{{ product.image }}" alt="{{ product.name }}" loading="lazy" width="600" height="750" style="aspect-ratio:4/5;">
-                    {% endif %}
-                    {% if product.stock <= 0 %}
-                    <div class="oos-badge">
-                        Out of Stock
+            {% if loop.index <= 2 %} <span class="product-badge badge-new">New</span>
+                {% endif %}
+                <button class="wishlist-btn" data-id="{{ product.id }}">
+                    <i class="fa-regular fa-heart"></i>
+                </button>
+                <a href="{{ url_for('shop.product_detail', slug=product.slug) }}" style="display:block;">
+                    <div class="product-image">
+                        {% set hero = product.hero_image %}
+                        {% if hero %}
+                        <div class="img-box" style="aspect-ratio:4/5;">
+                            <img class="blur-placeholder" src="{{ hero.blur_data_uri }}" alt="" aria-hidden="true">
+                            <picture>
+                                <source type="image/webp" srcset="{{ hero.srcset }}"
+                                    sizes="(max-width:600px) 50vw, 25vw">
+                                <img src="{{ hero.src(600) }}" alt="{{ hero.alt_text }}" width="600" height="750"
+                                    loading="lazy" class="blur-up" onload="this.classList.add('loaded')">
+                            </picture>
+                        </div>
+                        {% else %}
+                        <img src="/static/images/{{ product.image }}" alt="{{ product.name }}" loading="lazy"
+                            width="600" height="750" style="aspect-ratio:4/5;">
+                        {% endif %}
+                        {% if product.stock <= 0 %} <div class="oos-badge">
+                            Out of Stock
                     </div>
                     {% endif %}
                     <div class="product-quick">
                         {% if product.stock > 0 %}
-                            <button class="add-to-cart-btn"
-                                onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
-                                <i class="fa-solid fa-cart-shopping"></i>
-                                Add to Cart
-                            </button>
+                        <button class="add-to-cart-btn"
+                            onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            Add to Cart
+                        </button>
                         {% else %}
-                            <button class="out-of-stock-btn" disabled>
-                                <i class="fa-solid fa-circle-xmark"></i>
-                                Out of Stock
-                            </button>
+                        <button class="out-of-stock-btn" disabled>
+                            <i class="fa-solid fa-circle-xmark"></i>
+                            Out of Stock
+                        </button>
                         {% endif %}
                     </div>
-                </div>
-            </a>
-            <div class="product-info">
-                <h4 class="product-name">{{ product.name }}</h4>
-                {% if product.compare_at_price %}
-                    {% set p_price = product.price|float %}
-                    {% set p_compare = product.compare_at_price|float %}
-                    {% if p_compare > p_price %}
-                    <p class="product-price">
-                        <span class="price-old">৳{{ product.compare_at_price }}</span>
-                        <span class="price-new">৳{{ product.price }}</span>
-                    </p>
-                    {% else %}
-                    <p class="product-price"><span class="price-new">৳{{ product.price }}</span></p>
-                    {% endif %}
-                {% else %}
-                <p class="product-price"><span class="price-new">৳{{ product.price }}</span></p>
-                {% endif %}
-                <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="view-details-btn">
-                    View Details
-                    <i class="fa-solid fa-arrow-right"></i>
-                </a>
-            </div>
         </div>
-        {% endfor %}
-        <div id="scroll-sentinel"></div>
+        </a>
+        <div class="product-info">
+            <h4 class="product-name">{{ product.name }}</h4>
+            {% if product.compare_at_price %}
+            {% set p_price = product.price|float %}
+            {% set p_compare = product.compare_at_price|float %}
+            {% if p_compare > p_price %}
+            <p class="product-price">
+                <span class="price-old">৳{{ product.compare_at_price }}</span>
+                <span class="price-new">৳{{ product.price }}</span>
+            </p>
+            {% else %}
+            <p class="product-price"><span class="price-new">৳{{ product.price }}</span></p>
+            {% endif %}
+            {% else %}
+            <p class="product-price"><span class="price-new">৳{{ product.price }}</span></p>
+            {% endif %}
+            <a href="{{ url_for('shop.product_detail', slug=product.slug) }}" class="view-details-btn">
+                View Details
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+    <div id="scroll-sentinel"></div>
     </div>
 </section>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Activate data-category for infinite scroll
-document.querySelector('#product-grid')?.setAttribute('data-category', '{{ category.id }}');
+    // Activate data-category for infinite scroll
+    document.querySelector('#product-grid')?.setAttribute('data-category', '{{ category.id }}');
 </script>
 {% endblock %}

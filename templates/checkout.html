@@ -164,7 +164,7 @@
                     <div class="guest-checkout-form" style="display: flex; flex-direction: column; gap: 1.2rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1.5rem;">
                         <div class="form-group">
                             <label class="form-label" for="guest-name" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">Full Name</label>
-                            <input type="text" id="guest-name" class="form-input" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text);" placeholder="Recipient's Name" required>
+                            <input type="text" id="guest-name" class="form-input" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text);" placeholder="আপনার নাম লিখুন" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="guest-phone" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">Phone Number</label>
@@ -369,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         summaryList.innerHTML = cart.map(item => `
             <div class="checkout-summary-item">
-                <img src="/static/images/${item.image}" alt="${item.name}">
+                <img src="${item.image.startsWith('/') ? item.image.replace(/\\.jpg$/i, '.webp') : '/static/images/' + item.image.replace(/\\.jpg$/i, '.webp')}" alt="${item.name}">
                 <div class="checkout-summary-item-info">
                     <div class="checkout-summary-item-name">${item.name}</div>
                     <div style="font-size: 0.82rem; color: var(--text-2);">Qty: ${item.qty}</div>

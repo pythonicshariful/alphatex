@@ -80,11 +80,20 @@ def offer(slug):
     return render_template('offer.html', offer=offer_obj, products=products)
 
 @shop_bp.route('/product/<int:product_id>')
-def product_detail(product_id):
+def product_detail_legacy(product_id):
+    product = Product.query.get_or_404(product_id)
+    if not product.slug:
+        from utils.seo import apply_seo_fields
+        apply_seo_fields(product, force=False)
+        db.session.commit()
+    return redirect(url_for('shop.product_detail', slug=product.slug), code=301)
+
+@shop_bp.route('/product/<slug>')
+def product_detail(slug):
     if check_maintenance():
         from flask import abort
         abort(404)
-    product = Product.query.get_or_404(product_id)
+    product = Product.query.filter_by(slug=slug).first_or_404()
     
     # Log product view by IP
     ip = request.remote_addr
@@ -151,7 +160,7 @@ def product_detail(product_id):
         "name": product.name,
         "description": product.meta_description or '',
         "image": og_image,
-        "url": base_url + url_for('shop.product_detail', product_id=product.id),
+        "url": base_url + url_for('shop.product_detail', slug=product.slug),
         "brand": {
             "@type": "Brand",
             "name": "Alphatex"
@@ -162,7 +171,7 @@ def product_detail(product_id):
             "priceCurrency": "BDT",
             "price": f"{price_num:.2f}",
             "availability": availability,
-            "url": base_url + url_for('shop.product_detail', product_id=product.id),
+            "url": base_url + url_for('shop.product_detail', slug=product.slug),
             "seller": {
                 "@type": "Organization",
                 "name": "Alphatex"
@@ -537,7 +546,7 @@ def sitemap():
 
     # Product pages
     for p in products:
-        loc = f'{base_url}/product/{p.id}'
+        loc = f'{base_url}/product/{p.slug}'
         lines.append(
             f'  <url>'
             f'<loc>{loc}</loc>'

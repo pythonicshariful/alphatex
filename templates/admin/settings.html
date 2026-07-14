@@ -114,6 +114,20 @@
                     </a>
                 </div>
             </div>
+            <div class="divider"></div>
+
+            <div class="settings-section">
+                <h3 style="margin-bottom:1rem;">SEO Management</h3>
+                <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-card); padding:1.5rem; border-radius:6px; border:1px solid var(--border);">
+                    <div>
+                        <div style="font-weight:600; margin-bottom:4px;">Run SEO Migration</div>
+                        <div class="text-sm text-muted" style="margin-top:4px;">Automatically generates keyword-rich SEO Titles, Descriptions, and URL Slugs for all products.</div>
+                    </div>
+                    <button type="submit" formaction="{{ url_for('admin.run_seo_migration') }}" class="btn-a btn-a-primary">
+                        <i class="fa-solid fa-magic"></i> Run Migration
+                    </button>
+                </div>
+            </div>
 
             <div class="divider"></div>
             

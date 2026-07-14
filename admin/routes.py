@@ -1001,6 +1001,24 @@ def api_validate_coupon():
     return {'valid': True, 'discount_type': coupon.discount_type, 'value': coupon.value}, 200
 
 
+# ── SEO Management ─────────────────────────────────────────
+
+@admin_bp.route('/run-seo-migration', methods=['POST'])
+@require_admin('settings')
+def run_seo_migration(admin):
+    from models import Product
+    from utils.seo import apply_seo_fields
+    products = Product.query.all()
+    updated = 0
+    for p in products:
+        apply_seo_fields(p, force=True)
+        updated += 1
+    db.session.commit()
+    flash(f"SEO Migration complete! {updated} products optimized.", 'success')
+    return redirect(url_for('admin.settings'))
+
+
+
 # ── Settings ─────────────────────────────────────────────
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])

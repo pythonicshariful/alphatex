@@ -8,45 +8,55 @@
 <div class="hero-carousel">
     <div class="carousel-track">
         {% if slides %}
-            {% for slide in slides %}
-            <div class="carousel-slide">
-                <img src="{{ url_for('static', filename='images/' + slide.image) }}" alt="{{ slide.heading }}" class="parallax-img">
-                <div class="hero-overlay"></div>
-                <div class="slide-content">
-                    {% if slide.subheading %}
-                    <span class="slide-eyebrow">{{ slide.subheading }}</span>
-                    {% endif %}
-                    {% if slide.heading %}
-                    <h1 class="slide-title">{{ slide.heading | safe }}</h1>
-                    {% endif %}
-                    {% if slide.button_text and slide.button_link %}
-                    <div class="slide-actions">
-                        <a href="{{ slide.button_link }}" class="btn">{{ slide.button_text }}</a>
-                    </div>
-                    {% endif %}
+        {% for slide in slides %}
+        <div class="carousel-slide">
+            <img src="{{ url_for('static', filename='images/' + slide.image) }}" alt="{{ slide.heading }}"
+                class="parallax-img">
+            <div class="hero-overlay"></div>
+            <div class="slide-content">
+                {% if slide.subheading %}
+                <span class="slide-eyebrow">{{ slide.subheading }}</span>
+                {% endif %}
+                {% if slide.heading %}
+                <h1 class="slide-title">{{ slide.heading | safe }}</h1>
+                {% endif %}
+                {% if slide.button_text and slide.button_link %}
+                <div class="slide-actions">
+                    <a href="{{ slide.button_link }}" class="btn">{{ slide.button_text }}</a>
                 </div>
+                {% endif %}
             </div>
-            {% endfor %}
+        </div>
+        {% endfor %}
         {% else %}
-            <!-- Fallback if no slides exist in DB -->
-            <div class="carousel-slide">
-                <img src="{{ url_for('static', filename='images/carousel_1.webp') }}" alt="Default Slide" class="parallax-img">
-                <div class="hero-overlay"></div>
-                <div class="slide-content">
-                    <h1 class="slide-title">Welcome to<br>alphatex</h1>
-                </div>
+        <!-- Fallback if no slides exist in DB -->
+        <div class="carousel-slide">
+            <img src="{{ url_for('static', filename='images/carousel_1.webp') }}" alt="Default Slide"
+                class="parallax-img">
+            <div class="hero-overlay"></div>
+            <div class="slide-content">
+                <h1 class="slide-title">Welcome to<br>alphatex</h1>
             </div>
+        </div>
         {% endif %}
     </div>
 
     <!-- Progress indicators -->
     <div class="carousel-progress">
         {% if slides %}
-            {% for slide in slides %}
-            <div class="progress-item"><div class="progress-line"><div class="progress-fill"></div></div><span class="progress-num">0{{ loop.index }}</span></div>
-            {% endfor %}
+        {% for slide in slides %}
+        <div class="progress-item">
+            <div class="progress-line">
+                <div class="progress-fill"></div>
+            </div><span class="progress-num">0{{ loop.index }}</span>
+        </div>
+        {% endfor %}
         {% else %}
-            <div class="progress-item"><div class="progress-line"><div class="progress-fill"></div></div><span class="progress-num">01</span></div>
+        <div class="progress-item">
+            <div class="progress-line">
+                <div class="progress-fill"></div>
+            </div><span class="progress-num">01</span>
+        </div>
         {% endif %}
     </div>
     <div class="carousel-arrows">
@@ -59,14 +69,16 @@
 <section class="flash-sale">
     <div class="flash-header">
         <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-            <span class="flash-badge" style="background:var(--accent); color:#000;"><i class="fa-solid fa-star"></i> Recommended</span>
+            <span class="flash-badge" style="background:var(--accent); color:#000;"><i class="fa-solid fa-star"></i>
+                Recommended</span>
             <h2 style="font-size:1.6rem;font-weight:400;">Recommended For You</h2>
         </div>
     </div>
     <div class="flash-track">
         {% for product in featured %}
         <div class="flash-card">
-            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="display:block;text-decoration:none;color:inherit; position:relative;">
+            <a href="{{ url_for('shop.product_detail', slug=product.slug) }}"
+                style="display:block;text-decoration:none;color:inherit; position:relative;">
                 <div class="flash-img">
                     {% set hero = product.hero_image %}
                     {% if hero %}
@@ -77,53 +89,58 @@
                     {% else %}
                     <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}">
                     {% endif %}
-                    
-                    {% if product.stock <= 0 %}
-                    <div style="position:absolute; top:10px; left:10px; background:rgba(232,65,24,0.9); color:#fff; font-size:.62rem; font-weight:700; text-transform:uppercase; padding:.3rem .6rem; border-radius:4px; z-index:10; letter-spacing:.05em;">
+
+                    {% if product.stock <= 0 %} <div
+                        style="position:absolute; top:10px; left:10px; background:rgba(232,65,24,0.9); color:#fff; font-size:.62rem; font-weight:700; text-transform:uppercase; padding:.3rem .6rem; border-radius:4px; z-index:10; letter-spacing:.05em;">
                         Out of Stock
-                    </div>
-                    {% endif %}
-                    
-                    <button class="btn btn-sm btn-icon qv-trigger"
-                            onclick="event.preventDefault(); window.openQuickView('{{ product.id }}', '{{ product.name }}', '{{ product.price }}', '{{ hero.src(600) if hero else url_for('static', filename='images/' + product.image) }}', '', '{{ url_for('shop.product_detail', product_id=product.id) }}')"
-                            style="position:absolute; top:10px; right:10px; background:var(--surface); color:var(--text); border:1px solid var(--border); box-shadow:var(--shadow-sm); z-index:10;">
-                        <i class="fa-regular fa-eye"></i>
-                    </button>
                 </div>
-            </a>
-            <div class="flash-info">
-                <div class="flash-name">{{ product.name }}</div>
-                <div class="flash-prices">
-                    <span class="flash-price-new">৳{{ product.price }}</span>
-                    {% if product.compare_at_price %}
-                    <span class="flash-price-old">৳{{ product.compare_at_price }}</span>
-                    {% endif %}
+                {% endif %}
+
+                <button class="btn btn-sm btn-icon qv-trigger"
+                    onclick="event.preventDefault(); window.openQuickView('{{ product.id }}', '{{ product.name }}', '{{ product.price }}', '{{ hero.src(600) if hero else url_for('static', filename='images/' + product.image) }}', '', '{{ url_for('shop.product_detail', slug=product.slug) }}')"
+                    style="position:absolute; top:10px; right:10px; background:var(--surface); color:var(--text); border:1px solid var(--border); box-shadow:var(--shadow-sm); z-index:10;">
+                    <i class="fa-regular fa-eye"></i>
+                </button>
+        </div>
+        </a>
+        <div class="flash-info">
+            <div class="flash-name">{{ product.name }}</div>
+            <div class="flash-prices">
+                <span class="flash-price-new">৳{{ product.price }}</span>
+                {% if product.compare_at_price %}
+                <span class="flash-price-old">৳{{ product.compare_at_price }}</span>
+                {% endif %}
+            </div>
+            <div class="flash-progress-wrap">
+                <div class="flash-progress-label"><span>Claimed</span><span>{{ [55,70,82,40,65,90]|random }}%</span>
                 </div>
-                <div class="flash-progress-wrap">
-                    <div class="flash-progress-label"><span>Claimed</span><span>{{ [55,70,82,40,65,90]|random }}%</span></div>
-                    <div class="flash-progress-bar">
-                        <div class="flash-progress-fill" style="width:{{ [55,70,82,40,65,90]|random }}%;"></div>
-                    </div>
-                </div>
-                <div style="display:flex; gap:.5rem; margin-top:.5rem;">
-                    {% if product.stock > 0 %}
-                        <button class="btn btn-sm add-to-cart-btn" style="flex:1; padding:.5rem .25rem; font-size:.7rem; text-align:center;"
-                            onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
-                            Add to Cart
-                        </button>
-                        <button class="btn btn-sm btn-accent order-now-btn" style="flex:1; background:var(--accent); color:#000; border:1px solid var(--accent); padding:.5rem .25rem; font-size:.7rem; text-align:center;"
-                            onclick="event.preventDefault();buyNow('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}')">
-                            Order Now
-                        </button>
-                    {% else %}
-                        <button class="btn btn-sm" style="flex:1; padding:.5rem .25rem; font-size:.7rem; text-align:center; background:var(--surface-2); color:var(--text-2); border:1px solid var(--border); cursor:not-allowed;" disabled>
-                            Out of Stock
-                        </button>
-                    {% endif %}
+                <div class="flash-progress-bar">
+                    <div class="flash-progress-fill" style="width:{{ [55,70,82,40,65,90]|random }}%;"></div>
                 </div>
             </div>
+            <div style="display:flex; gap:.5rem; margin-top:.5rem;">
+                {% if product.stock > 0 %}
+                <button class="btn btn-sm add-to-cart-btn"
+                    style="flex:1; padding:.5rem .25rem; font-size:.7rem; text-align:center;"
+                    onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                    Add to Cart
+                </button>
+                <button class="btn btn-sm btn-accent order-now-btn"
+                    style="flex:1; background:var(--accent); color:#000; border:1px solid var(--accent); padding:.5rem .25rem; font-size:.7rem; text-align:center;"
+                    onclick="event.preventDefault();buyNow('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}')">
+                    Order Now
+                </button>
+                {% else %}
+                <button class="btn btn-sm"
+                    style="flex:1; padding:.5rem .25rem; font-size:.7rem; text-align:center; background:var(--surface-2); color:var(--text-2); border:1px solid var(--border); cursor:not-allowed;"
+                    disabled>
+                    Out of Stock
+                </button>
+                {% endif %}
+            </div>
         </div>
-        {% endfor %}
+    </div>
+    {% endfor %}
     </div>
 </section>
 
@@ -136,76 +153,72 @@
     <div class="products-grid" id="product-grid">
         {% for product in featured %}
         <div class="product-card reveal" data-category="{{ product.category_id }}">
-            {% if loop.index <= 2 %}
-            <span class="product-badge badge-new">New</span>
-            {% endif %}
-            <button class="wishlist-btn" data-id="{{ product.id }}">
-                <i class="fa-regular fa-heart"></i>
-            </button>
-            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="display:block;">
-                <div class="product-image">
-                    {% set hero = product.hero_image %}
-                    {% if hero %}
-                    <div class="img-box" style="aspect-ratio:4/5;">
-                        <img class="blur-placeholder" src="{{ hero.blur_data_uri }}" alt="" aria-hidden="true">
-                        <picture>
-                            <source type="image/webp" srcset="{{ hero.srcset }}" sizes="(max-width:600px) 50vw, 25vw">
-                            <img src="{{ hero.src(600) }}"
-                                 alt="{{ hero.alt_text }}"
-                                 width="600" height="750"
-                                 loading="lazy"
-                                 class="blur-up"
-                                 onload="this.classList.add('loaded')">
-                        </picture>
-                    </div>
-                    {% else %}
-                    <img src="/static/images/{{ product.image }}" alt="{{ product.name }}" loading="lazy" width="600" height="750" style="aspect-ratio:4/5;">
-                    {% endif %}
-                    {% if product.stock <= 0 %}
-                    <div class="oos-badge">
-                        Out of Stock
+            {% if loop.index <= 2 %} <span class="product-badge badge-new">New</span>
+                {% endif %}
+                <button class="wishlist-btn" data-id="{{ product.id }}">
+                    <i class="fa-regular fa-heart"></i>
+                </button>
+                <a href="{{ url_for('shop.product_detail', slug=product.slug) }}" style="display:block;">
+                    <div class="product-image">
+                        {% set hero = product.hero_image %}
+                        {% if hero %}
+                        <div class="img-box" style="aspect-ratio:4/5;">
+                            <img class="blur-placeholder" src="{{ hero.blur_data_uri }}" alt="" aria-hidden="true">
+                            <picture>
+                                <source type="image/webp" srcset="{{ hero.srcset }}"
+                                    sizes="(max-width:600px) 50vw, 25vw">
+                                <img src="{{ hero.src(600) }}" alt="{{ hero.alt_text }}" width="600" height="750"
+                                    loading="lazy" class="blur-up" onload="this.classList.add('loaded')">
+                            </picture>
+                        </div>
+                        {% else %}
+                        <img src="/static/images/{{ product.image }}" alt="{{ product.name }}" loading="lazy"
+                            width="600" height="750" style="aspect-ratio:4/5;">
+                        {% endif %}
+                        {% if product.stock <= 0 %} <div class="oos-badge">
+                            Out of Stock
                     </div>
                     {% endif %}
                     <div class="product-quick">
                         {% if product.stock > 0 %}
-                            <button class="add-to-cart-btn"
-                                onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
-                                <i class="fa-solid fa-cart-shopping"></i>
-                                Add to Cart
-                            </button>
+                        <button class="add-to-cart-btn"
+                            onclick="event.preventDefault();addToCart('{{ product.id }}','{{ product.name }}','{{ product.price }}','{{ product.image }}',this)">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            Add to Cart
+                        </button>
                         {% else %}
-                            <button class="out-of-stock-btn" disabled>
-                                <i class="fa-solid fa-circle-xmark"></i>
-                                Out of Stock
-                            </button>
+                        <button class="out-of-stock-btn" disabled>
+                            <i class="fa-solid fa-circle-xmark"></i>
+                            Out of Stock
+                        </button>
                         {% endif %}
                     </div>
-                </div>
-            </a>
-            <div class="product-info">
-                <h4 class="product-name">{{ product.name }}</h4>
-                {% if product.compare_at_price %}
-                    {% set p_price = product.price|float %}
-                    {% set p_compare = product.compare_at_price|float %}
-                    {% if p_compare > p_price %}
-                    <p class="product-price">
-                        <span class="price-old">৳{{ product.compare_at_price }}</span>
-                        <span class="price-new">৳{{ product.price }}</span>
-                    </p>
-                    {% else %}
-                    <p class="product-price"><span class="price-new">৳{{ product.price }}</span></p>
-                    {% endif %}
-                {% else %}
-                <p class="product-price"><span class="price-new">৳{{ product.price }}</span></p>
-                {% endif %}
-                <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="view-details-btn">
-                    View Details
-                    <i class="fa-solid fa-arrow-right"></i>
-                </a>
-            </div>
         </div>
-        {% endfor %}
-        <div id="scroll-sentinel"></div>
+        </a>
+        <div class="product-info">
+            <h4 class="product-name">{{ product.name }}</h4>
+            {% if product.compare_at_price %}
+            {% set p_price = product.price|float %}
+            {% set p_compare = product.compare_at_price|float %}
+            {% if p_compare > p_price %}
+            <p class="product-price">
+                <span class="price-old">৳{{ product.compare_at_price }}</span>
+                <span class="price-new">৳{{ product.price }}</span>
+            </p>
+            {% else %}
+            <p class="product-price"><span class="price-new">৳{{ product.price }}</span></p>
+            {% endif %}
+            {% else %}
+            <p class="product-price"><span class="price-new">৳{{ product.price }}</span></p>
+            {% endif %}
+            <a href="{{ url_for('shop.product_detail', slug=product.slug) }}" class="view-details-btn">
+                View Details
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+    <div id="scroll-sentinel"></div>
     </div>
 </section>
 
@@ -217,8 +230,10 @@
     </div>
     <div class="bento-grid reveal">
         {% for category in categories %}
-        <div class="bento-item" onclick="window.location.href='{{ url_for('shop.category', cat_id=category.id) }}'" style="overflow: hidden;">
-            <img src="{{ url_for('static', filename='images/' + category.image) }}" alt="{{ category.name }}" class="parallax-img">
+        <div class="bento-item" onclick="window.location.href='{{ url_for('shop.category', cat_id=category.id) }}'"
+            style="overflow: hidden;">
+            <img src="{{ url_for('static', filename='images/' + category.image) }}" alt="{{ category.name }}"
+                class="parallax-img">
             <div class="bento-overlay"></div>
             <div class="bento-info">
                 <div class="bento-tag">Explore</div>
@@ -228,46 +243,54 @@
         </div>
         {% endfor %}
         <!-- Extra bento tiles for layout -->
-        <div class="bento-item" style="background:var(--accent-dim);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.8rem;cursor:pointer;" onclick="window.location.href='{{ url_for('shop.contact') }}'">
+        <div class="bento-item"
+            style="background:var(--accent-dim);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.8rem;cursor:pointer;"
+            onclick="window.location.href='{{ url_for('shop.contact') }}'">
             <i class="fa-solid fa-envelope-open-text" style="font-size:2.5rem;color:var(--accent);"></i>
             <p style="font-family:var(--font-h);font-size:1.3rem;color:var(--text-1);">Contact Us</p>
-            <p style="font-size:.75rem;color:var(--text-2);text-align:center;padding:0 1rem;">Personal styling & bespoke inquiries</p>
+            <p style="font-size:.75rem;color:var(--text-2);text-align:center;padding:0 1rem;">Personal styling & bespoke
+                inquiries</p>
         </div>
-        <div class="bento-item" style="background:var(--surface-2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.6rem;cursor:default;">
+        <div class="bento-item"
+            style="background:var(--surface-2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.6rem;cursor:default;">
             <p style="font-family:var(--font-h);font-size:1.5rem;color:var(--accent);letter-spacing:.1em;">Free</p>
-            <p style="font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-2);">Shipping Over ৳2000</p>
+            <p style="font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-2);">Shipping Over
+                ৳2000</p>
         </div>
     </div>
 </section>
 
 <!-- ─── Testimonials Section ──────────────────────── -->
 {% if active_testimonials %}
-<section class="section" style="background:var(--surface); border-top:1px solid var(--border); overflow:hidden; padding-bottom: 4rem;">
+<section class="section"
+    style="background:var(--surface); border-top:1px solid var(--border); overflow:hidden; padding-bottom: 4rem;">
     <div class="section-header reveal">
         <span class="section-label">Testimonials</span>
         <h2>What Our Customers Say</h2>
-        <p style="margin-top:0.5rem; font-size:1.1rem; font-family:var(--font-h); color:var(--text-2);">Join thousands of satisfied customers who trust us</p>
+        <p style="margin-top:0.5rem; font-size:1.1rem; font-family:var(--font-h); color:var(--text-2);">Join thousands
+            of satisfied customers who trust us</p>
     </div>
-    
+
     <div class="testimonials-marquee-container reveal">
         <div class="testimonials-marquee-track">
             {% for repeat in range(4) %}
-                {% for item in active_testimonials %}
-                <div class="testimonial-marquee-card">
-                    <div class="test-user-header">
-                        <img src="{{ url_for('static', filename='images/' + (item.image or 'avatar_default.webp')) }}" alt="{{ item.name }}" class="test-user-img" loading="lazy">
-                        <div>
-                            <h4 class="test-user-name">{{ item.name }}</h4>
-                            <div class="test-stars">
-                                {% for star in range(item.rating) %}
-                                <i class="fa-solid fa-star"></i>
-                                {% endfor %}
-                            </div>
+            {% for item in active_testimonials %}
+            <div class="testimonial-marquee-card">
+                <div class="test-user-header">
+                    <img src="{{ url_for('static', filename='images/' + (item.image or 'avatar_default.webp')) }}"
+                        alt="{{ item.name }}" class="test-user-img" loading="lazy">
+                    <div>
+                        <h4 class="test-user-name">{{ item.name }}</h4>
+                        <div class="test-stars">
+                            {% for star in range(item.rating) %}
+                            <i class="fa-solid fa-star"></i>
+                            {% endfor %}
                         </div>
                     </div>
-                    <p class="test-text">"{{ item.content }}"</p>
                 </div>
-                {% endfor %}
+                <p class="test-text">"{{ item.content }}"</p>
+            </div>
+            {% endfor %}
             {% endfor %}
         </div>
     </div>
