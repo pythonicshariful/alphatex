@@ -1,43 +1,95 @@
 {% extends "admin/base.html" %}
 {% block title %}OTP Verification | alphatex Admin{% endblock %}
 
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
-{% endblock %}
-
 {% block auth_content %}
-<div class="auth-page" style="background:var(--surface-color);">
-    <div class="auth-card">
-        <div class="auth-logo">alphatex</div>
-        <h1 class="auth-title">Two-Factor OTP Verification</h1>
-        <p class="auth-subtitle">Enter the 6-digit OTP code sent to your email <strong>{{ session.get('admin_pending_email', '') }}</strong>{% if admin and admin.is_2fa_enabled %} or Google Authenticator app{% endif %}.</p>
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--a-bg);">
+    <div style="background: var(--a-surface); border: 1px solid var(--a-border); border-radius: 12px; width: 100%; max-width: 420px; padding: 2.5rem; box-shadow: 0 12px 40px rgba(0,0,0,0.2);">
+        
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-family: var(--font-heading, serif); font-size: 1.8rem; color: var(--a-accent); letter-spacing: 0.1em; margin-bottom: 0.5rem;">alphatex</div>
+            <h1 style="font-size: 1.2rem; font-weight: 600; color: var(--a-text);">Two-Factor OTP Verification</h1>
+            <p style="font-size: 0.85rem; color: var(--a-text2); margin-top: 0.25rem;">
+                Enter the 6-digit OTP code sent to your email<br><strong style="color:var(--a-accent);">{{ session.get('admin_pending_email', '') }}</strong>
+            </p>
+        </div>
 
         {% if error %}
-        <div class="admin-alert admin-alert-error" style="margin-bottom:1.5rem;">{{ error }}</div>
+        <div class="admin-alert admin-alert-danger" style="margin-bottom:1.5rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-circle-xmark"></i> {{ error }}
+        </div>
         {% endif %}
 
         <form method="POST" action="{{ url_for('admin.two_factor') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="form-group">
-                <label class="form-label">6-Digit Verification Code</label>
+            <div class="form-group" style="margin-bottom:1.5rem;">
+                <label class="form-label" style="font-weight:600;">6-Digit OTP Verification Code</label>
                 <input type="text" name="code" class="form-control otp-input"
                        placeholder="000000" maxlength="6" pattern="\d{6}" required
+                       style="font-size:1.4rem; letter-spacing:0.4em; text-align:center; padding:0.75rem;"
                        autocomplete="one-time-code" autofocus>
             </div>
-            <button type="submit" class="btn" style="width:100%;margin-top:1rem;">
+            <button type="submit" class="btn-a btn-a-primary" style="width:100%; justify-content:center; padding: 0.8rem;">
                 <i class="fa-solid fa-lock-open"></i> Verify & Login
             </button>
         </form>
 
         <form method="POST" action="{{ url_for('admin.resend_otp') }}" style="margin-top:1rem; text-align:center;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn" style="background:transparent; border:1px solid var(--border); color:var(--text); width:100%; font-size:0.85rem;">
+            <button type="submit" class="btn-a btn-a-outline" style="width:100%; justify-content:center; padding: 0.6rem; font-size:0.85rem;">
                 <i class="fa-solid fa-paper-plane"></i> Resend Email OTP
             </button>
         </form>
 
         <div style="text-align:center;margin-top:1.5rem;">
-            <a href="{{ url_for('admin.login') }}" style="color:var(--text-secondary);font-size:.85rem;">
+            <a href="{{ url_for('admin.login') }}" style="color:var(--a-text2);font-size:.85rem; text-decoration:none;">
+                <i class="fa-solid fa-arrow-left"></i> Back to login
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; background: var(--a-bg);">
+    <div style="background: var(--a-surface); border: 1px solid var(--a-border); border-radius: 12px; width: 100%; max-width: 420px; padding: 2.5rem; box-shadow: 0 12px 40px rgba(0,0,0,0.2);">
+        
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-family: var(--font-heading, serif); font-size: 1.8rem; color: var(--a-accent); letter-spacing: 0.1em; margin-bottom: 0.5rem;">alphatex</div>
+            <h1 style="font-size: 1.2rem; font-weight: 600; color: var(--a-text);">Two-Factor OTP Verification</h1>
+            <p style="font-size: 0.85rem; color: var(--a-text2); margin-top: 0.25rem;">
+                Enter the 6-digit OTP code sent to your email<br><strong style="color:var(--a-accent);">{{ session.get('admin_pending_email', '') }}</strong>
+            </p>
+        </div>
+
+        {% if error %}
+        <div class="admin-alert admin-alert-danger" style="margin-bottom:1.5rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-circle-xmark"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('admin.two_factor') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group" style="margin-bottom:1.5rem;">
+                <label class="form-label" style="font-weight:600;">6-Digit OTP Verification Code</label>
+                <input type="text" name="code" class="form-control otp-input"
+                       placeholder="000000" maxlength="6" pattern="\d{6}" required
+                       style="font-size:1.4rem; letter-spacing:0.4em; text-align:center; padding:0.75rem;"
+                       autocomplete="one-time-code" autofocus>
+            </div>
+            <button type="submit" class="btn-a btn-a-primary" style="width:100%; justify-content:center; padding: 0.8rem;">
+                <i class="fa-solid fa-lock-open"></i> Verify & Login
+            </button>
+        </form>
+
+        <form method="POST" action="{{ url_for('admin.resend_otp') }}" style="margin-top:1rem; text-align:center;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-a btn-a-outline" style="width:100%; justify-content:center; padding: 0.6rem; font-size:0.85rem;">
+                <i class="fa-solid fa-paper-plane"></i> Resend Email OTP
+            </button>
+        </form>
+
+        <div style="text-align:center;margin-top:1.5rem;">
+            <a href="{{ url_for('admin.login') }}" style="color:var(--a-text2);font-size:.85rem; text-decoration:none;">
                 <i class="fa-solid fa-arrow-left"></i> Back to login
             </a>
         </div>

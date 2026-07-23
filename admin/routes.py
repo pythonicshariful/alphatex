@@ -176,9 +176,9 @@ def two_factor():
             return redirect(url_for('admin.dashboard'))
 
         log_attempt(admin, 'fail_2fa', request)
-        return render_template('admin/2fa.html', admin=admin, error=msg)
+        return render_template('admin/2fa.html', pending_admin=admin, error=msg)
 
-    return render_template('admin/2fa.html', admin=admin)
+    return render_template('admin/2fa.html', pending_admin=admin)
 
 
 @admin_bp.route('/resend-otp', methods=['POST'])
