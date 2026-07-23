@@ -13,6 +13,8 @@
 <div class="admin-section" style="max-width:850px;">
     <div class="settings-tabs">
         <button class="settings-tab active" data-tab="general">General</button>
+        <button class="settings-tab" data-tab="social_auth">Social Login (OAuth)</button>
+        <button class="settings-tab" data-tab="captcha">Captcha & Security</button>
         <button class="settings-tab" data-tab="email">Email Server (SMTP)</button>
         <button class="settings-tab" data-tab="analytics">Analytics & Pixel</button>
         <button class="settings-tab" data-tab="seo">SEO</button>
@@ -72,7 +74,120 @@
                 </div>
             </div>
 
-            <!-- Email Server (SMTP / IMAP / POP3) -->
+            <!-- Social Login (Google & Facebook) -->
+            <div class="settings-panel" data-panel="social_auth">
+                <h3 style="margin-bottom:1rem; font-size:1rem; font-weight:600; color:var(--a-text);"><i class="fa-solid fa-user-lock"></i> Google & Facebook OAuth Configuration</h3>
+                <p class="text-muted" style="font-size:0.85rem; margin-bottom:1.5rem; line-height:1.5;">Enable social authentication to let customers log in with their Google or Facebook accounts.</p>
+
+                <!-- Google Auth -->
+                <div style="background:var(--a-surface2); border:1px solid var(--a-border); padding:1.25rem; border-radius:8px; margin-bottom:1.5rem;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+                        <div>
+                            <div style="font-weight:600; font-size:0.95rem; color:var(--a-text);"><i class="fa-brands fa-google" style="color:#ea4335;"></i> Google Sign-In</div>
+                            <div class="text-sm text-muted">Allow users to log in using Google OAuth 2.0</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="google_login_enabled" value="true" {% if settings.get('google_login_enabled') == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Google Client ID</label>
+                        <input type="text" name="google_client_id" class="form-control" value="{{ settings.get('google_client_id', '') }}" placeholder="e.g. 123456789-abc.apps.googleusercontent.com">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label class="form-label">Google Client Secret</label>
+                        <input type="password" name="google_client_secret" class="form-control" value="{{ settings.get('google_client_secret', '') }}" placeholder="e.g. GOCSPX-xxxxxxxxxxxxxx">
+                    </div>
+                    <div style="font-size:0.8rem; background:rgba(234,67,53,0.08); border:1px dashed rgba(234,67,53,0.3); padding:0.6rem 0.8rem; border-radius:6px; color:var(--a-text);">
+                        <strong>Authorized Redirect URI:</strong> <code>{{ request.host_url.rstrip('/') }}/auth/callback/google</code>
+                    </div>
+                </div>
+
+                <!-- Facebook Auth -->
+                <div style="background:var(--a-surface2); border:1px solid var(--a-border); padding:1.25rem; border-radius:8px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+                        <div>
+                            <div style="font-weight:600; font-size:0.95rem; color:var(--a-text);"><i class="fa-brands fa-facebook" style="color:#1877f2;"></i> Facebook Login</div>
+                            <div class="text-sm text-muted">Allow users to log in using Facebook OAuth</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="facebook_login_enabled" value="true" {% if settings.get('facebook_login_enabled') == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Facebook App ID</label>
+                        <input type="text" name="facebook_app_id" class="form-control" value="{{ settings.get('facebook_app_id', '') }}" placeholder="e.g. 1234567890123456">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label class="form-label">Facebook App Secret</label>
+                        <input type="password" name="facebook_app_secret" class="form-control" value="{{ settings.get('facebook_app_secret', '') }}" placeholder="e.g. 8f7e6d5c4b3a210987654321fedcba98">
+                    </div>
+                    <div style="font-size:0.8rem; background:rgba(24,119,242,0.08); border:1px dashed rgba(24,119,242,0.3); padding:0.6rem 0.8rem; border-radius:6px; color:var(--a-text);">
+                        <strong>Valid OAuth Redirect URI:</strong> <code>{{ request.host_url.rstrip('/') }}/auth/callback/facebook</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Captcha & Security -->
+            <div class="settings-panel" data-panel="captcha">
+                <h3 style="margin-bottom:1rem; font-size:1rem; font-weight:600; color:var(--a-text);"><i class="fa-solid fa-shield-virus"></i> Captcha Bot Protection</h3>
+                <p class="text-muted" style="font-size:0.85rem; margin-bottom:1.5rem; line-height:1.5;">Protect your storefront and admin forms against automated bot brute-forcing and spam.</p>
+
+                <div style="background:var(--a-surface2); border:1px solid var(--a-border); padding:1.25rem; border-radius:8px; margin-bottom:1.5rem;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+                        <div>
+                            <div style="font-weight:600; font-size:0.95rem; color:var(--a-text);">Enable Captcha Verification</div>
+                            <div class="text-sm text-muted">Require captcha challenge on configured site forms</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="captcha_enabled" value="true" {% if settings.get('captcha_enabled', 'true') == 'true' %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Captcha Service Provider</label>
+                        <select name="captcha_provider" class="form-control">
+                            <option value="turnstile" {% if settings.get('captcha_provider', 'turnstile') == 'turnstile' %}selected{% endif %}>Cloudflare Turnstile (Recommended - Privacy Friendly)</option>
+                            <option value="recaptcha_v2" {% if settings.get('captcha_provider') == 'recaptcha_v2' %}selected{% endif %}>Google reCAPTCHA v2 (Checkbox widget)</option>
+                            <option value="recaptcha_v2_invisible" {% if settings.get('captcha_provider') == 'recaptcha_v2_invisible' %}selected{% endif %}>Google reCAPTCHA v2 (Invisible)</option>
+                            <option value="simple_captcha" {% if settings.get('captcha_provider') == 'simple_captcha' %}selected{% endif %}>Built-in Simple Math Captcha (Fallback - No API Key Needed)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Site Key (Public)</label>
+                        <input type="text" name="captcha_site_key" class="form-control" value="{{ settings.get('captcha_site_key', '') }}" placeholder="Enter Site Key from provider dashboard">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Secret Key (Private)</label>
+                        <input type="password" name="captcha_secret_key" class="form-control" value="{{ settings.get('captcha_secret_key', '') }}" placeholder="Enter Secret Key from provider dashboard">
+                    </div>
+                </div>
+
+                <div style="background:var(--a-surface2); border:1px solid var(--a-border); padding:1.25rem; border-radius:8px;">
+                    <h4 style="font-size:0.9rem; font-weight:600; margin-bottom:1rem; color:var(--a-text);">Protected Forms</h4>
+
+                    <label style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem; cursor:pointer;">
+                        <input type="checkbox" name="captcha_on_login" value="true" {% if settings.get('captcha_on_login', 'true') == 'true' %}checked{% endif %}>
+                        <span style="font-size:0.9rem; color:var(--a-text);">Customer Login Form</span>
+                    </label>
+
+                    <label style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem; cursor:pointer;">
+                        <input type="checkbox" name="captcha_on_register" value="true" {% if settings.get('captcha_on_register', 'true') == 'true' %}checked{% endif %}>
+                        <span style="font-size:0.9rem; color:var(--a-text);">Customer Registration Form</span>
+                    </label>
+
+                    <label style="display:flex; align-items:center; gap:0.75rem; cursor:pointer;">
+                        <input type="checkbox" name="captcha_on_admin_login" value="true" {% if settings.get('captcha_on_admin_login') == 'true' %}checked{% endif %}>
+                        <span style="font-size:0.9rem; color:var(--a-text);">Admin Portal Login Form</span>
+                    </label>
+                </div>
+            </div>
             <div class="settings-panel" data-panel="email">
                 <h3 style="margin-bottom:1rem; font-size:1rem; font-weight:600; color:var(--a-text);">OTP & Transactional Email Server Configuration</h3>
                 <p class="text-muted" style="font-size:0.85rem; margin-bottom:1.5rem; line-height:1.5;">Configure the mail server used to dispatch One-Time Passwords (OTP) and notifications for customer & admin authentication.</p>

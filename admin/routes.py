@@ -92,6 +92,10 @@ def login():
     if not check_ip_whitelist():
         return render_template('admin/login.html', error='Access denied from your IP address.')
     if request.method == 'POST':
+        from bot_protection import verify_captcha
+        if not verify_captcha(form_type='admin_login'):
+            return render_template('admin/login.html', error='Security check / Captcha failed. Please try again.')
+
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         admin = AdminUser.query.filter_by(email=email).first()
@@ -1089,22 +1093,37 @@ def run_seo_migration(admin):
 def settings(admin):
     from models import SiteSettings
     if request.method == 'POST':
-        keys_to_save = ['site_name', 'support_email', 'maintenance_mode',
-                        'meta_title', 'meta_description', 'meta_keywords',
-                        'social_instagram', 'social_facebook', 'social_twitter',
-                        'social_whatsapp', 'social_messenger',
-                        'show_exact_stock',
-                        'smtp_server', 'smtp_port', 'smtp_username', 'smtp_password',
-                        'smtp_sender_name', 'imap_server', 'pop3_server',
-                        'facebook_pixel_id', 'google_analytics_id']
-        for key in keys_to_save:
-            val = request.form.get(key, '')
+        text_keys = ['site_name', 'support_email',
+                     'meta_title', 'meta_description', 'meta_keywords',
+                     'social_instagram', 'social_facebook', 'social_twitter',
+                     'social_whatsapp', 'social_messenger',
+                     'smtp_server', 'smtp_port', 'smtp_username', 'smtp_password',
+                     'smtp_sender_name', 'imap_server', 'pop3_server',
+                     'facebook_pixel_id', 'google_analytics_id',
+                     'google_client_id', 'google_client_secret',
+                     'facebook_app_id', 'facebook_app_secret',
+                     'captcha_provider', 'captcha_site_key', 'captcha_secret_key']
+
+        checkbox_keys = ['maintenance_mode', 'show_exact_stock',
+                         'google_login_enabled', 'facebook_login_enabled',
+                         'captcha_enabled', 'captcha_on_login',
+                         'captcha_on_register', 'captcha_on_admin_login']
+
+        for key in text_keys:
+            val = request.form.get(key, '').strip()
             setting = SiteSettings.query.filter_by(key=key).first()
             if setting: setting.value = val
             else: db.session.add(SiteSettings(key=key, value=val))
+
+        for key in checkbox_keys:
+            val = 'true' if request.form.get(key) == 'true' else 'false'
+            setting = SiteSettings.query.filter_by(key=key).first()
+            if setting: setting.value = val
+            else: db.session.add(SiteSettings(key=key, value=val))
+
         db.session.commit()
         log_audit(admin, 'update_settings', 'site_settings', None, 'Site settings updated')
-        flash('Settings saved.', 'success')
+        flash('Settings saved successfully.', 'success')
         return redirect(url_for('admin.settings'))
 
     settings_map = {s.key: s.value for s in SiteSettings.query.all()}

@@ -199,11 +199,11 @@ def contact():
             from flask import abort
             abort(403)
 
-        # Turnstile verification
-        from auth.routes import verify_turnstile
-        cf_token = data.get('cf-turnstile-response')
-        if not verify_turnstile(cf_token):
-            return jsonify({'error': 'Security verification failed. Please try again.'}), 400
+        # Captcha verification
+        from bot_protection import verify_captcha
+        token = data.get('cf-turnstile-response') or data.get('g-recaptcha-response') or data.get('simple_captcha_answer')
+        if not verify_captcha(response_token=token, form_type='login'):
+            return jsonify({'error': 'Security check / Captcha failed. Please try again.'}), 400
 
         name = data.get('name', '').strip()
         email = data.get('email', '').strip()

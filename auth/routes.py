@@ -100,9 +100,9 @@ def register():
 @auth_bp.route('/register/send-otp', methods=['POST'])
 @limiter.limit('3/hour', key_func=lambda: request.form.get('email', ''))
 def register_send_otp():
-    cf_token = request.form.get('cf-turnstile-response')
-    if not verify_turnstile(cf_token):
-        flash('Security check failed. Please try again.', 'error')
+    from bot_protection import verify_captcha
+    if not verify_captcha(form_type='register'):
+        flash('Security check / Captcha failed. Please try again.', 'error')
         return redirect(url_for('auth.register'))
         
     email = request.form.get('email', '').strip().lower()
@@ -182,9 +182,9 @@ def login():
 @auth_bp.route('/login/password', methods=['POST'])
 @limiter.limit('10/minute')
 def login_password():
-    cf_token = request.form.get('cf-turnstile-response')
-    if not verify_turnstile(cf_token):
-        flash('Security check failed. Please try again.', 'error')
+    from bot_protection import verify_captcha
+    if not verify_captcha(form_type='login'):
+        flash('Security check / Captcha failed. Please try again.', 'error')
         return redirect(url_for('auth.login'))
         
     identifier = request.form.get('identifier', '').strip()
@@ -204,9 +204,9 @@ def login_password():
 @auth_bp.route('/login/send-otp', methods=['POST'])
 @limiter.limit('3/hour', key_func=lambda: request.form.get('email', ''))
 def login_send_otp():
-    cf_token = request.form.get('cf-turnstile-response')
-    if not verify_turnstile(cf_token):
-        flash('Security check failed. Please try again.', 'error')
+    from bot_protection import verify_captcha
+    if not verify_captcha(form_type='login'):
+        flash('Security check / Captcha failed. Please try again.', 'error')
         return redirect(url_for('auth.login'))
         
     email = request.form.get('email', '').strip().lower()
@@ -250,6 +250,11 @@ def login_verify():
 @auth_bp.route('/reset-password', methods=['GET', 'POST'])
 def reset_request():
     if request.method == 'POST':
+        from bot_protection import verify_captcha
+        if not verify_captcha(form_type='login'):
+            flash('Security check / Captcha failed. Please try again.', 'error')
+            return redirect(url_for('auth.reset_request'))
+            
         email = request.form.get('email', '').strip().lower()
         user = User.query.filter_by(email=email, is_verified=True).first()
         if user:
@@ -301,25 +306,78 @@ def reset_set_password():
 # Social Login
 # -------------------------------------------------------
 
+def get_google_oauth():
+    from models import SiteSettings
+    from extensions import oauth
+    enabled = SiteSettings.query.filter_by(key='google_login_enabled').first()
+    if enabled and enabled.value != 'true':
+        return None, "Google login is currently disabled by administrator."
+    
+    cid = SiteSettings.query.filter_by(key='google_client_id').first()
+    csecret = SiteSettings.query.filter_by(key='google_client_secret').first()
+    
+    client_id = (cid.value if cid and cid.value else current_app.config.get('GOOGLE_CLIENT_ID', '') or '').strip()
+    client_secret = (csecret.value if csecret and csecret.value else current_app.config.get('GOOGLE_CLIENT_SECRET', '') or '').strip()
+
+    if not client_id or not client_secret:
+        return None, "Google Client ID or Secret is not configured in Admin Dashboard."
+
+    oauth.google.client_id = client_id
+    oauth.google.client_secret = client_secret
+    return oauth.google, None
+
+
+def get_facebook_oauth():
+    from models import SiteSettings
+    from extensions import oauth
+    enabled = SiteSettings.query.filter_by(key='facebook_login_enabled').first()
+    if enabled and enabled.value != 'true':
+        return None, "Facebook login is currently disabled by administrator."
+
+    appid = SiteSettings.query.filter_by(key='facebook_app_id').first()
+    appsecret = SiteSettings.query.filter_by(key='facebook_app_secret').first()
+
+    client_id = (appid.value if appid and appid.value else current_app.config.get('FACEBOOK_CLIENT_ID', '') or '').strip()
+    client_secret = (appsecret.value if appsecret and appsecret.value else current_app.config.get('FACEBOOK_CLIENT_SECRET', '') or '').strip()
+
+    if not client_id or not client_secret:
+        return None, "Facebook App ID or Secret is not configured in Admin Dashboard."
+
+    oauth.facebook.client_id = client_id
+    oauth.facebook.client_secret = client_secret
+    return oauth.facebook, None
+
+
 @auth_bp.route('/login/google')
 def google_login():
-    from extensions import oauth
+    google, err = get_google_oauth()
+    if not google:
+        flash(err, 'error')
+        return redirect(url_for('auth.login'))
     redirect_uri = url_for('auth.google_callback', _external=True)
-    return oauth.google.authorize_redirect(redirect_uri)
+    return google.authorize_redirect(redirect_uri)
 
 @auth_bp.route('/callback/google')
 def google_callback():
-    from extensions import oauth
-    token = oauth.google.authorize_access_token()
-    user_info = token.get('userinfo')
-    if not user_info:
-        flash('Failed to fetch user info from Google.', 'error')
+    google, err = get_google_oauth()
+    if not google:
+        flash(err, 'error')
+        return redirect(url_for('auth.login'))
+    
+    try:
+        token = google.authorize_access_token()
+        user_info = token.get('userinfo')
+        if not user_info:
+            flash('Failed to fetch user info from Google.', 'error')
+            return redirect(url_for('auth.login'))
+    except Exception as e:
+        current_app.logger.error(f"Google Callback error: {e}")
+        flash('Google login error. Please try again.', 'error')
         return redirect(url_for('auth.login'))
     
     email = user_info.get('email')
     user = User.query.filter_by(email=email).first()
     if not user:
-        # Save initial name from google to full_name
         full_name = user_info.get('name')
         user = User(email=email, social_provider='google', is_verified=True, 
                     username=email.split('@')[0], full_name=full_name)
@@ -330,14 +388,12 @@ def google_callback():
         user.is_verified = True
         db.session.commit()
     
-    # Update last login
     user.last_login = datetime.utcnow()
     db.session.commit()
     
     login_user(user, remember=True)
     log_user_login(user)
     
-    # Post-login redirect: prompt profile completion if incomplete
     if not user.profile_complete:
         flash('Welcome! Please complete your profile to enable seamless checkouts and delivery.', 'info')
         return redirect(url_for('user.profile'))
@@ -347,18 +403,30 @@ def google_callback():
 
 @auth_bp.route('/login/facebook')
 def facebook_login():
-    from extensions import oauth
+    facebook, err = get_facebook_oauth()
+    if not facebook:
+        flash(err, 'error')
+        return redirect(url_for('auth.login'))
     redirect_uri = url_for('auth.facebook_callback', _external=True)
-    return oauth.facebook.authorize_redirect(redirect_uri)
+    return facebook.authorize_redirect(redirect_uri)
 
 @auth_bp.route('/callback/facebook')
 def facebook_callback():
-    from extensions import oauth
-    token = oauth.facebook.authorize_access_token()
-    resp = oauth.facebook.get('me?fields=id,name,email')
-    user_info = resp.json()
-    if not user_info.get('email'):
-        flash('Failed to fetch email from Facebook.', 'error')
+    facebook, err = get_facebook_oauth()
+    if not facebook:
+        flash(err, 'error')
+        return redirect(url_for('auth.login'))
+    
+    try:
+        token = facebook.authorize_access_token()
+        resp = facebook.get('me?fields=id,name,email')
+        user_info = resp.json()
+        if not user_info.get('email'):
+            flash('Failed to fetch email from Facebook.', 'error')
+            return redirect(url_for('auth.login'))
+    except Exception as e:
+        current_app.logger.error(f"Facebook Callback error: {e}")
+        flash('Facebook login error. Please try again.', 'error')
         return redirect(url_for('auth.login'))
     
     email = user_info.get('email')
@@ -374,7 +442,6 @@ def facebook_callback():
         user.is_verified = True
         db.session.commit()
     
-    # Update last login
     user.last_login = datetime.utcnow()
     db.session.commit()
     

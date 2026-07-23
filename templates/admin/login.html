@@ -23,10 +23,26 @@
                 <label class="form-label">Admin Email</label>
                 <input type="email" name="email" class="form-control" placeholder="admin@alphatex.com" required autocomplete="username">
             </div>
-            <div class="form-group" style="margin-bottom: 2rem;">
+            <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label class="form-label">Password</label>
                 <input type="password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
             </div>
+            {% if site_settings and site_settings.get('captcha_enabled', 'true') == 'true' and site_settings.get('captcha_on_admin_login') == 'true' %}
+                {% set provider = site_settings.get('captcha_provider', 'turnstile') %}
+                {% set site_key = site_settings.get('captcha_site_key') or (config.TURNSTILE_SITE_KEY or '1x00000000000000000000AA') %}
+                {% if provider == 'turnstile' %}
+                    <div class="cf-turnstile" data-sitekey="{{ site_key }}" style="margin-bottom: 1.5rem;"></div>
+                {% elif provider == 'recaptcha_v2' %}
+                    <div class="g-recaptcha" data-sitekey="{{ site_key }}" style="margin-bottom: 1.5rem;"></div>
+                {% elif provider == 'recaptcha_v2_invisible' %}
+                    <div class="g-recaptcha" data-sitekey="{{ site_key }}" data-size="invisible" style="margin-bottom: 1.5rem;"></div>
+                {% elif provider == 'simple_captcha' %}
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label class="form-label">Security Check: {{ simple_captcha_question }} = ?</label>
+                        <input type="text" name="simple_captcha_answer" class="form-control" placeholder="Enter calculation answer" required>
+                    </div>
+                {% endif %}
+            {% endif %}
             <button type="submit" class="btn-a btn-a-primary" style="width:100%; justify-content:center; padding: 0.8rem;">
                 <i class="fa-solid fa-shield-halved"></i> Secure Login
             </button>

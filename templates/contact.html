@@ -229,8 +229,23 @@
                     <input type="text" name="website_url" tabindex="-1" autocomplete="off" value="">
                 </div>
 
-                <!-- Cloudflare Turnstile -->
-                <div class="cf-turnstile" data-sitekey="{{ config.TURNSTILE_SITE_KEY or '1x00000000000000000000AA' }}" style="margin-bottom:1rem;"></div>
+                <!-- Dynamic Captcha -->
+                {% if (not site_settings) or (site_settings.get('captcha_enabled', 'true') == 'true') %}
+                    {% set provider = site_settings.get('captcha_provider', 'turnstile') if site_settings else 'turnstile' %}
+                    {% set site_key = site_settings.get('captcha_site_key') if site_settings and site_settings.get('captcha_site_key') else (config.TURNSTILE_SITE_KEY or '1x00000000000000000000AA') %}
+                    {% if provider == 'turnstile' %}
+                        <div class="cf-turnstile" data-sitekey="{{ site_key }}" style="margin-bottom: 1rem;"></div>
+                    {% elif provider == 'recaptcha_v2' %}
+                        <div class="g-recaptcha" data-sitekey="{{ site_key }}" style="margin-bottom: 1rem;"></div>
+                    {% elif provider == 'recaptcha_v2_invisible' %}
+                        <div class="g-recaptcha" data-sitekey="{{ site_key }}" data-size="invisible" style="margin-bottom: 1rem;"></div>
+                    {% elif provider == 'simple_captcha' %}
+                        <div class="field-group" style="margin-bottom: 1.25rem;">
+                            <label style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">Security Check: {{ simple_captcha_question }} = ?</label>
+                            <input type="text" id="simple_captcha_answer" name="simple_captcha_answer" class="form-control" placeholder="Enter calculation answer" required>
+                        </div>
+                    {% endif %}
+                {% endif %}
 
                 <button type="submit" class="submit-btn"><i class="fa-solid fa-paper-plane" style="margin-right:.5rem;"></i>Send Message</button>
             </form>
@@ -270,7 +285,9 @@ async function submitContact(e) {
     const activeChip = document.querySelector('#chips .chip.active');
     const subject = activeChip ? activeChip.getAttribute('data-val') : 'General Enquiry';
     const honeypot = e.target.querySelector('input[name="website_url"]').value;
-    const turnstileToken = e.target.querySelector('[name="cf-turnstile-response"]')?.value || '';
+    const captchaToken = e.target.querySelector('[name="cf-turnstile-response"]')?.value ||
+                         e.target.querySelector('[name="g-recaptcha-response"]')?.value ||
+                         e.target.querySelector('[name="simple_captcha_answer"]')?.value || '';
 
     const payload = {
         name: `${fname} ${lname}`.trim(),
@@ -279,7 +296,9 @@ async function submitContact(e) {
         subject: subject,
         message: msg,
         website_url: honeypot,
-        'cf-turnstile-response': turnstileToken
+        'cf-turnstile-response': captchaToken,
+        'g-recaptcha-response': captchaToken,
+        'simple_captcha_answer': captchaToken
     };
 
     try {

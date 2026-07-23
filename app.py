@@ -105,6 +105,7 @@ def create_app():
     @app.context_processor
     def inject_settings():
         from models import SiteSettings, Partner, Testimonial
+        from bot_protection import generate_simple_captcha
         try:
             settings_map = {s.key: s.value for s in SiteSettings.query.all()}
         except Exception:
@@ -120,7 +121,8 @@ def create_app():
         return {
             'site_settings': settings_map,
             'active_partners': partners,
-            'active_testimonials': testimonials
+            'active_testimonials': testimonials,
+            'simple_captcha_question': generate_simple_captcha()
         }
 
     @app.after_request

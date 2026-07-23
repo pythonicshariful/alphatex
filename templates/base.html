@@ -12,8 +12,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <!-- Cloudflare Turnstile -->
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <!-- Dynamic Captcha Scripts -->
+    {% if site_settings and site_settings.get('captcha_enabled', 'true') == 'true' %}
+      {% set provider = site_settings.get('captcha_provider', 'turnstile') %}
+      {% if provider == 'turnstile' %}
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+      {% elif provider in ['recaptcha_v2', 'recaptcha_v2_invisible'] %}
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+      {% endif %}
+    {% else %}
+      <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    {% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=20260712b">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ui.css') }}?v=20260712b">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=20260712b">

@@ -15,6 +15,22 @@
                 <input type="email" name="email" class="form-control"
                        placeholder="you@example.com" required>
             </div>
+            {% if (not site_settings) or (site_settings.get('captcha_enabled', 'true') == 'true' and site_settings.get('captcha_on_login', 'true') == 'true') %}
+                {% set provider = site_settings.get('captcha_provider', 'turnstile') if site_settings else 'turnstile' %}
+                {% set site_key = site_settings.get('captcha_site_key') if site_settings and site_settings.get('captcha_site_key') else (config.TURNSTILE_SITE_KEY or '1x00000000000000000000AA') %}
+                {% if provider == 'turnstile' %}
+                    <div class="cf-turnstile" data-sitekey="{{ site_key }}" style="margin-bottom: 1rem;"></div>
+                {% elif provider == 'recaptcha_v2' %}
+                    <div class="g-recaptcha" data-sitekey="{{ site_key }}" style="margin-bottom: 1rem;"></div>
+                {% elif provider == 'recaptcha_v2_invisible' %}
+                    <div class="g-recaptcha" data-sitekey="{{ site_key }}" data-size="invisible" style="margin-bottom: 1rem;"></div>
+                {% elif provider == 'simple_captcha' %}
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">Security Check: {{ simple_captcha_question }} = ?</label>
+                        <input type="text" name="simple_captcha_answer" class="form-control" placeholder="Enter calculation answer" required>
+                    </div>
+                {% endif %}
+            {% endif %}
             <button type="submit" class="btn" style="width:100%;margin-top:1rem;">Send Reset OTP</button>
         </form>
         <p class="auth-switch"><a href="{{ url_for('auth.login') }}"><i class="fa-solid fa-arrow-left"></i> Back to login</a></p>

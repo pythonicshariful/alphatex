@@ -133,3 +133,76 @@ def get_suspicious_ips() -> dict:
         if recent:
             result[ip] = len(recent)
     return dict(sorted(result.items(), key=lambda x: x[1], reverse=True))
+
+
+def generate_simple_captcha() -> str:
+    """Generate simple math captcha question & store answer in session."""
+    import random
+    num1 = random.randint(1, 10)
+    num2 = random.randint(1, 10)
+    session['simple_captcha_answer'] = str(num1 + num2)
+    return f"{num1} + {num2}"
+
+
+def verify_captcha(response_token=None, form_type='login') -> bool:
+    """
+    Verifies captcha response token dynamically based on SiteSettings configured in DB.
+    Supports Turnstile, Google reCAPTCHA v2 (Checkbox & Invisible), and Simple Math Captcha.
+    """
+    try:
+        from models import SiteSettings
+        settings = {s.key: s.value for s in SiteSettings.query.all()}
+    except Exception:
+        settings = {}
+
+    captcha_enabled = settings.get('captcha_enabled', 'true')
+    if captcha_enabled != 'true':
+        return True
+
+    # Check form target policy
+    if form_type == 'login' and settings.get('captcha_on_login', 'true') != 'true':
+        return True
+    if form_type == 'register' and settings.get('captcha_on_register', 'true') != 'true':
+        return True
+    if form_type == 'admin_login' and settings.get('captcha_on_admin_login') != 'true':
+        return True
+
+    provider = settings.get('captcha_provider', 'turnstile')
+    secret = settings.get('captcha_secret_key') or current_app.config.get('TURNSTILE_SECRET_KEY')
+
+    # Simple Captcha fallback (session-based math answer)
+    if provider == 'simple_captcha':
+        user_answer = (response_token or request.form.get('simple_captcha_answer') or '').strip()
+        expected_answer = str(session.get('simple_captcha_answer', ''))
+        session.pop('simple_captcha_answer', None)
+        return bool(user_answer and expected_answer and user_answer == expected_answer)
+
+    # If secret key is not set, allow in dev/demo mode
+    if not secret:
+        return True
+
+    # Extract token from form if not passed directly
+    token = response_token or request.form.get('cf-turnstile-response') or request.form.get('g-recaptcha-response')
+    if not token:
+        return False
+
+    if provider == 'turnstile':
+        url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+        try:
+            res = requests.post(url, data={'secret': secret, 'response': token}, timeout=5)
+            return res.json().get('success', False)
+        except Exception as e:
+            current_app.logger.error(f"Turnstile verification error: {e}")
+            return False
+
+    elif provider in ('recaptcha_v2', 'recaptcha_v2_invisible'):
+        url = 'https://www.google.com/recaptcha/api/siteverify'
+        try:
+            res = requests.post(url, data={'secret': secret, 'response': token}, timeout=5)
+            return res.json().get('success', False)
+        except Exception as e:
+            current_app.logger.error(f"reCAPTCHA verification error: {e}")
+            return False
+
+    return True
+

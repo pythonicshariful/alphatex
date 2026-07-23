@@ -9,6 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <!-- Captcha scripts for Admin forms -->
+    {% if site_settings and site_settings.get('captcha_enabled', 'true') == 'true' and site_settings.get('captcha_on_admin_login') == 'true' %}
+      {% set provider = site_settings.get('captcha_provider', 'turnstile') %}
+      {% if provider == 'turnstile' %}
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+      {% elif provider in ['recaptcha_v2', 'recaptcha_v2_invisible'] %}
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+      {% endif %}
+    {% endif %}
     {% block head %}{% endblock %}
 </head>
 <body class="admin-body">
