@@ -5,7 +5,7 @@ Plugged into Flask as a before_request hook in app.py.
 import re
 import time
 from collections import defaultdict
-from flask import request, jsonify, abort, g
+from flask import request, jsonify, abort, g, session, has_request_context
 from functools import lru_cache
 
 # ── Known bot / scanner user-agent patterns ──────────────────────────────────
@@ -140,7 +140,11 @@ def generate_simple_captcha() -> str:
     import random
     num1 = random.randint(1, 10)
     num2 = random.randint(1, 10)
-    session['simple_captcha_answer'] = str(num1 + num2)
+    if has_request_context():
+        try:
+            session['simple_captcha_answer'] = str(num1 + num2)
+        except Exception:
+            pass
     return f"{num1} + {num2}"
 
 
