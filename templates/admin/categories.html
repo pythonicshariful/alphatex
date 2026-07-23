@@ -99,11 +99,15 @@
                         <div style="display:flex; justify-content: flex-end; gap:0.5rem;">
                             <button type="button" 
                                     class="btn-a btn-a-sm btn-a-outline" 
-                                    onclick="openEditCatModal('{{ cat.id }}', '{{ cat.name|escapejs }}', '{{ url_for('static', filename='images/' + cat.image) }}', '{{ cat.image|escapejs }}')">
+                                    data-id="{{ cat.id }}"
+                                    data-name="{{ cat.name }}"
+                                    data-image-url="{{ url_for('static', filename='images/' + cat.image) }}"
+                                    data-image-name="{{ cat.image }}"
+                                    onclick="openEditCatModalFromBtn(this)">
                                 <i class="fa-solid fa-pen-to-square"></i> Edit
                             </button>
                             <form method="POST" action="{{ url_for('admin.delete_category', cid=cat.id) }}"
-                                  onsubmit="return confirm('Delete category \'{{ cat.name|escapejs }}\' and ALL its associated products? This action cannot be undone.');">
+                                  onsubmit="return confirm('Delete category and ALL its associated products? This action cannot be undone.');">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn-a btn-a-sm btn-a-outline text-danger"><i class="fa-solid fa-trash"></i></button>
                             </form>
@@ -272,6 +276,14 @@ function previewCatImage(input, previewImgId, ratioInfoId, containerId) {
     }
 }
 
+function openEditCatModalFromBtn(btn) {
+    const id = btn.getAttribute('data-id');
+    const name = btn.getAttribute('data-name');
+    const imageUrl = btn.getAttribute('data-image-url');
+    const imageName = btn.getAttribute('data-image-name');
+    openEditCatModal(id, name, imageUrl, imageName);
+}
+
 function openEditCatModal(id, name, imageUrl, imageFilename) {
     const form = document.getElementById('edit-cat-form');
     form.action = `/admin/categories/edit/${encodeURIComponent(id)}`;
@@ -284,7 +296,7 @@ function openEditCatModal(id, name, imageUrl, imageFilename) {
     
     currentImg.src = imageUrl;
     currentImg.onload = function() {
-        const isWebp = imageFilename.toLowerCase().endsWith('.webp');
+        const isWebp = (imageFilename || '').toLowerCase().endsWith('.webp');
         const info = getAspectRatioInfo(this.naturalWidth, this.naturalHeight);
         currentRatio.textContent = (isWebp ? 'WebP Format • ' : '') + info;
     };
