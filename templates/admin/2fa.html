@@ -1,5 +1,5 @@
 {% extends "admin/base.html" %}
-{% block title %}Two-Factor Auth | alphatex Admin{% endblock %}
+{% block title %}OTP Verification | alphatex Admin{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
@@ -9,26 +9,34 @@
 <div class="auth-page" style="background:var(--surface-color);">
     <div class="auth-card">
         <div class="auth-logo">alphatex</div>
-        <h1 class="auth-title">Two-Factor Authentication</h1>
-        <p class="auth-subtitle">Enter the 6-digit code from your Google Authenticator app</p>
+        <h1 class="auth-title">Two-Factor OTP Verification</h1>
+        <p class="auth-subtitle">Enter the 6-digit OTP code sent to your email <strong>{{ session.get('admin_pending_email', '') }}</strong>{% if admin and admin.is_2fa_enabled %} or Google Authenticator app{% endif %}.</p>
 
         {% if error %}
         <div class="admin-alert admin-alert-error" style="margin-bottom:1.5rem;">{{ error }}</div>
         {% endif %}
 
-        <form method="POST">
+        <form method="POST" action="{{ url_for('admin.two_factor') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
-                <label>Authenticator Code</label>
+                <label class="form-label">6-Digit Verification Code</label>
                 <input type="text" name="code" class="form-control otp-input"
                        placeholder="000000" maxlength="6" pattern="\d{6}" required
-                       autocomplete="one-time-code">
+                       autocomplete="one-time-code" autofocus>
             </div>
             <button type="submit" class="btn" style="width:100%;margin-top:1rem;">
-                <i class="fa-solid fa-lock-open"></i> Verify & Enter
+                <i class="fa-solid fa-lock-open"></i> Verify & Login
             </button>
         </form>
-        <div style="text-align:center;margin-top:2rem;">
+
+        <form method="POST" action="{{ url_for('admin.resend_otp') }}" style="margin-top:1rem; text-align:center;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn" style="background:transparent; border:1px solid var(--border); color:var(--text); width:100%; font-size:0.85rem;">
+                <i class="fa-solid fa-paper-plane"></i> Resend Email OTP
+            </button>
+        </form>
+
+        <div style="text-align:center;margin-top:1.5rem;">
             <a href="{{ url_for('admin.login') }}" style="color:var(--text-secondary);font-size:.85rem;">
                 <i class="fa-solid fa-arrow-left"></i> Back to login
             </a>

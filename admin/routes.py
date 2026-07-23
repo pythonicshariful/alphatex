@@ -124,15 +124,20 @@ def login():
             log_attempt(admin, 'fail_password', request)
             return render_template('admin/login.html', error='Invalid email or password.')
 
-        # Credentials valid — proceed immediately
+        # Credentials valid — trigger OTP email and require 2FA verification
         admin.failed_attempts = 0
-        admin.last_login = datetime.utcnow()
         db.session.commit()
-        session['admin_id'] = admin.id
-        session['admin_2fa_verified'] = True  # Keep for compatibility
-        session['admin_last_activity'] = datetime.utcnow().timestamp()
-        log_attempt(admin, 'success', request)
-        return redirect(url_for('admin.dashboard'))
+
+        from auth.routes import create_otp_record
+        from utils.mail import send_otp_email
+
+        otp = create_otp_record(admin.email, 'admin_login')
+        send_otp_email(admin.email, otp)
+
+        session['admin_pending_id'] = admin.id
+        session['admin_pending_email'] = admin.email
+        flash(f'An OTP verification code has been sent to {admin.email}', 'info')
+        return redirect(url_for('admin.two_factor'))
 
     return render_template('admin/login.html')
 
@@ -143,18 +148,53 @@ def two_factor():
     if not admin_id:
         return redirect(url_for('admin.login'))
     admin = AdminUser.query.get(admin_id)
+    if not admin:
+        session.pop('admin_pending_id', None)
+        return redirect(url_for('admin.login'))
+
     if request.method == 'POST':
         code = request.form.get('code', '').strip()
-        if admin.verify_totp(code):
+        from auth.routes import verify_otp_record
+        
+        # Verify via Email OTP OR Google Authenticator (TOTP)
+        ok, msg = verify_otp_record(admin.email, code, 'admin_login')
+        if not ok and admin.is_2fa_enabled and admin.totp_secret:
+            if admin.verify_totp(code):
+                ok = True
+                msg = 'TOTP verified successfully.'
+
+        if ok:
             session.pop('admin_pending_id', None)
+            session.pop('admin_pending_email', None)
             session['admin_id'] = admin.id
             session['admin_2fa_verified'] = True
             session['admin_last_activity'] = datetime.utcnow().timestamp()
+            admin.last_login = datetime.utcnow()
+            db.session.commit()
             log_attempt(admin, 'success', request)
+            flash('Login successful!', 'success')
             return redirect(url_for('admin.dashboard'))
+
         log_attempt(admin, 'fail_2fa', request)
-        return render_template('admin/2fa.html', error='Invalid code. Please try again.')
-    return render_template('admin/2fa.html')
+        return render_template('admin/2fa.html', admin=admin, error=msg)
+
+    return render_template('admin/2fa.html', admin=admin)
+
+
+@admin_bp.route('/resend-otp', methods=['POST'])
+def resend_otp():
+    admin_id = session.get('admin_pending_id')
+    if not admin_id:
+        flash('Session expired. Please log in again.', 'error')
+        return redirect(url_for('admin.login'))
+    admin = AdminUser.query.get(admin_id)
+    if admin:
+        from auth.routes import create_otp_record
+        from utils.mail import send_otp_email
+        otp = create_otp_record(admin.email, 'admin_login')
+        send_otp_email(admin.email, otp)
+        flash(f'A new OTP code has been sent to {admin.email}', 'success')
+    return redirect(url_for('admin.two_factor'))
 
 
 @admin_bp.route('/setup-2fa', methods=['GET', 'POST'])
