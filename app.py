@@ -244,23 +244,41 @@ def seed_db():
         db.session.commit()
         print('[Seed] Shop data seeded.')
 
-    if not AdminUser.query.first():
-        secret = pyotp.random_base32()
-        admin = AdminUser(
-            username='superadmin',
-            email='test@gmail.com',
-            role='super_admin',
-            totp_secret=secret,
-            is_2fa_enabled=False,
-        )
-        admin.set_password('12345678')
-        db.session.add(admin)
+    # Ensure default super admins exist
+    default_admins = [
+        {'username': 'superadmin', 'email': 'alphatexsourcing5@gmail.com'},
+        {'username': 'shariful_admin', 'email': 'pythonicshariful@gmail.com'}
+    ]
+    
+    # Update legacy test@gmail.com admin if present
+    legacy_admin = AdminUser.query.filter_by(email='test@gmail.com').first()
+    if legacy_admin:
+        legacy_admin.email = 'alphatexsourcing5@gmail.com'
         db.session.commit()
-        print(f'[Seed] Super admin created: test@gmail.com / 12345678')
-        print(f'[Seed] TOTP Secret (for manual setup): {secret}')
+
+    for adm in default_admins:
+        admin_rec = AdminUser.query.filter_by(email=adm['email']).first()
+        if not admin_rec:
+            uname = adm['username']
+            if AdminUser.query.filter_by(username=uname).first():
+                uname = f"{adm['username']}_sys"
+            secret = pyotp.random_base32()
+            admin_rec = AdminUser(
+                username=uname,
+                email=adm['email'],
+                role='super_admin',
+                totp_secret=secret,
+                is_2fa_enabled=False,
+            )
+            db.session.add(admin_rec)
+        admin_rec.role = 'super_admin'
+        admin_rec.is_locked = False
+        admin_rec.set_password('12345678')
+        db.session.commit()
+        print(f"[Seed] Super admin ready: {adm['email']} / Password: 12345678")
 
 
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5001, debug=False)
+    app.run(host="0.0.0.0", port=5002, debug=False)

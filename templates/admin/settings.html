@@ -6,13 +6,15 @@
 <div class="admin-page-header">
     <div>
         <h1>Site Settings</h1>
-        <p>Global configuration, SEO, and maintenance controls.</p>
+        <p>Global configuration, Email Server, Facebook Pixel, Google Analytics, SEO, and maintenance controls.</p>
     </div>
 </div>
 
-<div class="admin-section" style="max-width:800px;">
+<div class="admin-section" style="max-width:850px;">
     <div class="settings-tabs">
         <button class="settings-tab active" data-tab="general">General</button>
+        <button class="settings-tab" data-tab="email">Email Server (SMTP)</button>
+        <button class="settings-tab" data-tab="analytics">Analytics & Pixel</button>
         <button class="settings-tab" data-tab="seo">SEO</button>
         <button class="settings-tab" data-tab="maintenance">Maintenance</button>
         <button class="settings-tab" data-tab="export">Data Export</button>
@@ -30,7 +32,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Support Email</label>
-                    <input type="email" name="support_email" class="form-control" value="{{ settings.get('support_email', '') }}">
+                    <input type="email" name="support_email" class="form-control" value="{{ settings.get('support_email', 'alphatexsourcing5@gmail.com') }}">
                 </div>
 
                 <div class="divider" style="margin:2rem 0 1rem;"></div>
@@ -67,6 +69,60 @@
                         <input type="checkbox" name="show_exact_stock" value="true" {% if settings.get('show_exact_stock') == 'true' %}checked{% endif %}>
                         <span class="toggle-slider"></span>
                     </label>
+                </div>
+            </div>
+
+            <!-- Email Server (SMTP / IMAP / POP3) -->
+            <div class="settings-panel" data-panel="email">
+                <h3 style="margin-bottom:1rem; font-size:1rem; font-weight:600; color:var(--a-text);">OTP & Transactional Email Server Configuration</h3>
+                <p class="text-muted" style="font-size:0.85rem; margin-bottom:1.5rem; line-height:1.5;">Configure the mail server used to dispatch One-Time Passwords (OTP) and notifications for customer & admin authentication.</p>
+
+                <div class="form-group">
+                    <label class="form-label">Outgoing SMTP Server Host *</label>
+                    <input type="text" name="smtp_server" class="form-control" value="{{ settings.get('smtp_server', 'alphatex.bd') }}" required placeholder="alphatex.bd">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">SMTP Port (SSL/TLS) *</label>
+                    <input type="number" name="smtp_port" class="form-control" value="{{ settings.get('smtp_port', '465') }}" required placeholder="465">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">SMTP Username / Sender Email *</label>
+                    <input type="text" name="smtp_username" class="form-control" value="{{ settings.get('smtp_username', 'no-reply@alphatex.bd') }}" required placeholder="no-reply@alphatex.bd">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">SMTP Password *</label>
+                    <input type="password" name="smtp_password" class="form-control" value="{{ settings.get('smtp_password', 'Hacktanha@24') }}" required placeholder="Email account password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sender Display Name</label>
+                    <input type="text" name="smtp_sender_name" class="form-control" value="{{ settings.get('smtp_sender_name', 'alphatex') }}" placeholder="alphatex">
+                </div>
+
+                <div style="background:var(--a-surface2); border:1px solid var(--a-border); padding:1rem 1.2rem; border-radius:8px; margin-top:1.5rem;">
+                    <div style="font-weight:600; font-size:0.9rem; margin-bottom:0.5rem; color:var(--a-text);"><i class="fa-solid fa-server"></i> Mailbox Protocols & Server Endpoints</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.6;">
+                        • <strong>Incoming IMAP Server:</strong> <code>alphatex.bd</code> (Port: <strong>993</strong>, SSL)<br>
+                        • <strong>Incoming POP3 Server:</strong> <code>alphatex.bd</code> (Port: <strong>995</strong>, SSL)<br>
+                        • <strong>Outgoing SMTP Server:</strong> <code>alphatex.bd</code> (Port: <strong>465</strong>, SSL)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics & Facebook Pixel -->
+            <div class="settings-panel" data-panel="analytics">
+                <h3 style="margin-bottom:1rem; font-size:1rem; font-weight:600; color:var(--a-text);">Marketing & Analytics Integrations</h3>
+                <p class="text-muted" style="font-size:0.85rem; margin-bottom:1.5rem; line-height:1.5;">Enter tracking IDs to automatically inject analytics pixels across customer-facing pages.</p>
+
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-brands fa-facebook" style="color:#1877f2;"></i> Facebook Pixel ID</label>
+                    <input type="text" name="facebook_pixel_id" class="form-control" value="{{ settings.get('facebook_pixel_id', '') }}" placeholder="e.g. 123456789012345">
+                    <small class="text-muted" style="display:block; margin-top:0.25rem;">Tracks PageView events automatically on all storefront pages.</small>
+                </div>
+
+                <div class="form-group" style="margin-top:1.5rem;">
+                    <label class="form-label"><i class="fa-brands fa-google" style="color:#ea4335;"></i> Google Analytics 4 (GA4) Measurement ID</label>
+                    <input type="text" name="google_analytics_id" class="form-control" value="{{ settings.get('google_analytics_id', '') }}" placeholder="e.g. G-XXXXXXXXXX">
+                    <small class="text-muted" style="display:block; margin-top:0.25rem;">Injects Global Site Tag (gtag.js) for visitor traffic tracking.</small>
                 </div>
             </div>
 
@@ -114,6 +170,7 @@
                     </a>
                 </div>
             </div>
+
             <div class="divider"></div>
 
             <div class="settings-section">

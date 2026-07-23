@@ -596,35 +596,37 @@ def api_ai_chat():
         
     # Retrieve product catalog to build RAG context
     try:
-        products = Product.query.all()
+        # Only include in-stock products
+        products = Product.query.filter(Product.stock > 0).all()
         catalog_lines = []
         for p in products:
             cat_name = p.category.name if p.category else 'Unknown'
-            status = 'In Stock' if p.stock > 0 else 'Out of Stock'
+            link = f"{request.host_url.rstrip('/')}/product/{p.slug or p.id}"
             catalog_lines.append(
                 f"- Name: {p.name}\n"
                 f"  Price: {p.price} BDT\n"
                 f"  Category: {cat_name}\n"
-                f"  Status: {status} (Stock: {p.stock})\n"
                 f"  Description: {p.description or 'Premium exclusive item'}\n"
-                f"  Link: /product/{p.id}"
+                f"  Link: {link}"
             )
         catalog_context = "\n".join(catalog_lines)
     except Exception as e:
         catalog_context = "No products found."
         
     system_instruction = (
-        "You are Alphatex AI Concierge, a luxury customer service assistant for Alphatex, "
-        "a high-end, premium clothing boutique. Your voice must be sophisticated, helpful, polite, and welcoming (concierge tone).\n\n"
-        "Here is our live product catalog:\n"
+        "You are the AI assistant for Alphatex, a high-end clothing boutique. "
+        "You have full, unrestricted access to the entire site and its database. "
+        "You must ALWAYS answer ALL questions exclusively in Bangla (Bengali).\n\n"
+        "Here is our live product catalog from the database:\n"
         f"{catalog_context}\n\n"
         "Guidelines:\n"
-        "1. Recommend specific products from our catalog that match the user's needs. Highlight their price in BDT and suggest visiting their link.\n"
-        "2. Keep responses brief, structured with bullet points or paragraphs, and easy to read. Do not write extremely long paragraphs.\n"
-        "3. If a product is Out of Stock, politely let them know and suggest an alternative that is In Stock.\n"
-        "4. For general inquiries (shipping, returns, size guide, contact), suggest checking the links at the bottom of the page.\n"
-        "5. If the user asks about WhatsApp or Messenger, note that they can chat directly with sales representatives by clicking the respective floating buttons on the screen.\n"
-        "6. Do not speculate or make up products that are not in the catalog. Only discuss real products listed above."
+        "1. Your answers MUST be written entirely in Bangla.\n"
+        "2. Keep your responses very short, simple, and direct.\n"
+        "3. Always greet the user with 'Assalamu Alaikum' (আসসালামু আলাইকুম) at the beginning of the conversation.\n"
+        "4. Since you have full access to the database, answer confidently using the provided catalog data.\n"
+        "5. Recommend specific products if relevant, including their price (BDT) and link.\n"
+        "6. Do not make up products; only use the provided catalog data.\n"
+        "7. If you do not know the answer to a question, politely provide our phone number or ask the user to chat with us on WhatsApp or Messenger."
     )
     
     # Format messages for Gemini API

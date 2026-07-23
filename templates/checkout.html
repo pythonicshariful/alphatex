@@ -168,31 +168,31 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="guest-phone" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">Phone Number</label>
-                            <input type="tel" id="guest-phone" class="form-input" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text);" placeholder="01XXXXXXXXX" required>
+                            <input type="tel" id="guest-phone" class="form-input" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text);" placeholder="আপনার ফোন নম্বর লিখুন" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">Division</label>
+                            <label class="form-label" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">বিভাগ</label>
                             <select id="guest-division" class="form-input" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text); cursor:pointer;" required>
-                                <option value="">Select Division</option>
+                                <option value="">বিভাগ নির্বাচন করুন</option>
                             </select>
                         </div>
                         <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div class="form-group">
-                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">District</label>
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">জেলা</label>
                                 <select id="guest-district" class="form-input" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text); cursor:pointer;" disabled required>
-                                    <option value="">Select District</option>
+                                    <option value="">জেলা নির্বাচন করুন</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">Upazila / Thana</label>
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">উপজেলা / থানা</label>
                                 <select id="guest-upazila" class="form-input" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text); cursor:pointer;" disabled required>
-                                    <option value="">Select Upazila / Thana</option>
+                                    <option value="">উপজেলা / থানা নির্বাচন করুন</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="guest-street" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 0.4rem; display: block;">Street Address</label>
-                            <textarea id="guest-street" class="form-input" rows="2" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text); resize: vertical;" placeholder="House #, Road #, Area/Locality" required></textarea>
+                            <textarea id="guest-street" class="form-input" rows="2" style="width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:var(--r); background:var(--surface-2); color:var(--text); resize: vertical;" placeholder="বাড়ি নং, রাস্তা নং, এলাকা" required></textarea>
                         </div>
                     </div>
                 {% endif %}
@@ -202,7 +202,7 @@
         <!-- Special Instructions Notes -->
         <div class="profile-card">
             <div class="checkout-section-title">2. Order Notes</div>
-            <textarea id="order-notes" class="form-input" rows="3" style="width: 100%; resize: vertical;" placeholder="Special notes for delivery (optional)..."></textarea>
+            <textarea id="order-notes" class="form-input" rows="3" style="width: 100%; resize: vertical;" placeholder="ডেলিভারির জন্য কোনো বিশেষ নোট (ঐচ্ছিক)..."></textarea>
         </div>
     </div>
 
@@ -249,63 +249,63 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label" for="recipient_name">Recipient Full Name *</label>
-                    <input type="text" id="recipient_name" class="form-input" placeholder="Recipient's Name" required>
+                    <input type="text" id="recipient_name" class="form-input" placeholder="আপনার নাম লিখুন" required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="phone">Recipient Mobile Number *</label>
-                    <input type="tel" id="phone" class="form-input" placeholder="e.g. 01XXXXXXXXX" required>
+                    <input type="tel" id="phone" class="form-input" placeholder="আপনার ফোন নম্বর লিখুন" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="division">Division *</label>
+                    <label class="form-label" for="division">বিভাগ *</label>
                     <select id="division" class="form-select" required>
-                        <option value="">Select Division</option>
+                        <option value="">বিভাগ নির্বাচন করুন</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="district">District *</label>
+                    <label class="form-label" for="district">জেলা *</label>
                     <select id="district" class="form-select" required disabled>
-                        <option value="">Select District</option>
+                        <option value="">জেলা নির্বাচন করুন</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="upazila">Upazila / Thana *</label>
+                    <label class="form-label" for="upazila">উপজেলা / থানা *</label>
                     <select id="upazila" class="form-select" required disabled>
-                        <option value="">Select Upazila / Thana</option>
+                        <option value="">উপজেলা / থানা নির্বাচন করুন</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="union_ward">Union / Ward (Optional)</label>
-                    <input type="text" id="union_ward" class="form-input" placeholder="Enter Union or Ward No.">
+                    <input type="text" id="union_ward" class="form-input" placeholder="আপনার ইউনিয়ন বা ওয়ার্ড নম্বর লিখুন">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="area">Area / Locality / Mohalla *</label>
-                    <input type="text" id="area" class="form-input" placeholder="e.g. Banani Road 11" required>
+                    <input type="text" id="area" class="form-input" placeholder="আপনার এলাকা লিখুন (যেমন: বনানী)" required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="road">Road / Street Name (Optional)</label>
-                    <input type="text" id="road" class="form-input" placeholder="e.g. Road 15/A">
+                    <input type="text" id="road" class="form-input" placeholder="রাস্তার নাম বা নম্বর লিখুন">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="house_no">House / Holding No. (Optional)</label>
-                    <input type="text" id="house_no" class="form-input" placeholder="e.g. House 42">
+                    <input type="text" id="house_no" class="form-input" placeholder="বাড়ির নম্বর লিখুন">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="apartment">Flat / Apartment (Optional)</label>
-                    <input type="text" id="apartment" class="form-input" placeholder="e.g. Flat 4B">
+                    <input type="text" id="apartment" class="form-input" placeholder="ফ্ল্যাট বা অ্যাপার্টমেন্ট নম্বর লিখুন">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="postal_code">Postal Code (Optional)</label>
-                    <input type="text" id="postal_code" class="form-input" placeholder="e.g. 1213">
+                    <input type="text" id="postal_code" class="form-input" placeholder="পোস্টাল কোড লিখুন">
                 </div>
 
                 <div class="form-group">
@@ -319,7 +319,7 @@
 
                 <div class="form-group full-width">
                     <label class="form-label" for="maps_link">Google Maps URL (Optional)</label>
-                    <input type="url" id="maps_link" class="form-input" placeholder="Paste Google Maps URL">
+                    <input type="url" id="maps_link" class="form-input" placeholder="গুগল ম্যাপের লিঙ্ক দিন">
                 </div>
 
                 <div class="form-group full-width" style="flex-direction: row; align-items: center; gap: 0.8rem; margin-top: 0.5rem;">
@@ -369,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         summaryList.innerHTML = cart.map(item => `
             <div class="checkout-summary-item">
-                <img src="${item.image.startsWith('/') ? item.image.replace(/\\.jpg$/i, '.webp') : '/static/images/' + item.image.replace(/\\.jpg$/i, '.webp')}" alt="${item.name}">
+                <img src="${item.image.startsWith('/') ? item.image.replace(/\.jpg$/i, '.webp') : '/static/images/' + item.image.replace(/\.jpg$/i, '.webp')}" alt="${item.name}">
                 <div class="checkout-summary-item-info">
                     <div class="checkout-summary-item-name">${item.name}</div>
                     <div style="font-size: 0.82rem; color: var(--text-2);">Qty: ${item.qty}</div>

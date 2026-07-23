@@ -4,15 +4,25 @@ from email.mime.multipart import MIMEMultipart
 from flask import current_app
 
 def send_otp_email(email, otp):
-    """Sends OTP via SMTP with SSL using configuration settings."""
-    smtp_server = current_app.config.get('SMTP_SERVER', 'alphatex.bd')
-    smtp_port = current_app.config.get('SMTP_PORT', 465)
-    sender_email = current_app.config.get('SMTP_USERNAME', 'no-reply@alphatex.bd')
-    sender_password = current_app.config.get('SMTP_PASSWORD', 'Hacktanha@24')
+    """Sends OTP via SMTP with SSL using dynamic site settings or configuration fallback."""
+    from models import SiteSettings
+    try:
+        settings_map = {s.key: s.value for s in SiteSettings.query.all()}
+    except Exception:
+        settings_map = {}
+
+    smtp_server = settings_map.get('smtp_server') or current_app.config.get('SMTP_SERVER', 'alphatex.bd')
+    try:
+        smtp_port = int(settings_map.get('smtp_port') or current_app.config.get('SMTP_PORT', 465))
+    except (ValueError, TypeError):
+        smtp_port = 465
+    sender_email = settings_map.get('smtp_username') or current_app.config.get('SMTP_USERNAME', 'no-reply@alphatex.bd')
+    sender_password = settings_map.get('smtp_password') or current_app.config.get('SMTP_PASSWORD', 'Hacktanha@24')
+    sender_name = settings_map.get('smtp_sender_name') or 'alphatex'
     
     # Create HTML/plain multipart email message
     msg = MIMEMultipart('alternative')
-    msg['From'] = f"alphatex <{sender_email}>"
+    msg['From'] = f"{sender_name} <{sender_email}>"
     msg['To'] = email
     msg['Subject'] = f"Your alphatex OTP Code: {otp}"
     

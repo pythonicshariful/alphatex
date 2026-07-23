@@ -56,6 +56,9 @@
                             <!-- Change Role -->
                             <button type="button" class="btn-a btn-a-sm btn-a-outline" onclick="openModal('role-modal-{{ a.id }}')">Edit Role</button>
                             
+                            <!-- Reset Password -->
+                            <button type="button" class="btn-a btn-a-sm btn-a-outline text-info" onclick="openModal('pwd-modal-{{ a.id }}')"><i class="fa-solid fa-key"></i> Password</button>
+
                             <!-- Lock/Unlock -->
                             <form method="POST" action="{{ url_for('admin.lock_admin_member', aid=a.id) }}" style="display:inline;">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -145,6 +148,32 @@
             </div>
             <div class="modal-footer">
                 <button type="submit" class="btn-a btn-a-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="pwd-modal-{{ a.id }}">
+    <div class="modal-box" style="max-width: 400px;">
+        <form method="POST" action="{{ url_for('admin.reset_team_admin_password', aid=a.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-header">
+                <h3>Reset Password: {{ a.username }}</h3>
+                <button type="button" class="modal-close" onclick="closeModal('pwd-modal-{{ a.id }}')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">New Password *</label>
+                    <input type="password" name="new_password" class="form-control" required placeholder="8+ chars, uppercase, digit, special">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirm New Password *</label>
+                    <input type="password" name="confirm_password" class="form-control" required placeholder="Re-enter new password">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-a btn-a-outline" onclick="closeModal('pwd-modal-{{ a.id }}')">Cancel</button>
+                <button type="submit" class="btn-a btn-a-primary">Update Password</button>
             </div>
         </form>
     </div>

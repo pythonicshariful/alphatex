@@ -213,7 +213,7 @@ function renderCart() {
     }
     itemsEl.innerHTML = cart.map((item, idx) => `
         <div class="cart-item">
-            <img class="cart-item-img" src="${item.image.startsWith('/') ? item.image.replace(/\\.jpg$/i, '.webp') : '/static/images/' + item.image.replace(/\\.jpg$/i, '.webp')}" alt="${item.name}">
+            <img class="cart-item-img" src="${item.image.startsWith('/') ? item.image.replace(/\.jpg$/i, '.webp') : '/static/images/' + item.image.replace(/\.jpg$/i, '.webp')}" alt="${item.name}">
             <div class="cart-item-info">
                 <div class="cart-item-name">${item.name}</div>
                 <div class="cart-item-price">${item.price}</div>

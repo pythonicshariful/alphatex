@@ -60,11 +60,15 @@ class Config:
     # Admin session is shorter (handled per-route)
     ADMIN_SESSION_TIMEOUT = 30 * 60  # 30 minutes
 
-    # SMTP Settings
+    # SMTP & Mail Settings
     SMTP_SERVER = os.environ.get('SMTP_SERVER') or 'alphatex.bd'
     SMTP_PORT = int(os.environ.get('SMTP_PORT') or 465)
     SMTP_USERNAME = os.environ.get('SMTP_USERNAME') or 'no-reply@alphatex.bd'
     SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD') or 'Hacktanha@24'
+    IMAP_SERVER = os.environ.get('IMAP_SERVER') or 'alphatex.bd'
+    IMAP_PORT = int(os.environ.get('IMAP_PORT') or 993)
+    POP3_SERVER = os.environ.get('POP3_SERVER') or 'alphatex.bd'
+    POP3_PORT = int(os.environ.get('POP3_PORT') or 995)
 
     # Admin brute force
     ADMIN_MAX_FAILED_ATTEMPTS = 5

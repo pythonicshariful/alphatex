@@ -471,8 +471,8 @@ def delete_product(admin, pid):
 def categories(admin):
     if request.method == 'POST':
         # Add new category
-        cat_id = request.form.get('id')
-        name = request.form.get('name')
+        cat_id = request.form.get('id', '').strip()
+        name = request.form.get('name', '').strip()
         file = request.files.get('image')
         
         if Category.query.get(cat_id):
@@ -488,11 +488,34 @@ def categories(admin):
             cat = Category(id=cat_id, name=name, image=image_filename)
             db.session.add(cat)
             db.session.commit()
-            flash('Category added.', 'success')
+            flash('Category added successfully.', 'success')
         return redirect(url_for('admin.categories'))
         
     cats = Category.query.all()
     return render_template('admin/categories.html', admin=admin, categories=cats)
+
+@admin_bp.route('/categories/edit/<string:cid>', methods=['POST'])
+@require_admin('products')
+def edit_category(admin, cid):
+    cat = Category.query.get_or_404(cid)
+    name = request.form.get('name', '').strip()
+    file = request.files.get('image')
+    
+    if not name:
+        flash('Category name cannot be empty.', 'error')
+        return redirect(url_for('admin.categories'))
+        
+    cat.name = name
+    
+    if file and file.filename:
+        from utils.images import optimize_and_save_image
+        upload_dir = os.path.join(current_app.root_path, 'static', 'images')
+        filename_base = f"category_{secure_filename(cat.id)}"
+        cat.image = optimize_and_save_image(file, upload_dir, filename_base, max_width=800)
+        
+    db.session.commit()
+    flash('Category updated successfully.', 'success')
+    return redirect(url_for('admin.categories'))
 
 @admin_bp.route('/categories/delete/<string:cid>', methods=['POST'])
 @require_admin('products')
@@ -1030,7 +1053,10 @@ def settings(admin):
                         'meta_title', 'meta_description', 'meta_keywords',
                         'social_instagram', 'social_facebook', 'social_twitter',
                         'social_whatsapp', 'social_messenger',
-                        'show_exact_stock']
+                        'show_exact_stock',
+                        'smtp_server', 'smtp_port', 'smtp_username', 'smtp_password',
+                        'smtp_sender_name', 'imap_server', 'pop3_server',
+                        'facebook_pixel_id', 'google_analytics_id']
         for key in keys_to_save:
             val = request.form.get(key, '')
             setting = SiteSettings.query.filter_by(key=key).first()
@@ -1155,6 +1181,54 @@ def change_admin_role(admin, aid):
     log_audit(admin, 'change_admin_role', 'admin_user', aid, f'{target.username}: {old_role} → {new_role}')
     flash(f'Role changed to {new_role}.', 'success')
     return redirect(url_for('admin.team'))
+
+@admin_bp.route('/team/<int:aid>/reset-password', methods=['POST'])
+@require_admin('settings')
+def reset_team_admin_password(admin, aid):
+    target = AdminUser.query.get_or_404(aid)
+    new_password = request.form.get('new_password', '')
+    confirm_password = request.form.get('confirm_password', '')
+
+    if not new_password or new_password != confirm_password:
+        flash('Passwords do not match.', 'error')
+        return redirect(url_for('admin.team'))
+
+    valid, err_msg = enforce_password_policy(new_password)
+    if not valid:
+        flash(err_msg, 'error')
+        return redirect(url_for('admin.team'))
+
+    target.set_password(new_password)
+    db.session.commit()
+    log_audit(admin, 'reset_admin_password', 'admin_user', aid, f'Reset password for admin {target.username}')
+    flash(f'Password for "{target.username}" reset successfully.', 'success')
+    return redirect(url_for('admin.team'))
+
+@admin_bp.route('/change-password', methods=['POST'])
+@require_admin()
+def change_own_password(admin):
+    current_password = request.form.get('current_password', '')
+    new_password = request.form.get('new_password', '')
+    confirm_password = request.form.get('confirm_password', '')
+
+    if not admin.check_password(current_password):
+        flash('Current password is incorrect.', 'error')
+        return redirect(request.referrer or url_for('admin.dashboard'))
+
+    if new_password != confirm_password:
+        flash('New passwords do not match.', 'error')
+        return redirect(request.referrer or url_for('admin.dashboard'))
+
+    valid, err_msg = enforce_password_policy(new_password)
+    if not valid:
+        flash(err_msg, 'error')
+        return redirect(request.referrer or url_for('admin.dashboard'))
+
+    admin.set_password(new_password)
+    db.session.commit()
+    log_audit(admin, 'change_own_password', 'admin_user', admin.id, 'Admin updated password')
+    flash('Password updated successfully.', 'success')
+    return redirect(request.referrer or url_for('admin.dashboard'))
 
 
 # ── Orders (Enhanced bulk) ───────────────────────────────

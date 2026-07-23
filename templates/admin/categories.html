@@ -3,10 +3,61 @@
 {% block breadcrumb %}<span>/</span> <span>Catalogue</span> <span>/</span> <span>Categories</span>{% endblock %}
 
 {% block content %}
+<style>
+    .cat-thumb-preview {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid var(--border, #333);
+        background: #111;
+    }
+    .ratio-hint-box {
+        background: rgba(var(--accent-rgb, 59, 130, 246), 0.1);
+        border: 1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.25);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        color: var(--text, #ddd);
+    }
+    .ratio-badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.6rem;
+        border-radius: 6px;
+        background: var(--bg-card, #222);
+        border: 1px solid var(--border, #444);
+        color: var(--text-muted, #aaa);
+    }
+    .ratio-badge.format-webp {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    .image-preview-card {
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        border: 1px solid var(--border, #333);
+        border-radius: 8px;
+        background: var(--bg-body, #181818);
+        text-align: center;
+    }
+    .image-preview-card img {
+        max-height: 130px;
+        border-radius: 6px;
+        margin: 0 auto 0.5rem auto;
+        object-fit: contain;
+        display: block;
+    }
+</style>
+
 <div class="admin-page-header">
     <div>
         <h1>Categories</h1>
-        <p>Manage product categories.</p>
+        <p>Manage product categories, edit details, and configure WebP category banners.</p>
     </div>
     <div class="page-actions">
         <button class="btn-a btn-a-primary" onclick="openModal('add-cat-modal')"><i class="fa-solid fa-plus"></i> Add Category</button>
@@ -18,28 +69,49 @@
         <table class="admin-table">
             <thead>
                 <tr>
+                    <th style="width: 70px;">Image</th>
                     <th>ID</th>
                     <th>Name</th>
                     <th>Image Source</th>
-                    <th>Action</th>
+                    <th>Ratio & Format</th>
+                    <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for cat in categories %}
                 <tr>
-                    <td style="font-family:monospace;">{{ cat.id }}</td>
-                    <td style="font-weight:600;">{{ cat.name }}</td>
-                    <td class="text-muted">{{ cat.image }}</td>
                     <td>
-                        <form method="POST" action="{{ url_for('admin.delete_category', cid=cat.id) }}"
-                              onsubmit="return confirm('Delete this category and ALL its products? This cannot be undone.');">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn-a btn-a-sm btn-a-outline text-danger"><i class="fa-solid fa-trash"></i></button>
-                        </form>
+                        <img src="{{ url_for('static', filename='images/' + cat.image) }}" 
+                             alt="{{ cat.name }}" 
+                             class="cat-thumb-preview"
+                             onload="detectTableImageRatio(this, 'ratio-info-{{ loop.index }}')"
+                             onerror="this.onerror=null;this.src='/static/images/product_1.jpg';">
+                    </td>
+                    <td style="font-family:monospace; font-weight: 600;">{{ cat.id }}</td>
+                    <td style="font-weight:600;">{{ cat.name }}</td>
+                    <td class="text-muted" style="font-size:0.85rem; font-family:monospace;">{{ cat.image }}</td>
+                    <td>
+                        <span class="ratio-badge {% if cat.image.endswith('.webp') %}format-webp{% endif %}" id="ratio-info-{{ loop.index }}">
+                            {% if cat.image.endswith('.webp') %}WebP • {% endif %}Checking ratio...
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display:flex; justify-content: flex-end; gap:0.5rem;">
+                            <button type="button" 
+                                    class="btn-a btn-a-sm btn-a-outline" 
+                                    onclick="openEditCatModal('{{ cat.id }}', '{{ cat.name|escapejs }}', '{{ url_for('static', filename='images/' + cat.image) }}', '{{ cat.image|escapejs }}')">
+                                <i class="fa-solid fa-pen-to-square"></i> Edit
+                            </button>
+                            <form method="POST" action="{{ url_for('admin.delete_category', cid=cat.id) }}"
+                                  onsubmit="return confirm('Delete category \'{{ cat.name|escapejs }}\' and ALL its associated products? This action cannot be undone.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-a btn-a-sm btn-a-outline text-danger"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="4" class="empty-state"><p>No categories found.</p></td></tr>
+                <tr><td colspan="6" class="empty-state"><p>No categories found.</p></td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -56,17 +128,27 @@
                 <button type="button" class="modal-close" onclick="closeModal('add-cat-modal')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
+                <div class="ratio-hint-box">
+                    <i class="fa-solid fa-circle-info"></i> <strong>Image Ratio Guidance:</strong> Recommended <strong>1:1 (Square, e.g. 800×800px)</strong> or <strong>4:3</strong>.<br>
+                    Supports WebP, PNG, JPG format. Uploaded images are automatically optimized into <strong>WebP</strong> format.
+                </div>
+
                 <div class="form-group">
-                    <label class="form-label">Category ID (e.g. 'men')</label>
-                    <input type="text" name="id" class="form-control" required placeholder="men">
+                    <label class="form-label">Category ID (e.g. 'men', 'women') *</label>
+                    <input type="text" name="id" class="form-control" required placeholder="e.g. men">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Category Name (e.g. 'Men')</label>
-                    <input type="text" name="name" class="form-control" required placeholder="Men">
+                    <label class="form-label">Category Name *</label>
+                    <input type="text" name="name" class="form-control" required placeholder="e.g. Men's Fashion">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Category Image</label>
-                    <input type="file" name="image" class="form-control" accept="image/*" required>
+                    <label class="form-label">Category Image *</label>
+                    <input type="file" name="image" class="form-control" accept="image/webp, image/jpeg, image/png, image/*" required onchange="previewCatImage(this, 'add-img-preview', 'add-img-ratio', 'add-preview-container')">
+                </div>
+
+                <div id="add-preview-container" class="image-preview-card" style="display:none;">
+                    <img id="add-img-preview" alt="New Image Preview">
+                    <div id="add-img-ratio" style="font-size:0.85rem; font-weight:600; color:var(--accent, #3b82f6);"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -76,4 +158,141 @@
         </form>
     </div>
 </div>
+
+<!-- Edit Category Modal -->
+<div class="modal-overlay" id="edit-cat-modal">
+    <div class="modal-box">
+        <form id="edit-cat-form" method="POST" action="" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-header">
+                <h3>Edit Category</h3>
+                <button type="button" class="modal-close" onclick="closeModal('edit-cat-modal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="ratio-hint-box">
+                    <i class="fa-solid fa-circle-info"></i> <strong>Image Ratio Guidance:</strong> Recommended <strong>1:1 (Square, e.g. 800×800px)</strong> or <strong>4:3</strong>.<br>
+                    Supports WebP, PNG, JPG. Uploaded files automatically convert to WebP format.
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Category ID</label>
+                    <input type="text" id="edit-cat-id-display" class="form-control" disabled style="opacity:0.75; font-family:monospace;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category Name *</label>
+                    <input type="text" id="edit-cat-name" name="name" class="form-control" required placeholder="Category Name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Current Image</label>
+                    <div class="image-preview-card">
+                        <img id="edit-current-img-preview" alt="Current Image">
+                        <div id="edit-current-img-ratio" style="font-size:0.85rem; font-weight:600; color:var(--text-muted, #aaa);"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Change Image (Optional)</label>
+                    <input type="file" name="image" class="form-control" accept="image/webp, image/jpeg, image/png, image/*" onchange="previewCatImage(this, 'edit-new-img-preview', 'edit-new-img-ratio', 'edit-new-preview-container')">
+                    <small class="text-muted" style="display:block; margin-top:0.25rem;">Leave empty if you don't want to change the image.</small>
+                </div>
+
+                <div id="edit-new-preview-container" class="image-preview-card" style="display:none;">
+                    <span style="font-size:0.75rem; color:var(--accent, #3b82f6); font-weight:600; display:block; margin-bottom:0.25rem;">NEW IMAGE PREVIEW</span>
+                    <img id="edit-new-img-preview" alt="New Image Preview">
+                    <div id="edit-new-img-ratio" style="font-size:0.85rem; font-weight:600; color:var(--accent, #3b82f6);"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-a btn-a-outline" onclick="closeModal('edit-cat-modal')">Cancel</button>
+                <button type="submit" class="btn-a btn-a-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function getAspectRatioInfo(w, h) {
+    if (!w || !h) return '';
+    const ratio = w / h;
+    function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+    const g = gcd(w, h);
+    const rW = Math.round(w / g);
+    const rH = Math.round(h / g);
+    
+    let typeStr = '';
+    if (Math.abs(ratio - 1.0) < 0.05) {
+        typeStr = ' (1:1 Square)';
+    } else if (Math.abs(ratio - 4/3) < 0.05) {
+        typeStr = ' (4:3 Landscape)';
+    } else if (Math.abs(ratio - 16/9) < 0.05) {
+        typeStr = ' (16:9 Landscape)';
+    } else if (Math.abs(ratio - 3/4) < 0.05) {
+        typeStr = ' (3:4 Portrait)';
+    } else {
+        typeStr = ` (${ratio.toFixed(2)}:1)`;
+    }
+    
+    return `${w}×${h}px • Ratio ${rW}:${rH}${typeStr}`;
+}
+
+function detectTableImageRatio(imgEl, badgeId) {
+    const badge = document.getElementById(badgeId);
+    if (!badge) return;
+    const w = imgEl.naturalWidth;
+    const h = imgEl.naturalHeight;
+    if (w && h) {
+        const isWebp = imgEl.src.toLowerCase().includes('.webp');
+        const ratioText = getAspectRatioInfo(w, h);
+        badge.textContent = (isWebp ? 'WebP • ' : '') + ratioText;
+    }
+}
+
+function previewCatImage(input, previewImgId, ratioInfoId, containerId) {
+    const file = input.files[0];
+    const container = document.getElementById(containerId);
+    const previewImg = document.getElementById(previewImgId);
+    const ratioInfo = document.getElementById(ratioInfoId);
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const infoText = getAspectRatioInfo(this.width, this.height);
+                previewImg.src = e.target.result;
+                ratioInfo.textContent = `Selected File: ${file.name} • ${infoText}`;
+                container.style.display = 'block';
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+function openEditCatModal(id, name, imageUrl, imageFilename) {
+    const form = document.getElementById('edit-cat-form');
+    form.action = `/admin/categories/edit/${encodeURIComponent(id)}`;
+    
+    document.getElementById('edit-cat-id-display').value = id;
+    document.getElementById('edit-cat-name').value = name;
+    
+    const currentImg = document.getElementById('edit-current-img-preview');
+    const currentRatio = document.getElementById('edit-current-img-ratio');
+    
+    currentImg.src = imageUrl;
+    currentImg.onload = function() {
+        const isWebp = imageFilename.toLowerCase().endsWith('.webp');
+        const info = getAspectRatioInfo(this.naturalWidth, this.naturalHeight);
+        currentRatio.textContent = (isWebp ? 'WebP Format • ' : '') + info;
+    };
+    
+    // Hide new preview container reset file input
+    document.getElementById('edit-new-preview-container').style.display = 'none';
+    
+    openModal('edit-cat-modal');
+}
+</script>
 {% endblock %}
